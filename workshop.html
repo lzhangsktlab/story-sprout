@@ -1800,10 +1800,6 @@ async function saveStory() {
   setSaveStatus('saving');
   await saveCurrentSlide(true);
 
-  // Ensure we have a folder — prompt if not
-  const dir = await ensureFolder();
-  if (!dir) { setSaveStatus('unsaved'); return; }
-
   const storyTitle = document.getElementById('story-title-input').value.trim() || 'My Story';
 
   const data = {
@@ -1818,44 +1814,68 @@ async function saveStory() {
     })),
   };
 
-  try {
-    const json    = JSON.stringify(data, null, 2);
-    await writeFile(STORY_FILE, json);
+  const json = JSON.stringify(data, null, 2);
 
-    // Also store the folder name in localStorage so we can prompt re-open on next boot
-    localStorage.setItem(SAVE_KEY + 'lastFolder', dir.name);
-
+  if (window.showDirectoryPicker) {
+    // Chrome/Edge: save to folder via File System Access API
+    const dir = await ensureFolder();
+    if (!dir) { setSaveStatus('unsaved'); return; }
+    try {
+      await writeFile(STORY_FILE, json);
+      localStorage.setItem(SAVE_KEY + 'lastFolder', dir.name);
+      S.dirty = false;
+      setSaveStatus('saved');
+      setStatus(`Saved to "${dir.name}/${STORY_FILE}"`, 'ok');
+      setTimeout(() => setStatus('', ''), 2500);
+      renderSlideThumbs();
+    } catch (e) {
+      setSaveStatus('unsaved');
+      setStatus('Save failed: ' + e.message, 'err');
+    }
+  } else {
+    // Firefox/Safari fallback: download as file
+    const blob = new Blob([json], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.download = STORY_FILE;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    URL.revokeObjectURL(link.href);
     S.dirty = false;
     setSaveStatus('saved');
-    setStatus(`Saved to "${dir.name}/${STORY_FILE}"`, 'ok');
+    setStatus('Story downloaded as ' + STORY_FILE, 'ok');
     setTimeout(() => setStatus('', ''), 2500);
     renderSlideThumbs();
-    console.log(`[StorySketch] Saved → ${dir.name}/${STORY_FILE} (${(json.length/1024).toFixed(1)}KB), images:`, Object.keys(S.imgMap));
-  } catch (e) {
-    setSaveStatus('unsaved');
-    setStatus('Save failed: ' + e.message, 'err');
-    console.error('[StorySketch] save error:', e);
   }
 }
 
 async function openStory() {
-  // Let user pick the story.json file directly
-  let fileHandle;
-  try {
-    [fileHandle] = await window.showOpenFilePicker({
-      types: [{
-        description: 'Story files',
-        accept: { 'application/json': ['.json'] },
-      }],
-      startIn: 'downloads',
+  let file;
+
+  if (window.showOpenFilePicker) {
+    // Chrome/Edge: native file picker
+    try {
+      const [fileHandle] = await window.showOpenFilePicker({
+        types: [{ description: 'Story files', accept: { 'application/json': ['.json'] } }],
+        startIn: 'downloads',
+      });
+      file = await fileHandle.getFile();
+    } catch (e) {
+      if (e.name !== 'AbortError') setStatus('Could not open file: ' + e.message, 'err');
+      return;
+    }
+  } else {
+    // Firefox/Safari fallback: hidden file input
+    file = await new Promise(resolve => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = () => resolve(input.files[0] || null);
+      input.click();
     });
-  } catch (e) {
-    if (e.name !== 'AbortError') setStatus('Could not open file: ' + e.message, 'err');
-    return;
+    if (!file) return;
   }
 
   try {
-    const file = await fileHandle.getFile();
     const json = await file.text();
     const d = JSON.parse(json);
     await loadStoryData(d);
