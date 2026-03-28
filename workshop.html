@@ -1649,25 +1649,22 @@ async function generateAiImage() {
   setStatus('Generating image with Stability AI…', 'info');
 
   try {
+    const isFinal = document.getElementById('ai-quality-select').value === 'final';
+    const formData = new FormData();
+    formData.append('prompt', prompt);
+    formData.append('output_format', 'png');
+    formData.append('aspect_ratio', '16:9');
+    formData.append('style_preset', document.getElementById('ai-style-select').value);
+    formData.append('cfg_scale', isFinal ? '7' : '5');
+    formData.append('steps', isFinal ? '30' : '15');
+
     const res = await fetch(STABILITY_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${STABILITY_API_KEY}`,
         'Accept': 'image/*',
-        'Content-Type': 'application/json',
       },
-      body: JSON.stringify((() => {
-        const isFinal = document.getElementById('ai-quality-select').value === 'final';
-        return {
-          prompt,
-          output_format: 'png',
-          aspect_ratio: '16:9',
-          style_preset: document.getElementById('ai-style-select').value,
-          cfg_scale: 7,
-          steps: isFinal ? 30 : 15,
-          width: isFinal ? 1024 : 512,
-        };
-      })()),
+      body: formData,
     });
 
     if (!res.ok) {
