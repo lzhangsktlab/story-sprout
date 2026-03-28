@@ -1863,8 +1863,23 @@ async function openStory() {
     file = await new Promise(resolve => {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = '.json';
-      input.onchange = () => resolve(input.files[0] || null);
+      input.accept = '.json,application/json';
+      input.style.display = 'none';
+      document.body.appendChild(input);
+      input.onchange = () => {
+        resolve(input.files[0] || null);
+        document.body.removeChild(input);
+      };
+      // Handle cancel (Safari doesn't fire onchange on cancel)
+      window.addEventListener('focus', function onFocus() {
+        window.removeEventListener('focus', onFocus);
+        setTimeout(() => {
+          if (!input.files || !input.files.length) {
+            resolve(null);
+            if (input.parentNode) document.body.removeChild(input);
+          }
+        }, 500);
+      });
       input.click();
     });
     if (!file) return;
