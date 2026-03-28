@@ -1598,10 +1598,10 @@ function clearPropsPanel() {
 }
 
 /* ═══════════════════════════════════════════════
-   AI IMAGE DRAWER — GEMINI
+   AI IMAGE DRAWER — STABILITY AI
 ═══════════════════════════════════════════════ */
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent';
-const GEMINI_API_KEY = 'AIzaSyC1hfPe9hU9kZTPVZwgfZINQs-8o0vjVqQ';
+const STABILITY_URL = 'https://api.stability.ai/v2beta/stable-image/generate/core';
+const STABILITY_API_KEY = 'sk-RDbkTgwufdF7CFyWoSMQbhhFx1SesjjEMAMu6F0nCC6kxMK3';
 
 // Image generation history [{dataUrl, prompt}]
 const aiHistory = [];
@@ -1610,7 +1610,7 @@ let aiSelectedIdx = -1;
 function openAiDrawer() { document.getElementById('ai-drawer').classList.add('open'); }
 function closeAiDrawer() { document.getElementById('ai-drawer').classList.remove('open'); }
 
-/* ── Generate via Gemini ── */
+/* ── Generate via Stability AI ── */
 async function generateAiImage() {
   const prompt = document.getElementById('ai-prompt-input').value.trim();
   if (!prompt) { setStatus('Please describe the image you want', 'err'); return; }
@@ -1631,58 +1631,30 @@ async function generateAiImage() {
   prevImg.style.display = 'none';
   prevPH.style.display  = 'flex';
   S.aiImgSrc = null;
-  setStatus('Asking Gemini to generate your image…', 'info');
+  setStatus('Generating image with Stability AI…', 'info');
 
   try {
-    // ── ?key= query param avoids CORS preflight in browsers ──
-    // x-goog-api-key header triggers OPTIONS preflight which Google blocks from browser origins
-    const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+    const res = await fetch(STABILITY_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }]
-      })
+      headers: {
+        'Authorization': `Bearer ${STABILITY_API_KEY}`,
+        'Accept': 'image/*',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt, output_format: 'png', aspect_ratio: '16:9', style_preset: 'digital-art' }),
     });
 
-    const data = await res.json();
-
     if (!res.ok) {
-      throw new Error(data?.error?.message || `HTTP ${res.status}: ${JSON.stringify(data).slice(0, 300)}`);
+      const errText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errText.slice(0, 300)}`);
     }
 
-    // ── Extract image — handle both inlineData (base64) and fileData (URL) ──
-    const parts = data?.candidates?.[0]?.content?.parts || [];
-    console.log('[Gemini] response parts:', JSON.stringify(parts.map(p => ({
-      keys: Object.keys(p),
-      mimeType: p.inlineData?.mimeType,
-      b64len: p.inlineData?.data?.length,
-      fileUri: p.fileData?.fileUri,
-      text: p.text?.slice(0, 80)
-    }))));
-
-    let dataUrl = null;
-
-    const inlinePart = parts.find(p => p.inlineData?.data);
-    if (inlinePart) {
-      const mime = inlinePart.inlineData.mimeType || 'image/png';
-      dataUrl = `data:${mime};base64,${inlinePart.inlineData.data}`;
-    }
-
-    if (!dataUrl) {
-      const filePart = parts.find(p => p.fileData?.fileUri);
-      if (filePart) dataUrl = filePart.fileData.fileUri;
-    }
-
-    if (!dataUrl) {
-      const textPart = parts.find(p => p.text);
-      throw new Error(
-        textPart
-          ? `Model returned text only: "${textPart.text.slice(0, 120)}"`
-          : `No image in response. Full response: ${JSON.stringify(data).slice(0, 400)}`
-      );
-    }
+    const blob = await res.blob();
+    const dataUrl = await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
 
     // ── Display ──
     prevImg.onload = () => {
@@ -1700,7 +1672,7 @@ async function generateAiImage() {
       prevPH.style.display = 'none';
       genBtn.disabled = false;
       genBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11l-1.5-3.5L3 6l3.5-1.5L8 1z" fill="currentColor"/></svg> Generate Image`;
-      showAiError('Image received but failed to render. The base64 data may be malformed.');
+      showAiError('Image received but failed to render.');
     };
     prevImg.style.display = 'block';
     prevImg.src = dataUrl;
@@ -1713,7 +1685,7 @@ async function generateAiImage() {
     genBtn.disabled = false;
     genBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11l-1.5-3.5L3 6l3.5-1.5L8 1z" fill="currentColor"/></svg> Generate Image`;
     showAiError(err.message);
-    console.error('[Gemini] full error:', err);
+    console.error('[StabilityAI] error:', err);
   }
 }
 
