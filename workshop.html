@@ -913,6 +913,11 @@ html, body {
               <option value="photographic">Photographic</option>
               <option value="cinematic">Cinematic</option>
             </select>
+            <label for="ai-quality-select" style="font-size:11px;font-weight:700;color:var(--ink3);white-space:nowrap;margin-left:8px;">Quality:</label>
+            <select id="ai-quality-select" style="font-family:var(--font);font-size:12px;font-weight:600;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--white);color:var(--ink);cursor:pointer;">
+              <option value="draft" selected>Draft (fast)</option>
+              <option value="final">Final (HD)</option>
+            </select>
           </div>
         </div>
         <div id="ai-prompt-buttons">
@@ -1651,14 +1656,18 @@ async function generateAiImage() {
         'Accept': 'image/*',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        prompt,
-        output_format: 'png',
-        aspect_ratio: '16:9',
-        style_preset: document.getElementById('ai-style-select').value,
-        cfg_scale: 7,
-        steps: 30,
-      }),
+      body: JSON.stringify((() => {
+        const isFinal = document.getElementById('ai-quality-select').value === 'final';
+        return {
+          prompt,
+          output_format: 'png',
+          aspect_ratio: '16:9',
+          style_preset: document.getElementById('ai-style-select').value,
+          cfg_scale: 7,
+          steps: isFinal ? 30 : 15,
+          width: isFinal ? 1024 : 512,
+        };
+      })()),
     });
 
     if (!res.ok) {
