@@ -845,6 +845,11 @@ html, body {
     </div>
     <div class="tb-sep"></div>
 
+    <button class="tb-btn tb-btn-icon" id="tb-new-btn" title="New story">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      New
+    </button>
+
     <button class="tb-btn tb-btn-icon" id="tb-open-btn" title="Open story">
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 4a1 1 0 011-1h4l1.5 1.5H13a1 1 0 011 1V12a1 1 0 01-1 1H3a1 1 0 01-1-1V4z" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
       Open
@@ -1871,6 +1876,19 @@ function selectHistoryItem(idx) {
 function markDirty() {
   S.dirty = true;
   setSaveStatus('unsaved');
+  scheduleAutoSave();
+}
+
+// Auto-save to disk every 5 seconds (only if a folder is selected)
+let autoSaveTimer = null;
+function scheduleAutoSave() {
+  if (!S.dirHandle) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(async () => {
+    if (S.dirty && S.dirHandle) {
+      await saveStory();
+    }
+  }, 5000);
 }
 
 function setSaveStatus(state) {
@@ -1885,6 +1903,27 @@ function setSaveStatus(state) {
     el.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg> Unsaved`;
     el.className = '';
   }
+}
+
+function newStory() {
+  if (S.dirty && !confirm('You have unsaved changes. Start a new story?')) return;
+  S.canvas.clear();
+  S.canvas.backgroundColor = '#FFFFFF';
+  S.canvas.renderAll();
+  S.slides = [{ json: null, thumb: null }];
+  S.history = [[]];
+  S.redo = [[]];
+  S.cur = 0;
+  S.dirHandle = null;
+  S.imgMap = {};
+  S.dirty = false;
+  document.getElementById('story-title-input').value = 'My Story';
+  clearPropsPanel();
+  updateSlideLabel();
+  renderSlideThumbs();
+  setSaveStatus('unsaved');
+  setStatus('New story — click Save to choose a folder', 'info');
+  setTimeout(() => setStatus('', ''), 3000);
 }
 
 async function saveStory() {
@@ -2049,6 +2088,7 @@ function setStatus(msg, cls) {
 function wireButtons() {
   // Top bar
   document.getElementById('tb-back-btn').onclick     = () => { window.close(); history.back(); };
+  document.getElementById('tb-new-btn').onclick      = newStory;
   document.getElementById('tb-save-btn').onclick    = saveStory;
   document.getElementById('tb-open-btn').onclick    = openStory;
   document.getElementById('tb-export-btn').onclick  = exportCurrentSlide;
@@ -2170,20 +2210,25 @@ window.addEventListener('DOMContentLoaded', async () => {
   initCanvas();
   wireButtons();
 
-  // Check for story text in URL params (from Bubble.io)
+  // Check for story text in URL params (from Bubble.io — new story context)
   const params = new URLSearchParams(window.location.search);
   const storyParam = params.get('story');
+  const titleParam = params.get('title');
+
   if (storyParam) {
+    // New story from Bubble — load story text, fresh canvas (don't auto-resume)
     try {
       setStoryText(decodeURIComponent(storyParam));
     } catch(e) { console.log('Could not parse story param:', e); }
-  }
-  const titleParam = params.get('title');
-  if (titleParam) {
-    document.getElementById('story-title-input').value = decodeURIComponent(titleParam);
+    if (titleParam) {
+      document.getElementById('story-title-input').value = decodeURIComponent(titleParam);
+    }
+    setStatus('Story text loaded — click lines to copy, then add to slides', 'info');
+    setTimeout(() => setStatus('', ''), 4000);
+    return;
   }
 
-  // Try to restore the project folder from IndexedDB and auto-load story.json
+  // No URL params — try to auto-resume last worked story from disk
   try {
     const handle = await idbGet('storysketch_dirHandle');
     if (handle) {
