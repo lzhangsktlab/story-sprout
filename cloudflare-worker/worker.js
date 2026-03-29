@@ -66,9 +66,14 @@ export default {
         });
       }
 
-      // Convert image to base64 data URL
+      // Convert image to base64 data URL (chunk to avoid call stack overflow)
       const imageBuffer = await res.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+      const bytes = new Uint8Array(imageBuffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i += 8192) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+      }
+      const base64 = btoa(binary);
       const mime = res.headers.get('Content-Type') || 'image/png';
       const dataUrl = `data:${mime};base64,${base64}`;
 
