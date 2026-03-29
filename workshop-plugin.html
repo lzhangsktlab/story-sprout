@@ -813,6 +813,10 @@ html, body {
 
   <!-- TOP BAR -->
   <div id="topbar">
+    <button class="tb-btn tb-btn-ghost" id="tb-back-btn" title="Go back">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back
+    </button>
     <div class="topbar-brand">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
         <path d="M12 3C8 3 5 6 5 10c0 2.5 1.2 4.7 3 6.1V18h8v-1.9c1.8-1.4 3-3.6 3-6.1 0-4-3-7-7-7z" fill="#9779D2" opacity=".25"/>
@@ -1714,8 +1718,8 @@ function clearPropsPanel() {
 /* ═══════════════════════════════════════════════
    AI IMAGE DRAWER — STABILITY AI
 ═══════════════════════════════════════════════ */
-const STABILITY_URL = 'https://api.stability.ai/v2beta/stable-image/generate/core';
-const STABILITY_API_KEY = 'sk-RDbkTgwufdF7CFyWoSMQbhhFx1SesjjEMAMu6F0nCC6kxMK3';
+// Cloudflare Worker proxy — API key is stored server-side, never exposed here
+const PROXY_URL = 'https://stability-proxy.YOURACCOUNT.workers.dev'; // TODO: replace after deploying Worker
 
 // Image generation history [{dataUrl, prompt}]
 const aiHistory = [];
@@ -1749,34 +1753,27 @@ async function generateAiImage() {
 
   try {
     const isFinal = document.getElementById('ai-quality-select').value === 'final';
-    const formData = new FormData();
-    formData.append('prompt', prompt);
-    formData.append('output_format', 'png');
-    formData.append('aspect_ratio', '16:9');
-    formData.append('style_preset', document.getElementById('ai-style-select').value);
-    formData.append('cfg_scale', isFinal ? '7' : '5');
-    formData.append('steps', isFinal ? '30' : '15');
 
-    const res = await fetch(STABILITY_URL, {
+    const res = await fetch(PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${STABILITY_API_KEY}`,
-        'Accept': 'image/*',
-      },
-      body: formData,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        output_format: 'png',
+        aspect_ratio: '16:9',
+        style_preset: document.getElementById('ai-style-select').value,
+        cfg_scale: isFinal ? 7 : 5,
+        steps: isFinal ? 30 : 15,
+      }),
     });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`HTTP ${res.status}: ${errText.slice(0, 300)}`);
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || `HTTP ${res.status}`);
     }
 
-    const blob = await res.blob();
-    const dataUrl = await new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.readAsDataURL(blob);
-    });
+    const dataUrl = data.image;
 
     // ── Display ──
     prevImg.onload = () => {
@@ -2051,6 +2048,7 @@ function setStatus(msg, cls) {
 ═══════════════════════════════════════════════ */
 function wireButtons() {
   // Top bar
+  document.getElementById('tb-back-btn').onclick     = () => { window.close(); history.back(); };
   document.getElementById('tb-save-btn').onclick    = saveStory;
   document.getElementById('tb-open-btn').onclick    = openStory;
   document.getElementById('tb-export-btn').onclick  = exportCurrentSlide;
