@@ -1825,6 +1825,8 @@ function newStory() {
   S.fileHandle = null;
   S.imgMap = {};
   S.dirty = false;
+  storyTextLines = [];
+  renderStoryText();
   document.getElementById('story-title-input').value = 'My Story';
   clearPropsPanel();
   updateSlideLabel();
@@ -1846,6 +1848,7 @@ async function saveStory() {
     title:  storyTitle,
     saved:  Date.now(),
     imgMap: S.imgMap,
+    storyText: storyTextLines,
     slides: S.slides.map(s => ({
       json:   s.json  || null,
       thumb:  s.thumb || null,
@@ -1954,6 +1957,12 @@ async function openStory() {
 async function loadStoryData(d) {
   // Restore global imgMap
   S.imgMap = d.imgMap || {};
+
+  // Restore story text
+  if (d.storyText && d.storyText.length > 0) {
+    storyTextLines = d.storyText;
+    renderStoryText();
+  }
 
   S.slides = (d.slides || [{ json: null, thumb: null }]).map(s => ({
     json:   s.json   || null,
