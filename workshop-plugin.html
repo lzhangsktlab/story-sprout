@@ -1083,7 +1083,8 @@ const S = {
   aiImgSrc:     null,
   dirty:        false,
   // File System handles
-  dirHandle:    null,   // FileSystemDirectoryHandle — the project folder
+  dirHandle:    null,   // FileSystemDirectoryHandle — the project folder (legacy)
+  fileHandle:   null,   // FileSystemFileHandle — the current story file for auto-save
   imgMap:       {},     // { elementId: 'image_abc123.jpg' } — id → filename
 };
 
@@ -1879,13 +1880,13 @@ function markDirty() {
   scheduleAutoSave();
 }
 
-// Auto-save to disk every 5 seconds (only if a folder is selected)
+// Auto-save to disk every 5 seconds (only if a file handle is set)
 let autoSaveTimer = null;
 function scheduleAutoSave() {
-  if (!S.dirHandle) return;
+  if (!S.fileHandle) return;
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(async () => {
-    if (S.dirty && S.dirHandle) {
+    if (S.dirty && S.fileHandle) {
       await saveStory();
     }
   }, 5000);
@@ -1915,6 +1916,7 @@ function newStory() {
   S.redo = [[]];
   S.cur = 0;
   S.dirHandle = null;
+  S.fileHandle = null;
   S.imgMap = {};
   S.dirty = false;
   document.getElementById('story-title-input').value = 'My Story';
@@ -1931,6 +1933,7 @@ async function saveStory() {
   await saveCurrentSlide(true);
 
   const storyTitle = document.getElementById('story-title-input').value.trim() || 'My Story';
+  const suggestedName = storyTitle.replace(/[^a-zA-Z0-9 _-]/g, '').trim() || 'My Story';
 
   const data = {
     v:      4,
@@ -1946,33 +1949,44 @@ async function saveStory() {
 
   const json = JSON.stringify(data, null, 2);
 
-  if (window.showDirectoryPicker) {
-    // Chrome/Edge: save to folder via File System Access API
-    const dir = await ensureFolder();
-    if (!dir) { setSaveStatus('unsaved'); return; }
+  if (window.showSaveFilePicker) {
+    // Chrome/Edge: save as file with name
     try {
-      await writeFile(STORY_FILE, json);
-      localStorage.setItem(SAVE_KEY + 'lastFolder', dir.name);
+      if (!S.fileHandle) {
+        S.fileHandle = await window.showSaveFilePicker({
+          suggestedName: suggestedName + '.json',
+          types: [{ description: 'Story files', accept: { 'application/json': ['.json'] } }],
+          startIn: 'documents',
+        });
+      }
+      const writable = await S.fileHandle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      await idbSet('storysketch_fileHandle', S.fileHandle);
       S.dirty = false;
       setSaveStatus('saved');
-      setStatus(`Saved to "${dir.name}/${STORY_FILE}"`, 'ok');
+      setStatus(`Saved "${S.fileHandle.name}"`, 'ok');
       setTimeout(() => setStatus('', ''), 2500);
       renderSlideThumbs();
     } catch (e) {
-      setSaveStatus('unsaved');
-      setStatus('Save failed: ' + e.message, 'err');
+      if (e.name !== 'AbortError') {
+        setSaveStatus('unsaved');
+        setStatus('Save failed: ' + e.message, 'err');
+      } else {
+        setSaveStatus('unsaved');
+      }
     }
   } else {
     // Firefox/Safari fallback: download as file
     const blob = new Blob([json], { type: 'application/json' });
     const link = document.createElement('a');
-    link.download = STORY_FILE;
+    link.download = suggestedName + '.json';
     link.href = URL.createObjectURL(blob);
     link.click();
     URL.revokeObjectURL(link.href);
     S.dirty = false;
     setSaveStatus('saved');
-    setStatus('Story downloaded as ' + STORY_FILE, 'ok');
+    setStatus('Story downloaded as ' + suggestedName + '.json', 'ok');
     setTimeout(() => setStatus('', ''), 2500);
     renderSlideThumbs();
   }
@@ -1986,9 +2000,11 @@ async function openStory() {
     try {
       const [fileHandle] = await window.showOpenFilePicker({
         types: [{ description: 'Story files', accept: { 'application/json': ['.json'] } }],
-        startIn: 'downloads',
+        startIn: 'documents',
       });
       file = await fileHandle.getFile();
+      S.fileHandle = fileHandle; // Keep handle for auto-save
+      await idbSet('storysketch_fileHandle', fileHandle);
     } catch (e) {
       if (e.name !== 'AbortError') setStatus('Could not open file: ' + e.message, 'err');
       return;
@@ -2228,22 +2244,21 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // No URL params — try to auto-resume last worked story from disk
+  // No URL params — try to auto-resume last worked story from file
   try {
-    const handle = await idbGet('storysketch_dirHandle');
-    if (handle) {
-      const perm = await handle.queryPermission({ mode: 'readwrite' });
+    const fh = await idbGet('storysketch_fileHandle');
+    if (fh) {
+      const perm = await fh.queryPermission({ mode: 'readwrite' });
       if (perm === 'granted') {
-        S.dirHandle = handle;
-        const json = await readFile(STORY_FILE);
-        if (json) {
-          const d = JSON.parse(json);
-          if (d?.v >= 4) {
-            await loadStoryData(d);
-            setStatus(`Resumed "${d.title}" from ${handle.name}`, 'ok');
-            setTimeout(() => setStatus('', ''), 3000);
-            return;
-          }
+        S.fileHandle = fh;
+        const file = await fh.getFile();
+        const json = await file.text();
+        const d = JSON.parse(json);
+        if (d?.v >= 4) {
+          await loadStoryData(d);
+          setStatus(`Resumed "${d.title}" from ${fh.name}`, 'ok');
+          setTimeout(() => setStatus('', ''), 3000);
+          return;
         }
       }
     }
@@ -2251,12 +2266,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     console.log('[Storybook] auto-resume skipped:', e.message);
   }
 
-  const lastFolder = localStorage.getItem(SAVE_KEY + 'lastFolder');
-  if (lastFolder) {
-    setStatus(`Click Open to reload your story from "${lastFolder}"`, 'info');
-  } else {
-    setStatus('Click Save to choose a project folder', 'info');
-  }
+  setStatus('Click Save to save your story, or Open to load one', 'info');
   setTimeout(() => setStatus('', ''), 4000);
 });
 </script>
