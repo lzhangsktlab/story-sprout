@@ -1092,87 +1092,7 @@ const S = {
    FILE SYSTEM HELPERS
 ═══════════════════════════════════════════════ */
 
-// Ask user to pick (or create) a project folder — called once per session
-async function ensureFolder() {
-  if (S.dirHandle) return S.dirHandle;
-
-  // Try to restore handle from IndexedDB
-  const saved = await idbGet('storysketch_dirHandle');
-  if (saved) {
-    // Verify we still have permission
-    const perm = await saved.queryPermission({ mode: 'readwrite' });
-    if (perm === 'granted') { S.dirHandle = saved; return S.dirHandle; }
-    const req  = await saved.requestPermission({ mode: 'readwrite' });
-    if (req === 'granted')  { S.dirHandle = saved; return S.dirHandle; }
-  }
-
-  // Show picker
-  setStatus('Select a FOLDER to save your story into (story.json will be created inside it)', 'info');
-  try {
-    S.dirHandle = await window.showDirectoryPicker({
-      id: 'storysketch',
-      mode: 'readwrite',
-      startIn: 'documents',
-    });
-    await idbSet('storysketch_dirHandle', S.dirHandle);
-    setStatus('Project folder set: ' + S.dirHandle.name, 'ok');
-    setTimeout(() => setStatus('', ''), 3000);
-    return S.dirHandle;
-  } catch (e) {
-    if (e.name !== 'AbortError') setStatus('Could not open folder: ' + e.message, 'err');
-    else setStatus('', '');
-    return null;
-  }
-}
-
-// Write a file into the project folder
-async function writeFile(filename, content /* string or Uint8Array */) {
-  const dir = await ensureFolder();
-  if (!dir) throw new Error('No project folder selected');
-  const fh = await dir.getFileHandle(filename, { create: true });
-  const w  = await fh.createWritable();
-  await w.write(content);
-  await w.close();
-}
-
-// Read a file from the project folder — returns string or null
-async function readFile(filename) {
-  const dir = await ensureFolder();
-  if (!dir) return null;
-  try {
-    const fh   = await dir.getFileHandle(filename);
-    const file = await fh.getFile();
-    return await file.text();
-  } catch { return null; }
-}
-
-// Read a file as a data URL (for images)
-async function readFileAsDataUrl(filename) {
-  const dir = await ensureFolder();
-  if (!dir) return null;
-  try {
-    const fh   = await dir.getFileHandle(filename);
-    const file = await fh.getFile();
-    return new Promise(res => {
-      const r = new FileReader();
-      r.onload = () => res(r.result);
-      r.onerror = () => res(null);
-      r.readAsDataURL(file);
-    });
-  } catch { return null; }
-}
-
-// Save a base64 image to the folder, return the filename
-async function saveImageToFolder(dataUrl, id) {
-  const filename = `image_${id}.jpg`;
-  // Convert data URL → Uint8Array
-  const base64 = dataUrl.split(',')[1];
-  const binary  = atob(base64);
-  const bytes   = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  await writeFile(filename, bytes);
-  return filename;
-}
+// (Folder-based functions removed — all persistence is now file-based via showSaveFilePicker/showOpenFilePicker)
 
 /* ═══════════════════════════════════════════════
    INDEXEDDB — for persisting the directory handle
@@ -1269,21 +1189,7 @@ async function saveCurrentSlide(withThumb = true) {
   const s = S.slides[S.cur];
   const parsed = S.canvas.toJSON(['id', 'selectable']);
 
-  // Also save images as separate files if we have folder access (for convenience)
-  if (parsed.objects && S.dirHandle) {
-    for (const obj of parsed.objects) {
-      if (obj.type === 'image' && obj.src?.startsWith('data:')) {
-        const id = obj.id || ('img_' + Math.random().toString(36).slice(2, 9));
-        obj.id = id;
-        if (!S.imgMap[id]) {
-          const filename = await saveImageToFolder(obj.src, id);
-          S.imgMap[id] = filename;
-        }
-      }
-    }
-  }
-
-  // Keep images as base64 inline in JSON so the file is self-contained
+  // Images stay as base64 inline in JSON — file is self-contained
   s.json   = JSON.stringify(parsed);
   s.imgMap = { ...S.imgMap };
 
@@ -1924,7 +1830,7 @@ function newStory() {
   updateSlideLabel();
   renderSlideThumbs();
   setSaveStatus('unsaved');
-  setStatus('New story — click Save to choose a folder', 'info');
+  setStatus('New story — click Save to name your file', 'info');
   setTimeout(() => setStatus('', ''), 3000);
 }
 
@@ -2066,7 +1972,7 @@ async function loadStoryData(d) {
   renderSlideThumbs();
   setSaveStatus('saved');
   S.dirty = false;
-  setStatus(`Opened "${d.title}" from ${S.dirHandle?.name || 'folder'}`, 'ok');
+  setStatus(`Opened "${d.title}"`, 'ok');
   setTimeout(() => setStatus('', ''), 3000);
 }
 
