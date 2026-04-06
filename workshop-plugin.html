@@ -2099,7 +2099,7 @@ function setStatus(msg, cls) {
 ═══════════════════════════════════════════════ */
 function wireButtons() {
   // Top bar
-  document.getElementById('tb-back-btn').onclick     = () => { window.close(); history.back(); };
+  document.getElementById('tb-back-btn').onclick     = () => { history.back(); };
   document.getElementById('tb-new-btn').onclick      = newStory;
   document.getElementById('tb-save-btn').onclick    = saveStory;
   document.getElementById('tb-open-btn').onclick    = openStory;
