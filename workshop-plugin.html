@@ -1103,8 +1103,9 @@ html, body {
 ═══════════════════════════════════════════════ */
 const CANVAS_W = 800;
 const CANVAS_H = 540;
-const SAVE_KEY  = 'storysketch_v4_';   // localStorage key prefix for story JSON
-const STORY_FILE = 'story.json';        // filename inside the project folder
+const SAVE_KEY  = 'storysketch_v4_';
+const STORY_FILE = 'story.json';
+const SESSION_START = new Date().toISOString();
 
 /* ═══════════════════════════════════════════════
    STATE
@@ -1224,7 +1225,7 @@ function updateZoomLabel() {
 ═══════════════════════════════════════════════ */
 async function saveCurrentSlide(withThumb = true) {
   const s = S.slides[S.cur];
-  const parsed = S.canvas.toJSON(['id', 'selectable']);
+  const parsed = S.canvas.toJSON(['id', 'selectable', 'historyId']);
 
   // Images stay as base64 inline in JSON — file is self-contained
   s.json   = JSON.stringify(parsed);
@@ -1323,7 +1324,7 @@ function updateSlideLabel() {
 ═══════════════════════════════════════════════ */
 function pushHistory() {
   if (S.supressHist) return;
-  const snap = JSON.stringify(S.canvas.toJSON(['id', 'selectable']));
+  const snap = JSON.stringify(S.canvas.toJSON(['id', 'selectable', 'historyId']));
   S.history[S.cur].push(snap);
   S.redo[S.cur] = [];
   if (S.history[S.cur].length > 50) S.history[S.cur].shift();
@@ -1334,7 +1335,7 @@ function pushHistory() {
 function undo() {
   const h = S.history[S.cur];
   if (!h.length) return;
-  const cur = JSON.stringify(S.canvas.toJSON(['id', 'selectable']));
+  const cur = JSON.stringify(S.canvas.toJSON(['id', 'selectable', 'historyId']));
   S.redo[S.cur].push(cur);
   const snap = h.pop();
   S.supressHist = true;
@@ -1451,7 +1452,7 @@ function addImageFromUrl(url) {
   }, { crossOrigin: 'anonymous' });
 }
 
-function addImageSrc(src) {
+function addImageSrc(src, historyId) {
   // handles both URLs and base64
   let normalised = src;
   if (!src.startsWith('http') && !src.startsWith('data:')) {
@@ -1459,19 +1460,20 @@ function addImageSrc(src) {
   }
   fabric.Image.fromURL(normalised, img => {
     if (!img) { setStatus('Could not render image', 'err'); return; }
-    scaleAndPlace(img);
+    scaleAndPlace(img, historyId);
     flashCanvas();
     setStatus('Image added to canvas', 'ok');
     setTimeout(() => setStatus('', ''), 2500);
   });
 }
 
-function scaleAndPlace(img) {
+function scaleAndPlace(img, historyId) {
   const maxW = CANVAS_W * 0.55;
   const maxH = CANVAS_H * 0.55;
   const scale = Math.min(1, maxW / img.width, maxH / img.height);
   img.set({
     id: makeId(),
+    historyId: historyId || null,
     left: 40 + Math.random() * 60,
     top:  40 + Math.random() * 40,
     scaleX: scale, scaleY: scale,
@@ -1482,13 +1484,24 @@ function scaleAndPlace(img) {
   S.canvas.renderAll();
 }
 
+function logRemoval(obj) {
+  if (obj.historyId) {
+    const item = aiHistory.find(h => h.historyId === obj.historyId);
+    if (item) {
+      item.actions = item.actions || [];
+      item.actions.push({ type: 'removed_from_canvas', at: new Date().toISOString(), slideIdx: S.cur });
+    }
+  }
+}
+
 function deleteSelected() {
   const obj = S.canvas.getActiveObject();
   if (!obj) return;
   if (obj.type === 'activeSelection') {
-    obj.getObjects().forEach(o => S.canvas.remove(o));
+    obj.getObjects().forEach(o => { logRemoval(o); S.canvas.remove(o); });
     S.canvas.discardActiveObject();
   } else {
+    logRemoval(obj);
     S.canvas.remove(obj);
   }
   S.canvas.renderAll();
@@ -1745,7 +1758,11 @@ async function generateAiImage() {
     prevImg.style.display = 'block';
     prevImg.src = dataUrl;
     S.aiImgSrc = dataUrl;
-    addToHistory(dataUrl, prompt);
+    const parentId = (aiSelectedIdx >= 0 && aiHistory[aiSelectedIdx]) ? aiHistory[aiSelectedIdx].historyId : null;
+    addToHistory(dataUrl, prompt, {
+      style_preset: document.getElementById('ai-style-select').value,
+      quality: document.getElementById('ai-quality-select').value,
+    }, parentId);
 
   } catch (err) {
     spinner.classList.remove('active');
@@ -1765,9 +1782,16 @@ function showAiError(msg) {
 }
 
 /* ── History strip ── */
-function addToHistory(dataUrl, prompt) {
-  aiHistory.unshift({ dataUrl, prompt });
-  if (aiHistory.length > 20) aiHistory.pop(); // cap at 20
+function addToHistory(dataUrl, prompt, settings = {}, parentId = null) {
+  aiHistory.unshift({
+    historyId: 'ai_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    dataUrl, prompt,
+    timestamp: new Date().toISOString(),
+    settings,
+    parentId,
+    actions: [],
+  });
+  if (aiHistory.length > 20) aiHistory.pop();
   aiSelectedIdx = 0;
   renderHistoryStrip();
 }
@@ -1916,9 +1940,14 @@ async function saveStory() {
   const suggestedName = storyTitle.replace(/[^a-zA-Z0-9 _-]/g, '').trim() || 'My Story';
 
   const data = {
-    v:      4,
+    v:      5,
     title:  storyTitle,
     saved:  Date.now(),
+    session: {
+      startedAt: SESSION_START,
+      savedAt: new Date().toISOString(),
+      totalSlides: S.slides.length,
+    },
     imgMap: S.imgMap,
     storyText: storyTextLines,
     aiHistory: aiHistory,
@@ -2156,7 +2185,16 @@ function wireButtons() {
   document.getElementById('ai-generate-btn').onclick  = generateAiImage;
   document.getElementById('ai-improve-btn').onclick   = generateAiImage;
   document.getElementById('ai-add-canvas-btn').onclick = () => {
-    if (S.aiImgSrc) { addImageSrc(S.aiImgSrc); closeAiDrawer(); }
+    if (S.aiImgSrc) {
+      const histItem = (aiSelectedIdx >= 0) ? aiHistory[aiSelectedIdx] : null;
+      addImageSrc(S.aiImgSrc, histItem?.historyId);
+      if (histItem) {
+        histItem.actions = histItem.actions || [];
+        histItem.actions.push({ type: 'added_to_canvas', at: new Date().toISOString(), slideIdx: S.cur });
+      }
+      closeAiDrawer();
+      markDirty();
+    }
   };
   document.getElementById('ai-prompt-input').addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generateAiImage(); }
