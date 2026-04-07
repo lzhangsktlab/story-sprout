@@ -897,6 +897,11 @@ html, body {
       Save
     </button>
 
+    <button class="tb-btn tb-btn-icon" id="tb-saveas-btn" title="Save as new file">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 2h8l3 3v9a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M5 2v4h6V2M5 9h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Save As
+    </button>
+
     <button class="tb-btn tb-btn-ghost" id="tb-export-btn">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3M3 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Export PNG
@@ -1932,44 +1937,56 @@ function newStory() {
   setTimeout(() => setStatus('', ''), 3000);
 }
 
-async function saveStory() {
-  setSaveStatus('saving');
+async function buildStoryJson() {
   await saveCurrentSlide(true);
-
   const storyTitle = document.getElementById('story-title-input').value.trim() || 'My Story';
-  const suggestedName = storyTitle.replace(/[^a-zA-Z0-9 _-]/g, '').trim() || 'My Story';
-
-  const data = {
-    v:      5,
-    title:  storyTitle,
-    saved:  Date.now(),
-    session: {
-      startedAt: SESSION_START,
-      savedAt: new Date().toISOString(),
-      totalSlides: S.slides.length,
-    },
-    imgMap: S.imgMap,
-    storyText: storyTextLines,
-    aiHistory: aiHistory,
-    slides: S.slides.map(s => ({
-      json:   s.json  || null,
-      thumb:  s.thumb || null,
-      imgMap: s.imgMap || {},
-    })),
+  return {
+    storyTitle,
+    suggestedName: storyTitle.replace(/[^a-zA-Z0-9 _-]/g, '').trim() || 'My Story',
+    json: JSON.stringify({
+      v:      5,
+      title:  storyTitle,
+      saved:  Date.now(),
+      session: { startedAt: SESSION_START, savedAt: new Date().toISOString(), totalSlides: S.slides.length },
+      imgMap: S.imgMap,
+      storyText: storyTextLines,
+      aiHistory: aiHistory,
+      slides: S.slides.map(s => ({ json: s.json || null, thumb: s.thumb || null, imgMap: s.imgMap || {} })),
+    }, null, 2),
   };
+}
 
-  const json = JSON.stringify(data, null, 2);
+async function saveStory() {
+  // Save to current file, or prompt for new file if none exists
+  if (!S.fileHandle) return saveStoryAs();
+  setSaveStatus('saving');
+  const { json } = await buildStoryJson();
+  try {
+    const writable = await S.fileHandle.createWritable();
+    await writable.write(json);
+    await writable.close();
+    S.dirty = false;
+    setSaveStatus('saved');
+    setStatus(`Saved "${S.fileHandle.name}"`, 'ok');
+    setTimeout(() => setStatus('', ''), 2500);
+    renderSlideThumbs();
+  } catch (e) {
+    setSaveStatus('unsaved');
+    setStatus('Save failed: ' + e.message, 'err');
+  }
+}
+
+async function saveStoryAs() {
+  setSaveStatus('saving');
+  const { suggestedName, json } = await buildStoryJson();
 
   if (window.showSaveFilePicker) {
-    // Chrome/Edge: save as file with name
     try {
-      if (!S.fileHandle) {
-        S.fileHandle = await window.showSaveFilePicker({
-          suggestedName: suggestedName + '.json',
-          types: [{ description: 'Story files', accept: { 'application/json': ['.json'] } }],
-          startIn: 'documents',
-        });
-      }
+      S.fileHandle = await window.showSaveFilePicker({
+        suggestedName: suggestedName + '.json',
+        types: [{ description: 'Story files', accept: { 'application/json': ['.json'] } }],
+        startIn: 'documents',
+      });
       const writable = await S.fileHandle.createWritable();
       await writable.write(json);
       await writable.close();
@@ -2131,6 +2148,7 @@ function wireButtons() {
   document.getElementById('tb-back-btn').onclick     = () => { history.back(); };
   document.getElementById('tb-new-btn').onclick      = newStory;
   document.getElementById('tb-save-btn').onclick    = saveStory;
+  document.getElementById('tb-saveas-btn').onclick  = saveStoryAs;
   document.getElementById('tb-open-btn').onclick    = openStory;
   document.getElementById('tb-export-btn').onclick  = exportCurrentSlide;
   document.getElementById('tb-story-text-btn').onclick = toggleStoryTextPanel;
