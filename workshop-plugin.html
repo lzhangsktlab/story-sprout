@@ -1884,14 +1884,21 @@ function markDirty() {
   scheduleAutoSave();
 }
 
-// Auto-save to disk every 5 seconds (only if a file handle is set)
+// Auto-save every 5 seconds — to file (Chrome) or IndexedDB (Firefox)
 let autoSaveTimer = null;
 function scheduleAutoSave() {
-  if (!S.fileHandle) return;
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(async () => {
-    if (S.dirty && S.fileHandle) {
+    if (!S.dirty) return;
+    if (S.fileHandle) {
       await saveStory();
+    } else {
+      // Firefox/Safari: auto-save to IndexedDB
+      await saveCurrentSlide(true);
+      const { json } = await buildStoryJson();
+      await idbSet('storysketch_autosave', JSON.parse(json));
+      S.dirty = false;
+      setSaveStatus('saved');
     }
   }, 5000);
 }
@@ -1928,6 +1935,7 @@ function newStory() {
   aiHistory.length = 0;
   aiSelectedIdx = -1;
   renderHistoryStrip();
+  idbSet('storysketch_autosave', null);
   document.getElementById('story-title-input').value = 'My Story';
   clearPropsPanel();
   updateSlideLabel();
@@ -1957,22 +1965,35 @@ async function buildStoryJson() {
 }
 
 async function saveStory() {
-  // Save to current file, or prompt for new file if none exists
-  if (!S.fileHandle) return saveStoryAs();
-  setSaveStatus('saving');
-  const { json } = await buildStoryJson();
-  try {
-    const writable = await S.fileHandle.createWritable();
-    await writable.write(json);
-    await writable.close();
+  // Chrome: save to file. Firefox: save to IndexedDB.
+  if (S.fileHandle) {
+    setSaveStatus('saving');
+    const { json } = await buildStoryJson();
+    try {
+      const writable = await S.fileHandle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      await idbSet('storysketch_autosave', JSON.parse(json));
+      S.dirty = false;
+      setSaveStatus('saved');
+      setStatus(`Saved "${S.fileHandle.name}"`, 'ok');
+      setTimeout(() => setStatus('', ''), 2500);
+    renderSlideThumbs();
+    } catch (e) {
+      setSaveStatus('unsaved');
+      setStatus('Save failed: ' + e.message, 'err');
+    }
+  } else {
+    // Firefox/Safari: save to IndexedDB
+    setSaveStatus('saving');
+    await saveCurrentSlide(true);
+    const { json } = await buildStoryJson();
+    await idbSet('storysketch_autosave', JSON.parse(json));
     S.dirty = false;
     setSaveStatus('saved');
-    setStatus(`Saved "${S.fileHandle.name}"`, 'ok');
+    setStatus('Saved', 'ok');
     setTimeout(() => setStatus('', ''), 2500);
     renderSlideThumbs();
-  } catch (e) {
-    setSaveStatus('unsaved');
-    setStatus('Save failed: ' + e.message, 'err');
   }
 }
 
@@ -2005,16 +2026,21 @@ async function saveStoryAs() {
       }
     }
   } else {
-    // Firefox/Safari fallback: download as file
+    // Firefox/Safari fallback: prompt for filename then download
+    const filename = prompt('Save story as:', suggestedName + '.json');
+    if (!filename) { setSaveStatus('unsaved'); return; }
+    const finalName = filename.endsWith('.json') ? filename : filename + '.json';
     const blob = new Blob([json], { type: 'application/json' });
     const link = document.createElement('a');
-    link.download = suggestedName + '.json';
+    link.download = finalName;
     link.href = URL.createObjectURL(blob);
     link.click();
     URL.revokeObjectURL(link.href);
+    // Also save to IndexedDB
+    await idbSet('storysketch_autosave', JSON.parse(json));
     S.dirty = false;
     setSaveStatus('saved');
-    setStatus('Story downloaded as ' + suggestedName + '.json', 'ok');
+    setStatus('Story downloaded as ' + finalName, 'ok');
     setTimeout(() => setStatus('', ''), 2500);
     renderSlideThumbs();
   }
@@ -2296,7 +2322,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // No URL params — try to auto-resume last worked story from file
+  // No URL params — try to auto-resume last worked story
+  // Try 1: fileHandle (Chrome — reads from actual file on disk)
   try {
     const fh = await idbGet('storysketch_fileHandle');
     if (fh) {
@@ -2315,7 +2342,20 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
     }
   } catch(e) {
-    console.log('[Storybook] auto-resume skipped:', e.message);
+    console.log('[Storybook] file resume skipped:', e.message);
+  }
+
+  // Try 2: IndexedDB autosave (Firefox/Safari — reads from IndexedDB)
+  try {
+    const autosave = await idbGet('storysketch_autosave');
+    if (autosave?.v >= 4) {
+      await loadStoryData(autosave);
+      setStatus(`Resumed "${autosave.title}"`, 'ok');
+      setTimeout(() => setStatus('', ''), 3000);
+      return;
+    }
+  } catch(e) {
+    console.log('[Storybook] IndexedDB resume skipped:', e.message);
   }
 
   setStatus('Click Save to save your story, or Open to load one', 'info');
