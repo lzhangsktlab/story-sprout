@@ -70,7 +70,7 @@ export default {
         formData = new FormData();
         formData.append('image', dataUrlToBlob(body.image), 'image.png');
         formData.append('prompt', prompt);
-        formData.append('control_strength', String(body.control_strength || 0.65));
+        formData.append('control_strength', String(body.control_strength || 0.5));
         formData.append('output_format', body.output_format || 'png');
         if (body.negative_prompt) formData.append('negative_prompt', body.negative_prompt);
       } else {
