@@ -10,8 +10,8 @@
 //
 // Deploy: Cloudflare Dashboard → Workers & Pages → Edit code → Paste → Deploy
 
-const GENERATE_URL = 'https://api.stability.ai/v2beta/stable-image/generate/core';
-const INPAINT_URL  = 'https://api.stability.ai/v2beta/stable-image/edit/inpaint';
+const GENERATE_URL  = 'https://api.stability.ai/v2beta/stable-image/generate/core';
+const TRANSFORM_URL = 'https://api.stability.ai/v2beta/stable-image/control/structure';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -65,13 +65,14 @@ export default {
       let formData, targetUrl;
 
       if (url.pathname === '/edit' && body.image) {
-        // ── Image-to-image (inpaint) ──
-        targetUrl = INPAINT_URL;
+        // ── Image-to-image (control/structure) ──
+        targetUrl = TRANSFORM_URL;
         formData = new FormData();
         formData.append('image', dataUrlToBlob(body.image), 'image.png');
         formData.append('prompt', prompt);
+        formData.append('control_strength', String(body.control_strength || 0.65));
         formData.append('output_format', body.output_format || 'png');
-        if (body.style_preset) formData.append('style_preset', body.style_preset);
+        if (body.negative_prompt) formData.append('negative_prompt', body.negative_prompt);
       } else {
         // ── Text-to-image (generate) ──
         targetUrl = GENERATE_URL;
