@@ -1779,6 +1779,80 @@ async function generateAiImage() {
   }
 }
 
+/* ── Modify existing image via inpaint ── */
+async function modifyAiImage() {
+  const prompt = document.getElementById('ai-prompt-input').value.trim();
+  if (!prompt) { setStatus('Describe how to modify the image', 'err'); return; }
+  if (!S.aiImgSrc) return generateAiImage(); // fallback if no image
+
+  const genBtn     = document.getElementById('ai-generate-btn');
+  const improveBtn = document.getElementById('ai-improve-btn');
+  const addBtn     = document.getElementById('ai-add-canvas-btn');
+  const spinner    = document.getElementById('ai-spinner');
+  const prevImg    = document.getElementById('ai-preview-img');
+  const prevPH     = document.getElementById('ai-preview-placeholder');
+
+  genBtn.disabled = true;
+  improveBtn.disabled = true;
+  improveBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0M14 8l-2-2M14 8l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> Modifying…`;
+  spinner.classList.add('active');
+  addBtn.classList.remove('visible');
+  setStatus('Modifying image with Stability AI…', 'info');
+
+  try {
+    const res = await fetch(PROXY_URL + '/edit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: S.aiImgSrc,
+        prompt,
+        output_format: 'png',
+        style_preset: document.getElementById('ai-style-select').value,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+    const dataUrl = data.image;
+
+    prevImg.onload = () => {
+      spinner.classList.remove('active');
+      prevPH.style.display = 'none';
+      addBtn.classList.add('visible');
+      improveBtn.classList.add('visible');
+      genBtn.disabled = false;
+      improveBtn.disabled = false;
+      improveBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0M14 8l-2-2M14 8l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> Regenerate`;
+      setStatus('Image modified — refine or add to canvas', 'ok');
+      setTimeout(() => setStatus('', ''), 3500);
+    };
+    prevImg.onerror = () => {
+      spinner.classList.remove('active');
+      genBtn.disabled = false;
+      improveBtn.disabled = false;
+      improveBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0M14 8l-2-2M14 8l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> Regenerate`;
+      showAiError('Modified image failed to render.');
+    };
+    prevImg.style.display = 'block';
+    prevImg.src = dataUrl;
+    S.aiImgSrc = dataUrl;
+
+    const parentId = (aiSelectedIdx >= 0 && aiHistory[aiSelectedIdx]) ? aiHistory[aiSelectedIdx].historyId : null;
+    addToHistory(dataUrl, prompt, {
+      type: 'modify',
+      style_preset: document.getElementById('ai-style-select').value,
+    }, parentId);
+
+  } catch (err) {
+    spinner.classList.remove('active');
+    genBtn.disabled = false;
+    improveBtn.disabled = false;
+    improveBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0M14 8l-2-2M14 8l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> Regenerate`;
+    showAiError(err.message);
+    console.error('[StabilityAI] modify error:', err);
+  }
+}
+
 function showAiError(msg) {
   const box = document.getElementById('ai-error-box');
   document.getElementById('ai-error-msg').textContent = msg;
@@ -2227,7 +2301,7 @@ function wireButtons() {
   // AI drawer
   document.getElementById('ai-drawer-close').onclick  = closeAiDrawer;
   document.getElementById('ai-generate-btn').onclick  = generateAiImage;
-  document.getElementById('ai-improve-btn').onclick   = generateAiImage;
+  document.getElementById('ai-improve-btn').onclick   = modifyAiImage;
   document.getElementById('ai-add-canvas-btn').onclick = () => {
     if (S.aiImgSrc) {
       const histItem = (aiSelectedIdx >= 0) ? aiHistory[aiSelectedIdx] : null;
