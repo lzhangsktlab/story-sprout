@@ -1068,6 +1068,9 @@ html, body {
               <option value="draft" selected>Draft (fast)</option>
               <option value="final">Final (HD)</option>
             </select>
+            <label for="ai-strength-range" style="font-size:11px;font-weight:700;color:var(--ink3);white-space:nowrap;margin-left:8px;">Modify strength:</label>
+            <input type="range" id="ai-strength-range" min="10" max="90" value="50" step="5" style="width:80px;vertical-align:middle;cursor:pointer;">
+            <span id="ai-strength-label" style="font-size:11px;font-weight:700;color:var(--ink2);min-width:28px;">50%</span>
           </div>
         </div>
         <div id="ai-prompt-buttons">
@@ -1808,6 +1811,7 @@ async function modifyAiImage() {
         prompt,
         output_format: 'png',
         style_preset: document.getElementById('ai-style-select').value,
+        control_strength: (100 - parseInt(document.getElementById('ai-strength-range').value)) / 100,
       }),
     });
 
@@ -2314,6 +2318,9 @@ function wireButtons() {
       markDirty();
     }
   };
+  document.getElementById('ai-strength-range').addEventListener('input', e => {
+    document.getElementById('ai-strength-label').textContent = e.target.value + '%';
+  });
   document.getElementById('ai-prompt-input').addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generateAiImage(); }
   });
