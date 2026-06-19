@@ -408,6 +408,88 @@ html, body {
 }
 .props-empty svg { opacity: .4; }
 
+/* Pip Panel — conversational illustrator */
+#pip-panel {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--white);
+  border-left: 1.5px solid var(--border);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+#pip-panel.open { display: flex; }
+.pip-header {
+  padding: 10px 14px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink3);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  position: relative;
+}
+.pip-close {
+  position: absolute;
+  top: 6px;
+  right: 11px;
+  background: none; border: none; cursor: pointer; font-size: 16px;
+  color: var(--ink3); font-weight: 700; line-height: 1;
+}
+.pip-close:hover { color: var(--ink); }
+#pip-transcript {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#pip-transcript::-webkit-scrollbar { width: 4px; }
+#pip-transcript::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+.pip-msg {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+.pip-msg.pip  { align-self: flex-start; background: var(--purple-bg); color: var(--ink); border-bottom-left-radius: 4px; }
+.pip-msg.user { align-self: flex-end; background: var(--purple); color: #fff; border-bottom-right-radius: 4px; }
+.pip-msg img  { max-width: 100%; border-radius: var(--radius-sm); margin-top: 6px; display: block; }
+.pip-input-row {
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#pip-input {
+  flex: 1;
+  resize: none;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--ink);
+}
+#pip-input:focus { outline: none; border-color: var(--purple-light); }
+#pip-send {
+  background: var(--purple);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0 14px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: var(--font);
+}
+#pip-send:hover { background: var(--purple-dark); }
+
 /* Story Text Panel */
 #story-text-panel {
   width: 240px;
@@ -874,6 +956,11 @@ html, body {
       Story Text
     </button>
 
+    <button class="tb-btn tb-btn-primary" id="tb-pip-btn" title="Toggle Pip the illustrator">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 3.5L13 7l-3.5 1.5L8 12l-1.5-3.5L3 7l3.5-1.5L8 2z" fill="currentColor"/></svg>
+      Pip
+    </button>
+
     <div class="tb-spacer"></div>
 
     <div id="save-status">
@@ -1013,6 +1100,19 @@ html, body {
         </div>
       </div>
       <div class="story-text-hint">Click a line to copy to clipboard</div>
+    </div>
+
+    <!-- PIP PANEL — conversational illustrator -->
+    <div id="pip-panel">
+      <div class="pip-header">
+        Pip — Your Illustrator
+        <button class="pip-close" id="pip-close" title="Close">×</button>
+      </div>
+      <div id="pip-transcript"></div>
+      <div class="pip-input-row">
+        <textarea id="pip-input" rows="2" placeholder="Tell Pip what to draw…"></textarea>
+        <button id="pip-send">Send</button>
+      </div>
     </div>
 
     <!-- AI DRAWER — spans full width of #main -->
@@ -2247,6 +2347,42 @@ function setStatus(msg, cls) {
 /* ═══════════════════════════════════════════════
    RIBBON & BUTTON WIRING
 ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   PIP — CONVERSATIONAL ILLUSTRATOR  (UI only for now;
+   not yet wired to OpenAI — that comes once the key is added)
+═══════════════════════════════════════════════ */
+let pipSeeded = false;
+const PIP_GREETING = "Hi, I'm Pip, your illustrator. Tell me what you'd like me to draw!";
+
+function togglePipPanel() {
+  document.getElementById('pip-panel').classList.toggle('open');
+  pipEnsureGreeting();
+}
+function pipEnsureGreeting() {
+  if (pipSeeded) return;
+  pipSeeded = true;
+  pipRenderMessage('pip', PIP_GREETING);
+}
+function pipRenderMessage(role, text) {
+  const t = document.getElementById('pip-transcript');
+  const div = document.createElement('div');
+  div.className = 'pip-msg ' + (role === 'user' ? 'user' : 'pip');
+  div.textContent = text;
+  t.appendChild(div);
+  t.scrollTop = t.scrollHeight;
+}
+function pipSubmit() {
+  const inp = document.getElementById('pip-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  pipRenderMessage('user', text);
+  // Placeholder reply — Pip isn't connected to OpenAI yet.
+  setTimeout(() => {
+    pipRenderMessage('pip', "I'm not connected yet — once my OpenAI key is added, I'll be able to draw for you!");
+  }, 300);
+}
+
 function wireButtons() {
   // Top bar
   document.getElementById('tb-back-btn').onclick     = () => { history.back(); };
@@ -2259,6 +2395,14 @@ function wireButtons() {
   document.getElementById('story-text-close').onclick = () => {
     document.getElementById('story-text-panel').classList.remove('open');
   };
+  document.getElementById('tb-pip-btn').onclick = togglePipPanel;
+  document.getElementById('pip-close').onclick = () => {
+    document.getElementById('pip-panel').classList.remove('open');
+  };
+  document.getElementById('pip-send').onclick = pipSubmit;
+  document.getElementById('pip-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); pipSubmit(); }
+  });
 
   // Ribbon - Insert
   document.getElementById('rib-text').onclick = addTextBox;
