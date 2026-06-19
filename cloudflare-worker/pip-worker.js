@@ -24,17 +24,63 @@ const IMAGE_EDIT_URL = 'https://api.openai.com/v1/images/edits';
 const CHAT_MODEL  = 'gpt-4o-mini';   // conversation: fast + cheap
 const IMAGE_MODEL = 'gpt-image-1';   // illustration generation
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+// ── CORS: locked to this app's origins ───────────────────────────────────────
+// The live site plus local testing. To fully lock down, remove the localhost /
+// 'null' entries (those exist so you can test from a local server or file://).
+const ALLOWED_ORIGINS = [
+  'https://lzhangsktlab.github.io',
+];
+function isAllowedOrigin(origin) {
+  if (!origin) return true;                                   // non-browser (e.g. curl) — no Origin header
+  if (origin === 'null') return true;                         // file:// local testing
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;  // local dev server
+  return false;
+}
+function corsHeaders(origin) {
+  // Echo the origin when allowed; otherwise pin to the canonical site so a
+  // disallowed browser origin fails the CORS check.
+  const allow = isAllowedOrigin(origin) ? (origin || '*') : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allow,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Vary': 'Origin',
+  };
+}
+// Attach CORS headers to a Response produced by a handler.
+function withCors(resp, cors) {
+  const headers = new Headers(resp.headers);
+  for (const [k, v] of Object.entries(cors)) headers.set(k, v);
+  return new Response(resp.body, { status: resp.status, headers });
+}
 
 function jsonResponse(data, status = 200) {
+  // CORS is added centrally by withCors() in fetch(); here we set Content-Type.
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
   });
+}
+
+// ── Rate limiting: gentle anti-spam, per client IP ───────────────────────────
+// In-memory sliding window. Note: a Worker may run several isolates, so this is
+// best-effort (per isolate) rather than globally exact — enough to stop a single
+// source hammering the API, without blocking normal kid-paced use.
+const RATE_LIMIT = 40;          // max requests…
+const RATE_WINDOW_MS = 60_000;  // …per 60 seconds, per IP
+const rateHits = new Map();     // ip -> [timestamps]
+function isRateLimited(ip) {
+  const now = Date.now();
+  const recent = (rateHits.get(ip) || []).filter(t => now - t < RATE_WINDOW_MS);
+  recent.push(now);
+  rateHits.set(ip, recent);
+  if (rateHits.size > 5000) {    // opportunistic cleanup to bound memory
+    for (const [k, v] of rateHits) {
+      if (!v.length || now - v[v.length - 1] > RATE_WINDOW_MS) rateHits.delete(k);
+    }
+  }
+  return recent.length > RATE_LIMIT;
 }
 
 // Convert a base64 data URL (data:image/png;base64,...) into a Blob for upload.
@@ -218,21 +264,35 @@ async function handleImageEdit(body, env) {
 
 export default {
   async fetch(request, env) {
+    const origin = request.headers.get('Origin');
+    const cors = corsHeaders(origin);
+
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: CORS_HEADERS });
+      return new Response(null, { headers: cors });
     }
     if (request.method !== 'POST') {
-      return jsonResponse({ error: 'POST required' }, 405);
+      return withCors(jsonResponse({ error: 'POST required' }, 405), cors);
+    }
+
+    // Gentle anti-spam guard.
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    if (isRateLimited(ip)) {
+      return withCors(
+        jsonResponse({ error: 'Too many requests — please slow down and try again in a moment.' }, 429),
+        cors,
+      );
     }
 
     const url = new URL(request.url);
     try {
       const body = await request.json();
-      if (url.pathname === '/image') return await handleImage(body, env);
-      if (url.pathname === '/image-edit') return await handleImageEdit(body, env);
-      return await handleChat(body, env);   // default + /chat
+      let resp;
+      if (url.pathname === '/image')           resp = await handleImage(body, env);
+      else if (url.pathname === '/image-edit') resp = await handleImageEdit(body, env);
+      else                                     resp = await handleChat(body, env);  // default + /chat
+      return withCors(resp, cors);
     } catch (err) {
-      return jsonResponse({ error: err.message }, 500);
+      return withCors(jsonResponse({ error: err.message }, 500), cors);
     }
   },
 };
