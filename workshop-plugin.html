@@ -460,6 +460,7 @@ html, body {
 .pip-msg.pip  { align-self: flex-start; background: var(--purple-bg); color: var(--ink); border-bottom-left-radius: 4px; }
 .pip-msg.user { align-self: flex-end; background: var(--purple); color: #fff; border-bottom-right-radius: 4px; }
 .pip-msg img  { max-width: 100%; border-radius: var(--radius-sm); margin-top: 6px; display: block; }
+.pip-msg.pip-typing { opacity: 0.6; font-style: italic; }
 .pip-input-row {
   display: flex;
   gap: 6px;
@@ -489,6 +490,7 @@ html, body {
   font-family: var(--font);
 }
 #pip-send:hover { background: var(--purple-dark); }
+#pip-send:disabled { opacity: 0.5; cursor: default; }
 
 /* Story Text Panel */
 #story-text-panel {
@@ -1142,7 +1144,7 @@ html, body {
           <div id="ai-error-msg" style="font-size:13px;font-weight:700;color:#c0392b;line-height:1.6;max-width:400px;word-break:break-word;"></div>
           <button onclick="document.getElementById('ai-error-box').style.display='none';document.getElementById('ai-preview-placeholder').style.display='flex';" style="padding:6px 16px;background:#E05555;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">Dismiss</button>
         </div>
-        <img id="ai-preview-img" alt="Generated image">
+        <img id="ai-preview-img" alt="Generated image" style="display:none;">
         <div id="ai-spinner">
           <div class="spinner-ring"></div>
           <div id="ai-spinner-label">Generating your image…</div>
@@ -1168,9 +1170,14 @@ html, body {
               <option value="draft" selected>Draft (fast)</option>
               <option value="final">Final (HD)</option>
             </select>
-            <label for="ai-strength-range" style="font-size:11px;font-weight:700;color:var(--ink3);white-space:nowrap;margin-left:8px;">Modify strength:</label>
-            <input type="range" id="ai-strength-range" min="10" max="90" value="50" step="5" style="width:80px;vertical-align:middle;cursor:pointer;">
-            <span id="ai-strength-label" style="font-size:11px;font-weight:700;color:var(--ink2);min-width:28px;">50%</span>
+            <!-- Modify-strength control: hidden for OpenAI (no strength param).
+                 Markup + JS kept intact; remove display:none to re-enable for a
+                 Stability-style model that supports control_strength. -->
+            <span id="ai-strength-control" style="display:none;align-items:center;gap:6px;">
+              <label for="ai-strength-range" style="font-size:11px;font-weight:700;color:var(--ink3);white-space:nowrap;margin-left:8px;">Modify strength:</label>
+              <input type="range" id="ai-strength-range" min="10" max="90" value="50" step="5" style="width:80px;vertical-align:middle;cursor:pointer;">
+              <span id="ai-strength-label" style="font-size:11px;font-weight:700;color:var(--ink2);min-width:28px;">50%</span>
+            </span>
           </div>
         </div>
         <div id="ai-prompt-buttons">
@@ -1786,10 +1793,11 @@ function clearPropsPanel() {
 }
 
 /* ═══════════════════════════════════════════════
-   AI IMAGE DRAWER — STABILITY AI
+   AI IMAGE DRAWER — OpenAI (gpt-image-1)
+   Uses the same Cloudflare Worker proxy as Pip
+   (PIP_PROXY_URL, defined below) — /image and
+   /image-edit. API key stays server-side.
 ═══════════════════════════════════════════════ */
-// Cloudflare Worker proxy — API key is stored server-side, never exposed here
-const PROXY_URL = 'https://stability-proxy.lzhang688.workers.dev';
 
 // Image generation history [{dataUrl, prompt}]
 const aiHistory = [];
@@ -1798,7 +1806,25 @@ let aiSelectedIdx = -1;
 function openAiDrawer() { document.getElementById('ai-drawer').classList.add('open'); }
 function closeAiDrawer() { document.getElementById('ai-drawer').classList.remove('open'); }
 
-/* ── Generate via Stability AI ── */
+// OpenAI has no style_preset param, so fold the dropdown choice into the prompt.
+const AI_STYLE_TEXT = {
+  'digital-art':  'digital art',
+  'comic-book':   'comic book art',
+  'fantasy-art':  'fantasy art',
+  'photographic': 'realistic photographic',
+  'cinematic':    'cinematic',
+};
+function aiStyledPrompt(prompt) {
+  const sel = document.getElementById('ai-style-select').value;
+  const style = AI_STYLE_TEXT[sel] || sel.replace(/-/g, ' ');
+  return `${prompt}. Art style: ${style}. 16:9 landscape composition.`;
+}
+// Draft = fast/low, Final = best/high.
+function aiQuality() {
+  return document.getElementById('ai-quality-select').value === 'final' ? 'high' : 'low';
+}
+
+/* ── Generate via OpenAI (text-to-image) ── */
 async function generateAiImage() {
   const prompt = document.getElementById('ai-prompt-input').value.trim();
   if (!prompt) { setStatus('Please describe the image you want', 'err'); return; }
@@ -1819,26 +1845,24 @@ async function generateAiImage() {
   prevImg.style.display = 'none';
   prevPH.style.display  = 'flex';
   S.aiImgSrc = null;
-  setStatus('Generating image with Stability AI…', 'info');
+  setStatus('Generating image with OpenAI…', 'info');
 
   try {
-    const isFinal = document.getElementById('ai-quality-select').value === 'final';
-
-    const res = await fetch(PROXY_URL, {
+    const res = await fetch(PIP_PROXY_URL + '/image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        prompt,
-        output_format: 'png',
-        aspect_ratio: '16:9',
-        style_preset: document.getElementById('ai-style-select').value,
-        cfg_scale: isFinal ? 7 : 5,
-        steps: isFinal ? 30 : 15,
+        prompt: aiStyledPrompt(prompt),
+        quality: aiQuality(),
+        size: '1536x1024',
       }),
     });
 
     const data = await res.json();
 
+    if (data.blocked) {
+      throw new Error("That request can't be drawn — try describing something else.");
+    }
     if (!res.ok || data.error) {
       throw new Error(data.error || `HTTP ${res.status}`);
     }
@@ -1878,11 +1902,11 @@ async function generateAiImage() {
     genBtn.disabled = false;
     genBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11l-1.5-3.5L3 6l3.5-1.5L8 1z" fill="currentColor"/></svg> Generate Image`;
     showAiError(err.message);
-    console.error('[StabilityAI] error:', err);
+    console.error('[OpenAI image] error:', err);
   }
 }
 
-/* ── Modify existing image via inpaint ── */
+/* ── Modify existing image via OpenAI (image-to-image edit) ── */
 async function modifyAiImage() {
   const prompt = document.getElementById('ai-prompt-input').value.trim();
   if (!prompt) { setStatus('Describe how to modify the image', 'err'); return; }
@@ -1900,22 +1924,22 @@ async function modifyAiImage() {
   improveBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0M14 8l-2-2M14 8l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> Modifying…`;
   spinner.classList.add('active');
   addBtn.classList.remove('visible');
-  setStatus('Modifying image with Stability AI…', 'info');
+  setStatus('Modifying image with OpenAI…', 'info');
 
   try {
-    const res = await fetch(PROXY_URL + '/edit', {
+    const res = await fetch(PIP_PROXY_URL + '/image-edit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         image: S.aiImgSrc,
-        prompt,
-        output_format: 'png',
-        style_preset: document.getElementById('ai-style-select').value,
-        control_strength: (100 - parseInt(document.getElementById('ai-strength-range').value)) / 100,
+        prompt: aiStyledPrompt(prompt),
+        quality: aiQuality(),
+        size: '1536x1024',
       }),
     });
 
     const data = await res.json();
+    if (data.blocked) throw new Error("That change can't be drawn — try describing it differently.");
     if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
     const dataUrl = data.image;
 
@@ -1953,7 +1977,7 @@ async function modifyAiImage() {
     improveBtn.disabled = false;
     improveBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0M14 8l-2-2M14 8l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> Regenerate`;
     showAiError(err.message);
-    console.error('[StabilityAI] modify error:', err);
+    console.error('[OpenAI image] modify error:', err);
   }
 }
 
@@ -2348,11 +2372,72 @@ function setStatus(msg, cls) {
    RIBBON & BUTTON WIRING
 ═══════════════════════════════════════════════ */
 /* ═══════════════════════════════════════════════
-   PIP — CONVERSATIONAL ILLUSTRATOR  (UI only for now;
-   not yet wired to OpenAI — that comes once the key is added)
+   PIP — CONVERSATIONAL ILLUSTRATOR
+   Chats via OpenAI (Cloudflare Worker proxy) and
+   generates an illustration when the user asks for it.
 ═══════════════════════════════════════════════ */
+const PIP_PROXY_URL = 'https://storysprout-pip.jackwangxyw.workers.dev';
 let pipSeeded = false;
-const PIP_GREETING = "Hi, I'm Pip, your illustrator. Tell me what you'd like me to draw!";
+let pipBusy = false;
+const pipMessages = [];   // OpenAI-format history: {role:'user'|'assistant', content}
+const PIP_GREETING = "Hi, I'm Pip, your virtual illustrator. Tell me what you want me to draw, and I'll make a picture for your story. After I draw it, you can tell me what to keep or change.";
+// Post-image reflection check (PIP_SCOPE.md §3) — rotated for variety.
+const PIP_IMAGE_CHECKS = [
+  "Is this the picture you imagined?",
+  "Does this match what you pictured?",
+  "Is this what you wanted?",
+  "Does this look like the scene you imagined?",
+];
+let pipImageCount = 0;
+// Track Pip's canvas images so revisions sit BESIDE the old one (for comparison)
+// and so Pip can remove the old one on request.
+let pipLastImage = null;   // most recent image Pip drew
+let pipPrevImage = null;   // the previous image (the "old" one being compared)
+
+// Add a Pip image to the canvas. A revision is placed to the RIGHT of the
+// current image so the child can compare; the first image is placed top-left.
+// Returns a Promise resolving to { img, isRevision }.
+function pipAddImage(dataUrl) {
+  return new Promise(resolve => {
+    fabric.Image.fromURL(dataUrl, img => {
+      if (!img) { setStatus('Could not render image', 'err'); resolve(null); return; }
+      const maxW = CANVAS_W * 0.42;   // narrower so two fit side by side
+      const maxH = CANVAS_H * 0.55;
+      const scale = Math.min(1, maxW / img.width, maxH / img.height);
+      img.set({ id: makeId(), scaleX: scale, scaleY: scale, selectable: true });
+
+      const isRevision = !!(pipLastImage && S.canvas.contains(pipLastImage));
+      if (isRevision) {
+        const old = pipLastImage;
+        const w = img.getScaledWidth();
+        let nx = old.left + old.getScaledWidth() + 30;       // sit to the right of old
+        if (nx + w > CANVAS_W - 10) nx = Math.max(10, CANVAS_W - w - 10);
+        img.set({ left: nx, top: old.top });
+        pipPrevImage = old;          // old image becomes the "previous" for comparison
+      } else {
+        img.set({ left: 40, top: 60 });
+        pipPrevImage = null;
+      }
+      pipLastImage = img;
+      S.canvas.add(img);
+      S.canvas.setActiveObject(img);
+      S.canvas.renderAll();
+      flashCanvas();
+      resolve({ img, isRevision });
+    });
+  });
+}
+
+// Remove the previous (old) image when the child prefers the new one.
+function pipRemoveOldImage() {
+  if (pipPrevImage && S.canvas.contains(pipPrevImage)) {
+    logRemoval(pipPrevImage);
+    S.canvas.remove(pipPrevImage);
+    S.canvas.renderAll();
+    markDirty();
+  }
+  pipPrevImage = null;
+}
 
 function togglePipPanel() {
   document.getElementById('pip-panel').classList.toggle('open');
@@ -2370,17 +2455,102 @@ function pipRenderMessage(role, text) {
   div.textContent = text;
   t.appendChild(div);
   t.scrollTop = t.scrollHeight;
+  return div;
 }
-function pipSubmit() {
+
+// Transient "Pip is …" bubble; returns a function that removes it.
+function pipShowTyping(label = 'Pip is thinking…') {
+  const el = pipRenderMessage('pip', label);
+  el.classList.add('pip-typing');
+  return () => el.remove();
+}
+
+function pipSetBusy(busy) {
+  pipBusy = busy;
+  document.getElementById('pip-send').disabled = busy;
+}
+
+async function pipSubmit() {
+  if (pipBusy) return;
   const inp = document.getElementById('pip-input');
   const text = inp.value.trim();
   if (!text) return;
   inp.value = '';
   pipRenderMessage('user', text);
-  // Placeholder reply — Pip isn't connected to OpenAI yet.
-  setTimeout(() => {
-    pipRenderMessage('pip', "I'm not connected yet — once my OpenAI key is added, I'll be able to draw for you!");
-  }, 300);
+  pipMessages.push({ role: 'user', content: text });
+
+  pipSetBusy(true);
+  const stopTyping = pipShowTyping();
+  try {
+    const res = await fetch(PIP_PROXY_URL + '/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: pipMessages }),
+    });
+    const data = await res.json();
+    stopTyping();
+    if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+
+    pipRenderMessage('pip', data.reply);
+    pipMessages.push({ role: 'assistant', content: data.reply });
+
+    if (data.remove_old) pipRemoveOldImage();
+
+    if (data.ready && data.image_prompt) {
+      await pipGenerate(data.image_prompt);
+    }
+  } catch (err) {
+    stopTyping();
+    pipRenderMessage('pip', "Sorry, I had trouble just then — mind trying again?");
+    console.error('[Pip] chat error:', err);
+  } finally {
+    pipSetBusy(false);
+    document.getElementById('pip-input').focus();
+  }
+}
+
+// Generate the illustration from Pip's refined prompt and add it to the canvas.
+async function pipGenerate(imagePrompt) {
+  const stopTyping = pipShowTyping('Pip is drawing… 🎨');
+  setStatus('Pip is drawing your scene…', 'info');
+  try {
+    const res = await fetch(PIP_PROXY_URL + '/image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: imagePrompt }),
+    });
+    const data = await res.json();
+    stopTyping();
+    // Gentle redirect when OpenAI's safety filter declines the picture.
+    if (data.blocked) {
+      const msg = "Hmm, I can't draw that one. Let's try a different picture — what else would you like me to make?";
+      pipRenderMessage('pip', msg);
+      pipMessages.push({ role: 'assistant', content: msg });
+      setStatus('', '');
+      return;
+    }
+    if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+
+    const placed = await pipAddImage(data.image);
+    addToHistory(data.image, imagePrompt);
+    markDirty();
+    // Post-image reflection check after every generation (PIP_SCOPE.md §3).
+    const check = PIP_IMAGE_CHECKS[pipImageCount++ % PIP_IMAGE_CHECKS.length];
+    let msg = check;
+    if (placed && placed.isRevision) {
+      msg = "I put the new picture next to the old one so you can compare them. " + check
+          + " If you like the new one better and don't want the old one, just tell me and I'll remove it.";
+    }
+    pipRenderMessage('pip', msg);
+    pipMessages.push({ role: 'assistant', content: msg });
+    setStatus('Pip added an image to the canvas', 'ok');
+    setTimeout(() => setStatus('', ''), 3500);
+  } catch (err) {
+    stopTyping();
+    pipRenderMessage('pip', "I couldn't finish the drawing just now — want me to try again?");
+    setStatus('Pip could not generate the image', 'err');
+    console.error('[Pip] image error:', err);
+  }
 }
 
 function wireButtons() {
