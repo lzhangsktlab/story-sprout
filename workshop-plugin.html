@@ -330,6 +330,7 @@ html, body {
   background: var(--cream);
   overflow: hidden;
   position: relative;
+  transition: padding-bottom .32s cubic-bezier(.4,0,.2,1);
 }
 
 /* subtle dot grid */
@@ -408,36 +409,92 @@ html, body {
 }
 .props-empty svg { opacity: .4; }
 
-/* Pip Panel — conversational illustrator */
-#pip-panel {
-  width: 300px;
-  flex-shrink: 0;
-  background: var(--white);
-  border-left: 1.5px solid var(--border);
-  display: none;
-  flex-direction: column;
-  overflow: hidden;
+/* Pip drawer body — preview (left) + chat (right) */
+#pip-body {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
 }
-#pip-panel.open { display: flex; }
-.pip-header {
-  padding: 10px 14px 8px;
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  color: var(--ink3);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+/* Preview pane — mirrors the old image-generator preview */
+#pip-preview {
+  flex: 1;
   position: relative;
+  background: var(--cream2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 0;
 }
-.pip-close {
+#pip-preview img {
+  max-width: 100%; max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+#pip-preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink3);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.6;
+  padding: 20px;
+}
+#pip-preview-placeholder svg { opacity: .3; }
+#pip-preview-spinner {
+  display: none;
   position: absolute;
-  top: 6px;
-  right: 11px;
-  background: none; border: none; cursor: pointer; font-size: 16px;
-  color: var(--ink3); font-weight: 700; line-height: 1;
+  inset: 0;
+  background: rgba(255,255,255,.9);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
 }
-.pip-close:hover { color: var(--ink); }
+#pip-preview-spinner.active { display: flex; }
+#pip-preview-spinner-label { font-size: 13px; font-weight: 700; color: var(--purple-dark); }
+/* Approval bar — overlays the bottom of the preview after a draw */
+#pip-approve-bar {
+  display: none;
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 10px 14px;
+  background: rgba(255,255,255,.96);
+  border-top: 1px solid var(--border);
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+#pip-approve-bar.active { display: flex; }
+#pip-approve-text { font-size: 13px; font-weight: 700; color: var(--ink2); }
+#pip-approve-add {
+  background: var(--purple); color: #fff; border: none;
+  border-radius: var(--radius-sm); padding: 7px 16px;
+  font-weight: 800; font-family: var(--font); font-size: 13px; cursor: pointer;
+}
+#pip-approve-add:hover { background: var(--purple-dark); }
+#pip-approve-redo {
+  background: transparent; color: var(--ink3);
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: 7px 14px; font-weight: 700; font-family: var(--font); font-size: 13px; cursor: pointer;
+}
+#pip-approve-redo:hover { background: var(--cream3); color: var(--ink); }
+
+/* Pip chat — conversational illustrator, docked to the right of the preview */
+#pip-chat {
+  width: 500px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1.5px solid var(--border);
+  background: var(--white);
+}
 #pip-transcript {
   flex: 1;
   overflow-y: auto;
@@ -626,13 +683,13 @@ html, body {
 .prop-btn.danger:hover { background: #fff0f0; border-color: #fcc; }
 
 /* ═══════════════════════════════════════════════
-   AI IMAGE DRAWER — full plugin width, vertical
+   PIP DRAWER — full plugin width, vertical (home to Pip)
 ═══════════════════════════════════════════════ */
-#ai-drawer {
+#pip-drawer {
   position: absolute;
   bottom: 0;
   left: 0; right: 0;           /* full width of #main */
-  height: 85%;
+  height: 48%;                 /* leave the slide page visible above */
   background: var(--white);
   border-top: 2px solid var(--purple-light);
   box-shadow: 0 -16px 60px rgba(124,92,191,.22);
@@ -643,10 +700,10 @@ html, body {
   z-index: 50;
   overflow: hidden;
 }
-#ai-drawer.open { transform: translateY(0); }
+#pip-drawer.open { transform: translateY(0); }
 
 /* ── Topbar: title + history strip + close ── */
-#ai-drawer-topbar {
+#pip-drawer-topbar {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -656,7 +713,7 @@ html, body {
   flex-shrink: 0;
   min-height: 0;
 }
-.ai-drawer-title {
+.pip-drawer-title {
   font-size: 13px;
   font-weight: 800;
   color: var(--purple-dark);
@@ -666,7 +723,7 @@ html, body {
   white-space: nowrap;
   flex-shrink: 0;
 }
-.ai-drawer-close {
+.pip-drawer-close {
   flex-shrink: 0;
   background: none;
   border: none;
@@ -679,7 +736,7 @@ html, body {
   border-radius: 6px;
   transition: background .13s;
 }
-.ai-drawer-close:hover { background: var(--cream3); color: var(--ink); }
+.pip-drawer-close:hover { background: var(--cream3); color: var(--ink); }
 
 /* History strip — scrolls horizontally in the topbar */
 #ai-history-strip {
@@ -958,11 +1015,6 @@ html, body {
       Story Text
     </button>
 
-    <button class="tb-btn tb-btn-primary" id="tb-pip-btn" title="Toggle Pip the illustrator">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 3.5L13 7l-3.5 1.5L8 12l-1.5-3.5L3 7l3.5-1.5L8 2z" fill="currentColor"/></svg>
-      Pip
-    </button>
-
     <div class="tb-spacer"></div>
 
     <div id="save-status">
@@ -1009,9 +1061,9 @@ html, body {
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="2.5" width="13" height="11" rx="2" stroke="currentColor" stroke-width="1.4"/><circle cx="5.5" cy="6.5" r="1.3" fill="currentColor"/><path d="M1.5 12l3.5-4 3 3.5 2-2.5 3.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
         Image URL
       </button>
-      <button class="rib-btn purple" id="rib-ai-image">
+      <button class="rib-btn purple" id="rib-ai-image" title="Open Pip the illustrator">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11l-1.5-3.5L3 6l3.5-1.5L8 1z" fill="currentColor" opacity=".9"/><path d="M13 10l.8 1.7 1.7.8-1.7.8L13 15l-.8-1.7-1.7-.8 1.7-.8L13 10z" fill="currentColor"/></svg>
-        AI Image
+        Pip
       </button>
       <button class="rib-btn" id="rib-shape">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/></svg>
@@ -1104,34 +1156,57 @@ html, body {
       <div class="story-text-hint">Click a line to copy to clipboard</div>
     </div>
 
-    <!-- PIP PANEL — conversational illustrator -->
-    <div id="pip-panel">
-      <div class="pip-header">
-        Pip — Your Illustrator
-        <button class="pip-close" id="pip-close" title="Close">×</button>
-      </div>
-      <div id="pip-transcript"></div>
-      <div class="pip-input-row">
-        <textarea id="pip-input" rows="2" placeholder="Tell Pip what to draw…"></textarea>
-        <button id="pip-send">Send</button>
-      </div>
-    </div>
-
-    <!-- AI DRAWER — spans full width of #main -->
-    <div id="ai-drawer">
+    <!-- PIP DRAWER — spans full width of #main; home to Pip's chat -->
+    <div id="pip-drawer">
 
       <!-- Top bar -->
-      <div id="ai-drawer-topbar">
-        <div class="ai-drawer-title">
+      <div id="pip-drawer-topbar">
+        <div class="pip-drawer-title">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11l-1.5-3.5L3 6l3.5-1.5L8 1z" fill="#9779D2"/><path d="M13 10l.7 1.7L15.4 12l-1.7.7-.7 1.7-.7-1.7-1.7-.7 1.7-.7L13 10z" fill="#9779D2" opacity=".6"/></svg>
-          AI Image Generator
+          Pip — Your Illustrator
         </div>
-        <!-- History thumbnails in topbar -->
-        <div id="ai-history-strip">
+        <!-- History thumbnails — part of the legacy manual generator, hidden -->
+        <div id="ai-history-strip" style="display:none">
           <span class="ai-hist-empty" id="ai-hist-empty">Previous generations appear here</span>
         </div>
-        <button class="ai-drawer-close" id="ai-drawer-close">×</button>
+        <button class="pip-drawer-close" id="pip-drawer-close" style="margin-left:auto">×</button>
       </div>
+
+      <!-- Pip body: image preview (left) + chat (right) -->
+      <div id="pip-body">
+
+        <!-- Preview — shows the picture Pip just drew -->
+        <div id="pip-preview">
+          <div id="pip-preview-placeholder">
+            <svg width="56" height="56" viewBox="0 0 52 52" fill="none"><rect x="4" y="8" width="44" height="36" rx="6" stroke="#9B93AB" stroke-width="2"/><circle cx="17" cy="22" r="5" stroke="#9B93AB" stroke-width="2"/><path d="M4 36l12-14 10 12 8-9 14 17" stroke="#9B93AB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            Pip's picture will appear here.<br>Tell Pip what to draw to get started.
+          </div>
+          <img id="pip-preview-img" alt="Pip's latest illustration" style="display:none;">
+          <div id="pip-preview-spinner">
+            <div class="spinner-ring"></div>
+            <div id="pip-preview-spinner-label">Pip is drawing…</div>
+          </div>
+          <!-- Approval bar — appears after Pip draws a picture -->
+          <div id="pip-approve-bar">
+            <span id="pip-approve-text">Like this picture?</span>
+            <button id="pip-approve-add">✓ Add to book</button>
+            <button id="pip-approve-redo">Change it</button>
+          </div>
+        </div>
+
+        <!-- Chat — conversational illustrator -->
+        <div id="pip-chat">
+          <div id="pip-transcript"></div>
+          <div class="pip-input-row">
+            <textarea id="pip-input" rows="2" placeholder="Tell Pip what to draw…"></textarea>
+            <button id="pip-send">Send</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- LEGACY manual generator — UI hidden, code retained -->
+      <div id="ai-manual-ui" style="display:none">
 
       <!-- Image (big, ~75% of height) -->
       <div id="ai-preview-box">
@@ -1196,7 +1271,9 @@ html, body {
         </div>
       </div>
 
-    </div><!-- /ai-drawer -->
+      </div><!-- /ai-manual-ui -->
+
+    </div><!-- /pip-drawer -->
 
   </div><!-- /main -->
 
@@ -1316,9 +1393,14 @@ function initCanvas() {
 }
 
 function fitCanvas(targetZoom) {
-  const area  = document.getElementById('canvas-area');
+  const area   = document.getElementById('canvas-area');
+  const drawer = document.getElementById('pip-drawer');
+  // When Pip's drawer is open, reserve its height at the bottom so the active
+  // page shrinks and floats up into the visible band above the drawer.
+  const reserve = drawer.classList.contains('open') ? drawer.offsetHeight : 0;
+  area.style.paddingBottom = reserve ? reserve + 'px' : '';
   const aw    = area.clientWidth  - 60;
-  const ah    = area.clientHeight - 60;
+  const ah    = area.clientHeight - 60 - reserve;
   const zoom  = targetZoom !== undefined
     ? targetZoom
     : Math.min(1, aw / CANVAS_W, ah / CANVAS_H);
@@ -1793,7 +1875,8 @@ function clearPropsPanel() {
 }
 
 /* ═══════════════════════════════════════════════
-   AI IMAGE DRAWER — OpenAI (gpt-image-1)
+   LEGACY AI IMAGE GENERATOR — OpenAI (gpt-image-1)
+   UI hidden (#ai-manual-ui); code retained for reuse.
    Uses the same Cloudflare Worker proxy as Pip
    (PIP_PROXY_URL, defined below) — /image and
    /image-edit. API key stays server-side.
@@ -1803,8 +1886,10 @@ function clearPropsPanel() {
 const aiHistory = [];
 let aiSelectedIdx = -1;
 
-function openAiDrawer() { document.getElementById('ai-drawer').classList.add('open'); }
-function closeAiDrawer() { document.getElementById('ai-drawer').classList.remove('open'); }
+function closePipDrawer() {
+  document.getElementById('pip-drawer').classList.remove('open');
+  fitCanvas();   // restore the page to the full canvas area
+}
 
 // OpenAI has no style_preset param, so fold the dropdown choice into the prompt.
 const AI_STYLE_TEXT = {
@@ -2439,9 +2524,66 @@ function pipRemoveOldImage() {
   pipPrevImage = null;
 }
 
-function togglePipPanel() {
-  document.getElementById('pip-panel').classList.toggle('open');
+function openPipDrawer() {
+  document.getElementById('pip-drawer').classList.add('open');
+  fitCanvas();   // float the active page up above the drawer
   pipEnsureGreeting();
+  setTimeout(() => document.getElementById('pip-input').focus(), 60);
+}
+
+// Show the picture Pip just drew in the left-hand preview pane.
+function pipSetPreview(dataUrl) {
+  const img = document.getElementById('pip-preview-img');
+  img.src = dataUrl;
+  img.style.display = 'block';
+  document.getElementById('pip-preview-placeholder').style.display = 'none';
+}
+// Toggle the preview spinner while Pip is drawing.
+function pipPreviewSpinner(on) {
+  const sp  = document.getElementById('pip-preview-spinner');
+  const ph  = document.getElementById('pip-preview-placeholder');
+  const img = document.getElementById('pip-preview-img');
+  sp.classList.toggle('active', on);
+  if (on) ph.style.display = 'none';
+  else if (img.style.display === 'none') ph.style.display = 'flex';
+}
+
+// The picture Pip has drawn into the preview but NOT yet added to the book.
+let pipPendingImage = null;
+
+function pipShowApprove() { document.getElementById('pip-approve-bar').classList.add('active'); }
+function pipHideApprove() { document.getElementById('pip-approve-bar').classList.remove('active'); }
+
+// Child likes it → add the previewed picture to the book, then close Pip.
+async function pipApproveImage() {
+  if (!pipPendingImage) return;
+  pipHideApprove();
+  await pipAddImage(pipPendingImage);
+  markDirty();
+  pipPendingImage = null;
+  const msg = "Added it to your book! 🎉";
+  pipRenderMessage('pip', msg);
+  pipMessages.push({ role: 'assistant', content: msg });
+  setStatus('Image added to your book', 'ok');
+  setTimeout(() => { setStatus('', ''); closePipDrawer(); pipResetPreview(); }, 650);
+}
+
+// Child wants changes → dismiss the prompt and invite a revision in chat.
+function pipRequestChange() {
+  pipHideApprove();
+  const msg = "No problem — tell me one thing to change and I'll draw it again.";
+  pipRenderMessage('pip', msg);
+  pipMessages.push({ role: 'assistant', content: msg });
+  document.getElementById('pip-input').focus();
+}
+
+// Clear the preview back to its empty state.
+function pipResetPreview() {
+  const img = document.getElementById('pip-preview-img');
+  img.removeAttribute('src');
+  img.style.display = 'none';
+  document.getElementById('pip-preview-placeholder').style.display = 'flex';
+  pipHideApprove();
 }
 function pipEnsureGreeting() {
   if (pipSeeded) return;
@@ -2509,10 +2651,13 @@ async function pipSubmit() {
   }
 }
 
-// Generate the illustration from Pip's refined prompt and add it to the canvas.
+// Generate the illustration from Pip's refined prompt into the PREVIEW only.
+// It is added to the book later, when the child approves it (pipApproveImage).
 async function pipGenerate(imagePrompt) {
   const stopTyping = pipShowTyping('Pip is drawing… 🎨');
   setStatus('Pip is drawing your scene…', 'info');
+  pipHideApprove();
+  pipPreviewSpinner(true);
   try {
     const res = await fetch(PIP_PROXY_URL + '/image', {
       method: 'POST',
@@ -2526,27 +2671,28 @@ async function pipGenerate(imagePrompt) {
       const msg = "Hmm, I can't draw that one. Let's try a different picture — what else would you like me to make?";
       pipRenderMessage('pip', msg);
       pipMessages.push({ role: 'assistant', content: msg });
+      pipPreviewSpinner(false);
       setStatus('', '');
       return;
     }
     if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
 
-    const placed = await pipAddImage(data.image);
+    // Show the picture in the preview ONLY — it is not added to the book yet.
+    pipSetPreview(data.image);
+    pipPreviewSpinner(false);
+    pipPendingImage = data.image;
     addToHistory(data.image, imagePrompt);
-    markDirty();
-    // Post-image reflection check after every generation (PIP_SCOPE.md §3).
+    // Ask whether the child likes it, then let them approve via the bar.
+    pipShowApprove();
     const check = PIP_IMAGE_CHECKS[pipImageCount++ % PIP_IMAGE_CHECKS.length];
-    let msg = check;
-    if (placed && placed.isRevision) {
-      msg = "I put the new picture next to the old one so you can compare them. " + check
-          + " If you like the new one better and don't want the old one, just tell me and I'll remove it.";
-    }
+    const msg = check + " If you like it, tap “Add to book” and I'll pop it into your story. If not, just tell me what to change.";
     pipRenderMessage('pip', msg);
     pipMessages.push({ role: 'assistant', content: msg });
-    setStatus('Pip added an image to the canvas', 'ok');
+    setStatus('Pip drew a picture — add it to your book if you like it', 'ok');
     setTimeout(() => setStatus('', ''), 3500);
   } catch (err) {
     stopTyping();
+    pipPreviewSpinner(false);
     pipRenderMessage('pip', "I couldn't finish the drawing just now — want me to try again?");
     setStatus('Pip could not generate the image', 'err');
     console.error('[Pip] image error:', err);
@@ -2565,11 +2711,9 @@ function wireButtons() {
   document.getElementById('story-text-close').onclick = () => {
     document.getElementById('story-text-panel').classList.remove('open');
   };
-  document.getElementById('tb-pip-btn').onclick = togglePipPanel;
-  document.getElementById('pip-close').onclick = () => {
-    document.getElementById('pip-panel').classList.remove('open');
-  };
   document.getElementById('pip-send').onclick = pipSubmit;
+  document.getElementById('pip-approve-add').onclick = pipApproveImage;
+  document.getElementById('pip-approve-redo').onclick = pipRequestChange;
   document.getElementById('pip-input').addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); pipSubmit(); }
   });
@@ -2581,7 +2725,7 @@ function wireButtons() {
     const url = prompt('Paste image URL (must start with https://):');
     if (url) addImageFromUrl(url.trim());
   };
-  document.getElementById('rib-ai-image').onclick = openAiDrawer;
+  document.getElementById('rib-ai-image').onclick = openPipDrawer;
 
   // Ribbon - Edit
   document.getElementById('rib-undo').onclick   = undo;
@@ -2616,8 +2760,8 @@ function wireButtons() {
   // Slides
   document.getElementById('add-slide-btn').onclick = addSlide;
 
-  // AI drawer
-  document.getElementById('ai-drawer-close').onclick  = closeAiDrawer;
+  // Pip drawer (+ legacy AI generator controls, UI hidden)
+  document.getElementById('pip-drawer-close').onclick  = closePipDrawer;
   document.getElementById('ai-generate-btn').onclick  = generateAiImage;
   document.getElementById('ai-improve-btn').onclick   = modifyAiImage;
   document.getElementById('ai-add-canvas-btn').onclick = () => {
@@ -2628,7 +2772,7 @@ function wireButtons() {
         histItem.actions = histItem.actions || [];
         histItem.actions.push({ type: 'added_to_canvas', at: new Date().toISOString(), slideIdx: S.cur });
       }
-      closeAiDrawer();
+      closePipDrawer();
       markDirty();
     }
   };
