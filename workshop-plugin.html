@@ -657,8 +657,9 @@ html, body {
 }
 .pip-bank-close:hover { background: var(--cream3); color: var(--ink); }
 #pip-bank-grid {
-  flex: 1; overflow-y: auto; padding: 12px;
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-content: start;
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 12px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+  grid-auto-rows: min-content; align-content: start;
 }
 #pip-bank-grid::-webkit-scrollbar { width: 5px; }
 #pip-bank-grid::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
