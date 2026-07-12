@@ -160,7 +160,8 @@ html, body {
   display: none; align-items: center; gap: 4px;
   margin-left: 10px; transition: color .3s;
 }
-#sync-pill.on      { display: flex; }
+#sync-pill.on      { display: flex; cursor: pointer; }
+#sync-pill.on:hover { color: var(--purple); }
 #sync-pill.synced  { color: var(--green); }
 #sync-pill.syncing { color: var(--amber); }
 #sync-pill.error   { color: var(--red, #e05c5c); }
@@ -1226,7 +1227,7 @@ html, body {
     <!-- Sync state gets its OWN pill. It must not go through setStatus(), which is a
          single shared line that other actions self-clear after 2.5s — a sync error
          routed through it would be wiped by the next "Image added to canvas". -->
-    <div id="sync-pill" title="Teacher sync">
+    <div id="sync-pill" title="Click to send your work to your teacher right now">
       <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>
       <span id="sync-pill-text">Offline</span>
     </div>
@@ -3409,6 +3410,8 @@ function wireButtons() {
   // Top bar
   document.getElementById('tb-back-btn').onclick     = () => { history.back(); };
   document.getElementById('tb-join-btn').onclick     = joinClass;
+  // Clicking the pill forces a send, for when a teacher is standing there waiting.
+  document.getElementById('sync-pill').onclick       = () => { if (SYNC.active) { clearTimeout(SYNC.timer); syncPush(); } };
   document.getElementById('tb-new-btn').onclick      = newStory;
   document.getElementById('tb-save-btn').onclick    = saveStory;
   document.getElementById('tb-saveas-btn').onclick  = saveStoryAs;
@@ -3573,7 +3576,11 @@ const SYNC = {
   deviceId: null,
 };
 
-const SYNC_DEBOUNCE_MS = 30000;   // local autosave is 5s; pushing that often is absurd
+// Local autosave is 5s; pushing that often would re-upload on every brushstroke.
+// But 30s was too long — a teacher walking over to collect would keep missing the
+// last thing a child did. 12s, plus an immediate flush the moment the child looks
+// away (see below), makes "collect now" land on fresh work in practice.
+const SYNC_DEBOUNCE_MS = 12000;
 const LS_REV   = 'sprout_last_pushed_rev';
 const LS_DEV   = 'sprout_device_id';
 const LS_CLASS = 'sprout_class_computer';  // this machine has been used for a class
@@ -3695,6 +3702,21 @@ function scheduleSyncPush() {
   clearTimeout(SYNC.timer);
   SYNC.timer = setTimeout(syncPush, SYNC_DEBOUNCE_MS);
 }
+
+// Send straight away, skipping the debounce. Used when the child stops working —
+// which is precisely the moment a teacher is likely to go and collect.
+function syncPushNow() {
+  if (!SYNC.active || !S.dirty) return;
+  clearTimeout(SYNC.timer);
+  syncPush();
+}
+
+// The child switched tabs, minimised, or put the laptop down. Flush now rather
+// than sitting on their last change for another twelve seconds.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') syncPushNow();
+});
+window.addEventListener('blur', syncPushNow);
 
 /* ── pull ────────────────────────────────────────────────────────────────── */
 

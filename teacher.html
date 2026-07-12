@@ -886,16 +886,20 @@
       await writeJson(T.root, 'class.json', T.klass);
       renderTeams();
 
+      // Be precise about what "nothing new" means. The teacher can only ever
+      // collect what a student has SENT — and students send a few seconds after
+      // they stop drawing, not the instant they draw. Saying "up to date" when the
+      // truth is "they haven't sent it yet" makes a working system look broken.
       const bits = [];
-      if (changed) bits.push(changed + ' team' + (changed > 1 ? 's' : '') + ' had new work');
+      if (changed) bits.push('Collected new work from ' + changed + ' team' + (changed > 1 ? 's' : ''));
       if (failed)  bits.push(failed + ' failed');
       if (!changed && !failed) {
         bits.push(empty === T.teacher.teams.length
-          ? 'No work sent yet — students\' work appears about a minute after they start drawing'
-          : 'Everything is already up to date');
+          ? 'Nothing sent yet — work arrives a few seconds after a student stops drawing'
+          : 'Nothing new since the last collect');
       }
       const msg = bits.join(' · ');
-      setCollectStatus(msg, failed ? 'err' : 'ok');
+      setCollectStatus(msg, failed ? 'err' : (changed ? 'ok' : ''));
       log(msg);
 
       btn.disabled = false;
