@@ -9,7 +9,7 @@
 ![No build step](https://img.shields.io/badge/build-none-success?style=flat-square)
 ![Client-side](https://img.shields.io/badge/runs-100%25_in_browser-blue?style=flat-square)
 ![Fabric.js](https://img.shields.io/badge/canvas-Fabric.js_5.3.1-orange?style=flat-square)
-![AI](https://img.shields.io/badge/AI-OpenAI_gpt--image--1-10A37F?style=flat-square)
+![AI](https://img.shields.io/badge/AI-OpenAI_gpt--image--2-10A37F?style=flat-square)
 
 </div>
 
@@ -29,6 +29,7 @@ It doubles as a research tool for studying how children learn to write and refin
 - **📚 Multi-slide stories** — build a picture book one slide at a time, with thumbnails.
 - **↩️ Undo / redo** — per-slide history (up to 50 steps).
 - **💾 Local-first saving** — saves `story.json` + image files to a folder you pick (File System Access API); auto-saves every few seconds.
+- **🍎 Teacher Mode** — a teacher can collect every child's work onto their own computer, automatically. Children never make accounts. See below.
 - **🔒 Safe by design** — Pip is scoped to illustration only, with content guardrails appropriate for young children.
 
 ## 🏗️ Architecture
@@ -38,11 +39,70 @@ The browser app never holds any API keys. All AI calls go through a small **Clou
 ```mermaid
 flowchart LR
     A["🧒 Browser app<br/>(workshop-plugin.html)<br/>no API key"] -->|"HTTPS (CORS-locked)"| B["☁️ Cloudflare Worker<br/>(pip-worker.js)<br/>holds OPENAI_API_KEY"]
-    B -->|"chat + images"| C["🤖 OpenAI<br/>gpt-4o-mini · gpt-image-1"]
+    B -->|"chat + images"| C["🤖 OpenAI<br/>gpt-4o-mini · gpt-image-2"]
 ```
 
 - **Frontend:** one HTML file (inline CSS + JS), served as static files (GitHub Pages or opened locally).
 - **Backend:** a Cloudflare Worker proxy — the only place the API key lives. Adds CORS lock-down, a gentle anti-spam rate limit, and child-safety guardrails.
+
+## 🍎 Teacher Mode
+
+A teacher signs in at [`teacher.html`](https://lzhangsktlab.github.io/story-sprout/teacher.html), creates a **team** for each classroom computer, and gets back a team name and a secret code to tape to that machine. Children enter it once. From then on their work flows back to the teacher's laptop — every few minutes, and on demand.
+
+**Children never create accounts.** A team identifies a *computer*, not a person.
+
+### The relay is a dead-drop, not a database
+
+A browser cannot reach into another computer, so the two machines need something in between. That something stores **only ciphertext it cannot read**:
+
+```mermaid
+flowchart LR
+    S["🧒 Student browser<br/>encrypts BEFORE sending"] -->|"encrypted bytes"| R["☁️ Cloudflare R2<br/>(cannot decrypt anything)"]
+    R -->|"encrypted bytes"| T["🍎 Teacher's laptop<br/>decrypts locally · keeps the only readable copy"]
+```
+
+The team's secret code is run through PBKDF2, then split by HKDF into three separate keys:
+
+| Key | Where it goes |
+|---|---|
+| **encryption key** | Never leaves the browser. |
+| **auth token** | Sent to the relay to prove team membership. Cannot be reversed into the encryption key. |
+| **blob key** | HMACs image IDs, so listing the bucket can't reveal *which* images a team holds, or that two teams share one. |
+
+The teacher and the student each derive all three from `(team name, secret code)` alone — **no key is ever exchanged.** The only readable copy of a child's story exists on the teacher's disk.
+
+> **Be honest about the limit:** the secret code *is* the security model. A generated code is solid against a curious classmate; it is not solid against a determined attacker holding the ciphertext, because no iteration count fixes a small search space. Codes are always **generated, never chosen**. Guessing one still cannot *read* a story — but it could *overwrite* one, which is why the relay keeps the last 30 revisions.
+
+### Stories are 50MB. Syncs are 1.5KB.
+
+Every AI image is base64-inlined into each slide *and* duplicated in the history, so a six-page story runs ~50MB. Re-uploading that every five minutes, per device, over school wifi would be hopeless.
+
+So images are **content-addressed**: each one is hashed, uploaded exactly once, and referenced by hash thereafter. The recurring payload is just the story skeleton — gzipped and encrypted, **about 1.5KB**, or ~4,000× smaller. On the teacher's disk, images live in one shared folder, so a snapshot every five minutes costs kilobytes rather than gigabytes.
+
+### What lands on the teacher's disk
+
+```
+Class folder/
+├── teacher.json          ← teams + secret codes.  ⚠ This is the master key. Lose it and the work is unrecoverable.
+├── class.json            ← index of every team's work
+├── images/<hash>.png     ← decrypted, shared across all teams and snapshots
+└── teams/brave-otter/
+    ├── latest.json       ← the full story — opens directly in workshop-plugin.html
+    └── snapshots/…       ← dated history of how the story grew
+```
+
+### Setting it up
+
+**Cloudflare** (same Worker as Pip — the sync routes live alongside `/chat` and `/image`):
+1. **R2 → Create bucket**, then **Worker → Settings → Bindings → R2 bucket**, variable name `SPROUT_BUCKET`.
+2. Add a secret `TEACHER_PASSPHRASE` — long and random. This is the fallback sign-in.
+3. *(Optional, for Google sign-in)* add plain vars `GOOGLE_CLIENT_ID` and `ALLOWED_TEACHER_EMAILS`.
+
+**Google sign-in** (optional — the passphrase alone works fine): create an OAuth **Web application** client in Google Cloud. Authorized JavaScript origins must include `https://<you>.github.io` **and** `http://localhost:8000`; leave redirect URIs empty. Paste the client ID into `GOOGLE_CLIENT_ID` in `teacher.html` (client IDs are public — safe to commit).
+
+**Requires Chrome or Edge.** Saving to a folder needs the File System Access API, which Firefox and Safari do not implement. When Chrome asks about the folder, choose **"Allow on every visit"** or it will re-prompt every session.
+
+> ⚠️ **`sprout-sync.js` is shared byte-for-byte by both pages.** If you change any crypto constant in it, bump `VERSION`, both pages' `REQUIRE_SYNC_VERSION`, *and* the `?v=` on both `<script>` tags — together. A stale cached copy on one page would derive different keys and fail **silently**: uploads succeed, collection succeeds, and the stories simply never open. Both pages assert the version on boot and refuse to sync on a mismatch, which turns that into a loud, fixable error instead of quiet data loss.
 
 ## 📂 Project structure
 
@@ -50,8 +110,11 @@ flowchart LR
 |---|---|
 | `index.html` | Entry point — redirects to the current app |
 | `workshop-plugin.html` | **The app** (Pip + OpenAI drawer) — current version |
+| `teacher.html` | **Teacher Mode dashboard** — create teams, collect student work |
+| `sprout-sync.js` | Shared crypto + content-addressing + relay client (used by **both** pages) |
+| `sprout-sync-test.html` | Test harness for the above — open it and click *Run tests* |
 | `workshop.html` | Earlier version (direct Stability AI) — legacy |
-| `cloudflare-worker/pip-worker.js` | **OpenAI proxy** for Pip + the image drawer |
+| `cloudflare-worker/pip-worker.js` | **OpenAI proxy** for Pip + the image drawer, **and** the sync relay |
 | `cloudflare-worker/worker.js` | Legacy Stability AI proxy |
 | `PIP_SCOPE.md` | Pip's behavior specification (source of truth) |
 | `RESEARCH_DATA.md` | Schema for the data captured for prompt-writing research |
@@ -93,6 +156,12 @@ The Worker exposes:
 | `POST /chat` | Pip's conversational turn (`{ reply, ready, image_prompt, remove_old }`) |
 | `POST /image` | Text-to-image generation |
 | `POST /image-edit` | Image-to-image revision |
+| `POST /sync/register` | Teacher only — creates a team. The one gate stopping the relay being open storage. |
+| `GET /sync/state` | Cheap poll: `{ rev, updatedAt }`. The teacher only downloads when `rev` moves. |
+| `GET · PUT /sync/manifest` | The encrypted story. `PUT` is compare-and-set on a **server-assigned** revision — student clocks are never trusted. |
+| `POST /sync/blobs/check` | `{ ids[] } → { missing[] }`, so a routine sync is two requests, not twenty |
+| `GET · PUT /sync/blob/<id>` | An encrypted image. Immutable, content-addressed. |
+| `GET · PUT /sync/assign` | The teacher's assignment — its own object, so it can't race a student's push |
 
 ## ⌨️ Keyboard shortcuts
 
@@ -107,17 +176,25 @@ The Worker exposes:
 ## 🧰 Tech stack
 
 - **[Fabric.js 5.3.1](http://fabricjs.com/)** — canvas objects, serialization
-- **[OpenAI](https://platform.openai.com/)** — `gpt-4o-mini` (chat) + `gpt-image-1` (images)
-- **[Cloudflare Workers](https://workers.cloudflare.com/)** — key-safe API proxy
+- **[OpenAI](https://platform.openai.com/)** — `gpt-4o-mini` (chat) + `gpt-image-2` (images)
+- **[Cloudflare Workers](https://workers.cloudflare.com/)** — key-safe API proxy + zero-knowledge sync relay
+- **[Cloudflare R2](https://developers.cloudflare.com/r2/)** — encrypted blob storage for Teacher Mode
+- **WebCrypto** — PBKDF2 → HKDF → AES-GCM, all in the browser
 - **Vanilla JS + HTML + CSS** — no framework, no build
 - **Nunito** (Google Fonts)
 
 ## 🔐 Privacy & safety
 
-- No accounts, no logins — story data stays on the child's device.
+- **Children never have accounts.** No logins, no names, no email. A team identifies a *computer*, not a person. Only the teacher signs in.
+- **Without Teacher Mode, nothing leaves the device** — story data is local, full stop.
+- **With Teacher Mode, only ciphertext leaves the device.** Work is encrypted in the child's browser before it is sent; the relay stores bytes it holds no key to open, and they expire. The only readable copy lives on the teacher's own computer.
 - API keys never reach the browser; they live only in the Cloudflare Worker.
 - Pip is constrained to age-appropriate illustration with content and prompt-injection guardrails.
 - Research data (if used) is anonymized and stored only in the local story file — see [`RESEARCH_DATA.md`](RESEARCH_DATA.md).
+
+**Two things not to be coy about:**
+- `teacher.json` holds every team's secret code in plaintext on the teacher's disk. It has to — those codes *are* the decryption keys. **Losing that file means losing the class's work irrecoverably**, and no one can recover it for you; that is what zero-knowledge means. Keep it off shared drives.
+- A team's secret code protects that team's work. It is generated with real entropy and never chosen by a child, but it is still a short human-typeable string. It is proof against a curious classmate, not against a determined attacker who already holds the ciphertext.
 
 ---
 

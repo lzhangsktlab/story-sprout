@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>sprout-sync — test harness</title>
+<style>
+  body { font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+         background: #12111a; color: #e6e3f0; margin: 0; padding: 28px; line-height: 1.6; }
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  .sub { color: #8b86a3; font-size: 12px; margin-bottom: 22px; }
+  button { font: inherit; background: #7c5cff; color: #fff; border: 0; padding: 10px 20px;
+           border-radius: 8px; cursor: pointer; font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  #out { margin-top: 22px; white-space: pre-wrap; font-size: 12.5px; }
+  .pass { color: #4ade80; }
+  .fail { color: #f87171; font-weight: 700; }
+  .info { color: #8b86a3; }
+  .hd   { color: #c4b5fd; font-weight: 700; margin-top: 16px; display: block; }
+</style>
+</head>
+<body>
+
+<h1>sprout-sync test harness</h1>
+<div class="sub">Proves the crypto and the shred/rehydrate round-trip before any UI depends on them.</div>
+<button id="run">Run tests</button>
+<div id="out"></div>
+
+<script src="sprout-sync.js?v=1"></script>
+<script>
+const out = document.getElementById('out');
+let failures = 0;
+
+const line = (cls, msg) => {
+  const s = document.createElement('span');
+  s.className = cls;
+  s.textContent = msg + '\n';
+  out.appendChild(s);
+};
+const head = (m) => line('hd', m);
+const info = (m) => line('info', '   ' + m);
+const ok   = (m) => line('pass', '   PASS  ' + m);
+const bad  = (m) => { failures++; line('fail', '   FAIL  ' + m); };
+const check = (cond, m) => cond ? ok(m) : bad(m);
+const kb = (n) => (n / 1024).toFixed(1) + ' KB';
+const mb = (n) => (n / 1048576).toFixed(2) + ' MB';
+
+// A realistic AI image: random noise doesn't compress, so a 1024x1024 PNG lands
+// around 2-3MB — the same ballpark as gpt-image output. A gradient would
+// compress to nothing and make the test lie to us.
+function makeNoisePng(seed, size = 1024) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(size, size);
+  let s = seed;
+  for (let i = 0; i < img.data.length; i += 4) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    img.data[i]     = s & 0xff;
+    img.data[i + 1] = (s >> 8) & 0xff;
+    img.data[i + 2] = (s >> 16) & 0xff;
+    img.data[i + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  return c.toDataURL('image/png');
+}
+
+function makeThumb(seed) {
+  const c = document.createElement('canvas');
+  c.width = 180; c.height = 120;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#' + ((seed * 9973) & 0xffffff).toString(16).padStart(6, '0');
+  ctx.fillRect(0, 0, 180, 120);
+  return c.toDataURL('image/jpeg', 0.25);
+}
+
+// Mirrors buildStoryJson()'s v5 shape exactly, including the quirks:
+// the SAME data-URL string appears in both aiHistory[].dataUrl and the canvas
+// object's src (that's what Fabric actually does), and imgMap is always {}.
+function makeStory(nSlides) {
+  const images = [];
+  for (let i = 0; i < nSlides; i++) images.push(makeNoisePng(i + 1));
+
+  const slides = images.map((src, i) => ({
+    json: JSON.stringify({
+      version: '5.3.1',
+      objects: [
+        { type: 'image', src, left: 40, top: 40, scaleX: 0.5, scaleY: 0.5, id: 'img_' + i },
+        { type: 'textbox', text: 'Page ' + (i + 1), left: 20, top: 20, fill: '#333' },
+      ],
+      background: '#FFFFFF',
+    }),
+    thumb: makeThumb(i + 1),
+    imgMap: {},
+  }));
+
+  // One image reused on a second slide — content-addressing must store it once.
+  slides.push({
+    json: JSON.stringify({
+      version: '5.3.1',
+      objects: [{ type: 'image', src: images[0], left: 10, top: 10, id: 'img_reuse' }],
+      background: '#FFFFFF',
+    }),
+    thumb: makeThumb(99),
+    imgMap: {},
+  });
+
+  return {
+    v: 5,
+    title: 'The Lost Dragon',
+    saved: 1752000000000,
+    session: { startedAt: '2026-07-11T10:00:00Z', savedAt: '2026-07-11T11:00:00Z', totalSlides: slides.length },
+    imgMap: {},
+    storyText: ['Once upon a time', 'there was a dragon.'],
+    aiHistory: images.map((dataUrl, i) => ({
+      historyId: 'ai_' + i,
+      dataUrl,                                   // same string Fabric holds as src
+      prompt: 'a dragon, scene ' + i,
+      timestamp: '2026-07-11T10:0' + i + ':00Z',
+      settings: { quality: 'medium' },
+      parentId: null,
+      actions: [],
+    })),
+    slides,
+  };
+}
+
+document.getElementById('run').onclick = async () => {
+  document.getElementById('run').disabled = true;
+  out.textContent = '';
+  failures = 0;
+  const S = window.SproutSync;
+
+  try {
+    /* ─────────────────────────────────────────────────────────── */
+    head('1. Module loaded');
+    check(!!S, 'window.SproutSync exists');
+    info('VERSION = ' + S.VERSION + ', PBKDF2 iterations = ' + S.PBKDF2_ITERS.toLocaleString());
+
+    /* ─────────────────────────────────────────────────────────── */
+    head('2. Team-name normalization  (the trailing-space data-loss bug)');
+    const variants = ['Table 3', 'table 3 ', '  TABLE   3  ', 'table 3'];
+    const normed = variants.map(S.normalizeTeamName);
+    check(new Set(normed).size === 1, 'all 4 spellings of "Table 3" normalize identically -> "' + normed[0] + '"');
+
+    /* ─────────────────────────────────────────────────────────── */
+    head('3. Key derivation  (timed — this runs on classroom Chromebooks)');
+    const t0 = performance.now();
+    const keys = await S.deriveKeys('Table 3', 'OTTER-LAMP-7291');
+    const derivMs = performance.now() - t0;
+    info('PBKDF2 600k took ' + derivMs.toFixed(0) + ' ms on THIS machine');
+    info('a low-end Chromebook is roughly 3-5x slower -> ~' + (derivMs * 4).toFixed(0) + ' ms');
+    check(derivMs < 3000, 'derivation under 3s here (budget: tolerable once, behind a spinner)');
+    check(!!keys.encKey && !!keys.blobKey && !!keys.authToken, 'encKey, blobKey, authToken all derived');
+    check(keys.encKey.extractable === false, 'encKey is NON-extractable (XSS cannot steal the raw bytes)');
+
+    const keysAgain = await S.deriveKeys('  TABLE 3 ', 'OTTER-LAMP-7291');
+    check(keysAgain.authToken === keys.authToken, 'same team+code (differently spelled) -> same authToken');
+
+    const wrongCode = await S.deriveKeys('Table 3', 'WRONG-CODE-0000');
+    check(wrongCode.authToken !== keys.authToken, 'a different code -> a different authToken');
+
+    /* ─────────────────────────────────────────────────────────── */
+    head('4. Blob ids are HMACd, not raw hashes  (zero-knowledge)');
+    const hash = await S.sha256Hex(new TextEncoder().encode('pretend-image-bytes'));
+    const idA = await S.blobIdFor(keys.blobKey, hash);
+    const idB = await S.blobIdFor(wrongCode.blobKey, hash);
+    check(idA !== hash, 'blob id is NOT the plaintext content hash');
+    check(idA !== idB, 'the same image under two teams -> two different blob ids (no cross-team correlation)');
+    check(idA === await S.blobIdFor(keys.blobKey, hash), 'blob id is deterministic for a given team');
+
+    /* ─────────────────────────────────────────────────────────── */
+    head('5. Encrypt / decrypt');
+    const payload = new TextEncoder().encode(JSON.stringify({ hello: 'world' }).repeat(500));
+    const env1 = await S.encrypt(keys.encKey, payload, { compress: true });
+    const env2 = await S.encrypt(keys.encKey, payload, { compress: true });
+    check(!(env1.length === env2.length && env1.every((b, i) => b === env2[i])),
+          'encrypting the same bytes twice gives different ciphertext (fresh IV each time)');
+    const back = await S.decrypt(keys.encKey, env1);
+    check(new TextDecoder().decode(back) === new TextDecoder().decode(payload), 'decrypt(encrypt(x)) === x');
+    info('gzip: ' + kb(payload.length) + ' plaintext -> ' + kb(env1.length) + ' encrypted envelope');
+
+    let rejected = false;
+    try { await S.decrypt(wrongCode.encKey, env1); }
+    catch (e) { rejected = (e.code === 'DECRYPT_FAILED'); }
+    check(rejected, 'the WRONG key fails cleanly with DECRYPT_FAILED (not a raw OperationError)');
+
+    /* ─────────────────────────────────────────────────────────── */
+    head('6. Shred / rehydrate a realistic story  (THE load-bearing test)');
+    info('building a 6-image story with noise PNGs...');
+    await new Promise(r => setTimeout(r, 0));
+
+    const story = makeStory(6);
+    const originalJson = JSON.stringify(story);
+    info('full story.json = ' + mb(originalJson.length) + '  <- what we would push every 5 min WITHOUT this');
+
+    const tShred = performance.now();
+    const { manifestStory, blobs } = await S.stripImages(story);
+    const shredMs = performance.now() - tShred;
+
+    const manifestJson = JSON.stringify(manifestStory);
+    let blobBytes = 0;
+    for (const b of blobs.values()) blobBytes += b.bytes.length;
+
+    info('manifest      = ' + kb(manifestJson.length) + '  <- what we actually push each time');
+    info('unique images = ' + blobs.size + ' (' + mb(blobBytes) + ', uploaded ONCE each)');
+    info('shred took ' + shredMs.toFixed(0) + ' ms');
+
+    check(blobs.size === 6, '7 image references collapsed to 6 unique blobs (the reused image stored once)');
+    check(manifestJson.length < 200 * 1024, 'manifest is under 200KB (was ' + mb(originalJson.length) + ')');
+    check(!manifestJson.includes('data:image/png'), 'NO full-size PNG survived into the manifest');
+    check(manifestJson.includes('data:image/jpeg'), 'thumbnails DID stay inline (deliberate — they churn every save)');
+
+    const shrink = (originalJson.length / manifestJson.length).toFixed(0);
+    info('=> recurring payload is ' + shrink + 'x smaller. This is what makes it viable on school wifi.');
+
+    // The whole feature rests on this being an exact inverse.
+    const restored = await S.rehydrate(manifestStory, blobs);
+    const restoredJson = JSON.stringify(restored);
+    check(restoredJson === originalJson, 'rehydrate(strip(story)) is BYTE-IDENTICAL to the original story');
+
+    if (restoredJson !== originalJson) {
+      info('length: original ' + originalJson.length + ' vs restored ' + restoredJson.length);
+      for (let i = 0; i < Math.min(originalJson.length, restoredJson.length); i++) {
+        if (originalJson[i] !== restoredJson[i]) {
+          info('first divergence at char ' + i + ':');
+          info('  original: ...' + originalJson.slice(Math.max(0, i - 60), i + 60));
+          info('  restored: ...' + restoredJson.slice(Math.max(0, i - 60), i + 60));
+          break;
+        }
+      }
+    }
+
+    let missing = false;
+    try { await S.rehydrate(manifestStory, new Map()); }
+    catch (e) { missing = (e.code === 'MISSING_BLOB'); }
+    check(missing, 'a missing blob raises MISSING_BLOB (so a torn pull aborts instead of writing a broken story)');
+
+    /* ─────────────────────────────────────────────────────────── */
+    head('7. Full push simulation  (shred -> gzip -> encrypt)');
+    const enveloped = await S.encrypt(keys.encKey, new TextEncoder().encode(manifestJson), { compress: true });
+    info('on the wire per sync = ' + kb(enveloped.length) + ' (encrypted + gzipped manifest)');
+    check(enveloped.length < 200 * 1024, 'each recurring sync is under 200KB on the wire');
+
+    const rt = JSON.parse(new TextDecoder().decode(await S.decrypt(keys.encKey, enveloped)));
+    const rtStory = await S.rehydrate(rt, blobs);
+    check(JSON.stringify(rtStory) === originalJson, 'FULL ROUND TRIP: shred->gzip->encrypt->decrypt->gunzip->rehydrate === original');
+
+  } catch (e) {
+    bad('EXCEPTION: ' + (e && e.stack ? e.stack : e));
+  }
+
+  head(failures === 0 ? '\nALL TESTS PASSED' : '\n' + failures + ' TEST(S) FAILED');
+  document.getElementById('run').disabled = false;
+};
+</script>
+</body>
+</html>
