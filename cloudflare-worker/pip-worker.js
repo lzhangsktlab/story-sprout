@@ -14,6 +14,7 @@
 //
 //   Teacher Mode sync (zero-knowledge relay — see the big block comment below):
 //   POST /sync/register     — teacher only (Google ID token). Creates a team.
+//   POST /sync/delete       — teacher only. Erases a team and everything in it.
 //   GET  /sync/state        — cheap poll: { rev, updatedAt, serverTime }
 //   GET  /sync/manifest     — download the encrypted story
 //   PUT  /sync/manifest     — upload it (compare-and-set on X-Base-Rev; 409 on conflict)
@@ -362,6 +363,18 @@ function makeStore(env) {
       return o ? { size: o.size } : null;
     },
     async delete(key) { await bucket.delete(key); },
+    async list(prefix) {
+      // R2 pages at 1000; a team can hold more objects than that once snapshots
+      // and images pile up, so keep asking until it says there's no more.
+      const keys = [];
+      let cursor;
+      do {
+        const r = await bucket.list({ prefix, cursor });
+        for (const o of r.objects) keys.push(o.key);
+        cursor = r.truncated ? r.cursor : null;
+      } while (cursor);
+      return keys;
+    },
   };
 }
 
@@ -559,6 +572,24 @@ async function handleSync(path, request, env) {
         rev: 0, updatedAt: 0, bytes: 0, blobCount: 0,
       }), 'application/json');
       return jsonResponse({ objectKey, created: true });
+    }
+
+    // Deleting a team is irreversible, so it requires TEACHER credentials — not
+    // just the team token. A child knows their own team's code, and "delete
+    // everything we made" must not be one mistyped click away for them.
+    if (path === '/sync/delete' && request.method === 'POST') {
+      const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+      if (isRegisterRateLimited(ip)) throw httpError(429, 'Too many attempts. Wait a minute.');
+      await verifyTeacher(request, env);
+
+      const { authToken } = await request.json();
+      const objectKey = await objectKeyFor(authToken);
+      if (!objectKey) throw httpError(400, 'Bad team token.');
+
+      const prefix = `t/${objectKey}/`;
+      const keys = await store.list(prefix);
+      for (const k of keys) await store.delete(k);
+      return jsonResponse({ deleted: keys.length });
     }
 
     // Every remaining route authenticates with the team token alone. The relay

@@ -165,6 +165,11 @@ html, body {
 #sync-pill.syncing { color: var(--amber); }
 #sync-pill.error   { color: var(--red, #e05c5c); }
 
+/* Hidden by default: a computer that has never joined a class should look exactly
+   as it always did. JS reveals it, and hides it again once the class is joined. */
+#tb-join-btn { display: none; }
+#tb-join-btn.on { display: inline-flex; }
+
 /* Full-screen and deliberately blocking. The canvas must not be reachable until
    identity resolves — if a child starts drawing behind this and we then restore
    their teacher's copy over the top, we have destroyed their work. */
@@ -1225,6 +1230,13 @@ html, body {
       <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>
       <span id="sync-pill-text">Offline</span>
     </div>
+
+    <!-- Shown only on a computer that has never joined a class. Once it has, the
+         cached keys take over and the sync pill replaces this. -->
+    <button class="tb-btn tb-btn-icon" id="tb-join-btn" title="Connect this computer to a teacher's class">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 9.5a3 3 0 100-6 3 3 0 000 6zM2.5 14a5.5 5.5 0 0111 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Join class
+    </button>
     <div class="tb-sep"></div>
 
     <button class="tb-btn tb-btn-icon" id="tb-new-btn" title="New story">
@@ -3396,6 +3408,7 @@ function pipToggleMic() {
 function wireButtons() {
   // Top bar
   document.getElementById('tb-back-btn').onclick     = () => { history.back(); };
+  document.getElementById('tb-join-btn').onclick     = joinClass;
   document.getElementById('tb-new-btn').onclick      = newStory;
   document.getElementById('tb-save-btn').onclick    = saveStory;
   document.getElementById('tb-saveas-btn').onclick  = saveStoryAs;
@@ -3827,9 +3840,18 @@ function showTeamGate() {
   });
 }
 
-// Teacher Mode is opt-in per computer: ?class=1 the first time, and from then on
-// the cached keys keep it on. A machine that has never joined a class is
-// completely unaffected by any of this.
+// Opens the gate and connects, if the child goes through with it. Used both by
+// the "Join class" button and by the ?class=1 first-run path.
+async function joinClass() {
+  const keys = await showTeamGate();
+  if (!keys) return;                                 // child chose to work alone
+  document.getElementById('tb-join-btn').classList.remove('on');
+  await syncStart(keys);
+}
+
+// Teacher Mode is opt-in per computer. A machine that has never joined a class is
+// completely unaffected by any of this — it just shows a "Join class" button.
+// Once joined, the cached keys keep it on and the child is never asked again.
 async function initTeacherMode() {
   if (typeof SproutSync === 'undefined') return;
 
@@ -3844,13 +3866,12 @@ async function initTeacherMode() {
   let keys = null;
   try { keys = await SproutSync.loadCachedKeys(); } catch {}
 
-  const wantsClass = new URLSearchParams(location.search).has('class');
-  if (!keys && !wantsClass) return;                  // not a class computer — done
+  if (keys) { await syncStart(keys); return; }       // already in a class — reconnect
 
-  if (!keys) keys = await showTeamGate();
-  if (!keys) return;                                 // child chose to work alone
-
-  await syncStart(keys);
+  // Never joined. Offer the button, and open the gate straight away if the
+  // teacher handed out a ?class=1 link.
+  document.getElementById('tb-join-btn').classList.add('on');
+  if (new URLSearchParams(location.search).has('class')) await joinClass();
 }
 
 window.addEventListener('DOMContentLoaded', async () => {

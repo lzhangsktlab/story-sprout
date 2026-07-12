@@ -390,6 +390,108 @@
       display: none !important;
     }
 
+    .team-actions {
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .del-link {
+      background: none;
+      border: none;
+      padding: 4px 2px;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink3);
+      cursor: pointer;
+    }
+
+    .del-link:hover {
+      background: none;
+      color: var(--red);
+    }
+
+    /* Deleting a team destroys the only copy of its secret code, and with it any
+       hope of ever reading that team's encrypted work again. It gets a real
+       dialog, not a browser confirm() nobody reads. */
+    #confirm-back {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      background: rgba(24, 20, 40, .55);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #confirm-back.open {
+      display: flex;
+    }
+
+    .confirm-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 28px 30px;
+      width: 460px;
+      max-width: 92vw;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, .28);
+    }
+
+    .confirm-card h3 {
+      margin: 0 0 10px;
+      font-size: 17px;
+      color: var(--red);
+    }
+
+    .confirm-card p {
+      font-size: 13px;
+      color: var(--ink2);
+      margin: 0 0 12px;
+      line-height: 1.6;
+    }
+
+    .confirm-card ul {
+      font-size: 12.5px;
+      color: var(--ink2);
+      margin: 0 0 14px;
+      padding-left: 20px;
+      line-height: 1.8;
+    }
+
+    .confirm-card input {
+      width: 100%;
+      box-sizing: border-box;
+      font-family: var(--font);
+      font-size: 14px;
+      padding: 10px 12px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--cream);
+    }
+
+    .confirm-card input:focus {
+      outline: none;
+      border-color: var(--red);
+      background: var(--white);
+    }
+
+    .confirm-row {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 18px;
+    }
+
+    .btn-danger {
+      background: var(--red);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #c94a4a;
+    }
+
     select,
     input[type=number] {
       font-family: var(--font);
@@ -487,6 +589,27 @@
     <div class="grid" id="teams"></div>
 
   </main>
+
+  <!-- Delete confirmation. Typing the team name is deliberate friction: this is
+       irreversible, and the encrypted work becomes unreadable forever. -->
+  <div id="confirm-back">
+    <div class="confirm-card">
+      <h3>Delete this team?</h3>
+      <p>You are about to permanently delete <strong id="del-name">—</strong>. This cannot be undone.</p>
+      <ul>
+        <li>Its secret code will be gone — and that code is the <strong>only key</strong> that can decrypt this team's work.</li>
+        <li>Everything it has synced will be erased from the relay.</li>
+        <li>The stories already collected onto this computer will be deleted too.</li>
+      </ul>
+      <p style="margin-bottom:8px">Type <strong id="del-confirm-name">—</strong> to confirm:</p>
+      <input id="del-input" type="text" autocomplete="off" spellcheck="false" placeholder="team name">
+      <div class="err" id="del-err"></div>
+      <div class="confirm-row">
+        <button class="ghost" id="del-cancel">Cancel</button>
+        <button class="btn-danger" id="del-go" disabled>Delete forever</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     /* ═══════════════════════════════════════════════════════════════════════════
@@ -672,7 +795,41 @@
       rec.thumb = (story.slides || []).map(s => s.thumb).find(Boolean) || null;
       rec.status = 'ok';
       rec.error = null;
+
+      // Which images in images/ this team relies on. Images are shared between
+      // teams, so this is the only way to know later whether a given file is
+      // still needed by somebody or is a true orphan.
+      rec.blobHashes = Object.keys(manifest.blobs || {});
       return true;
+    }
+
+    // Delete images that no remaining team references. Runs after a team is
+    // removed. Bails out entirely if any team's references are unknown — an
+    // orphaned image wastes a few megabytes, but deleting one a story still needs
+    // silently breaks that story, and only one of those is recoverable.
+    async function pruneImages() {
+      const teams = Object.values(T.klass.teams || {});
+      const collected = teams.filter(t => t.lastRev > 0);
+      if (collected.some(t => !Array.isArray(t.blobHashes))) {
+        log('skipped image cleanup — some teams were collected before image tracking existed');
+        return 0;
+      }
+
+      const needed = new Set();
+      for (const t of collected) for (const h of t.blobHashes) needed.add(h);
+
+      const imagesDir = await dir(T.root, 'images');
+      let removed = 0;
+      const doomed = [];
+      for await (const [name, handle] of imagesDir.entries()) {
+        if (handle.kind !== 'file') continue;
+        const hash = name.replace(/\.[^.]+$/, '');
+        if (!needed.has(hash)) doomed.push(name);
+      }
+      for (const name of doomed) {
+        try { await imagesDir.removeEntry(name); removed++; } catch {}
+      }
+      return removed;
     }
 
     async function collectAll() {
@@ -724,7 +881,10 @@
         <div class="team-title">${rec.storyTitle || '—'}</div>
         <div class="team-meta"><span class="dot ${dot}"></span>${meta}</div>
         <div class="code hidden" data-code="${team.secretCode}">Click to show the secret code</div>
+        <div class="team-actions"><button class="del-link">Delete team</button></div>
       </div>`;
+
+        el.querySelector('.del-link').onclick = () => askDelete(team);
 
         const codeEl = el.querySelector('.code');
         codeEl.onclick = () => {
@@ -833,6 +993,84 @@
       }
     }
 
+    /* ── delete a team ───────────────────────────────────────────────────────
+       A team lives in three places, and leaving any of them behind is its own
+       kind of mess: the relay would keep encrypted blobs nobody can ever open
+       again, and the disk would keep stories for a team that no longer exists.
+       ─────────────────────────────────────────────────────────────────────── */
+
+    let pendingDelete = null;
+
+    function askDelete(team) {
+      pendingDelete = team;
+      $('del-name').textContent = team.teamName;
+      $('del-confirm-name').textContent = team.teamName;
+      $('del-input').value = '';
+      $('del-go').disabled = true;
+      hideErr('del-err');
+      $('confirm-back').classList.add('open');
+      $('del-input').focus();
+    }
+
+    function closeDelete() {
+      $('confirm-back').classList.remove('open');
+      pendingDelete = null;
+    }
+
+    async function doDelete() {
+      const team = pendingDelete;
+      if (!team) return;
+
+      const btn = $('del-go');
+      btn.disabled = true;
+      btn.textContent = 'Deleting…';
+      hideErr('del-err');
+
+      try {
+        // 1. The relay first. If this fails we stop and change nothing locally —
+        //    better a team that still exists than a teacher.json with no code for
+        //    blobs that are still sitting in the bucket.
+        const keys = await SproutSync.deriveKeys(team.teamName, team.secretCode);
+        const res = await fetch(WORKER + '/sync/delete', {
+          method: 'POST',
+          headers: { ...teacherAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ authToken: keys.authToken }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'could not erase the team from the relay');
+        const { deleted } = await res.json();
+
+        // 2. The collected work on this computer. Only "it was never there" is an
+        //    acceptable failure — anything else means we did NOT delete what we
+        //    said we deleted, and the teacher needs to hear about it.
+        try {
+          const teamsDir = await dir(T.root, 'teams');
+          await teamsDir.removeEntry(team.teamName, { recursive: true });
+        } catch (e) {
+          if (e.name !== 'NotFoundError') throw new Error('Erased from the relay, but could not delete the folder on this computer: ' + e.message);
+        }
+
+        // 3. The bookkeeping — before pruning, so pruneImages() sees the team as
+        //    already gone and its images as unreferenced.
+        T.teacher.teams = T.teacher.teams.filter(t => t.teamName !== team.teamName);
+        delete T.klass.teams[team.teamName];
+        await writeJson(T.root, 'teacher.json', T.teacher);
+        await writeJson(T.root, 'class.json', T.klass);
+
+        // 4. Images that no surviving team still needs.
+        const pruned = await pruneImages();
+
+        log('deleted team ' + team.teamName + ' — ' + deleted + ' erased from the relay, '
+            + pruned + ' unused image(s) removed from this computer');
+        closeDelete();
+        renderTeams();
+      } catch (e) {
+        showErr('del-err', e.message);
+      } finally {
+        btn.textContent = 'Delete forever';
+        btn.disabled = false;
+      }
+    }
+
     function restartTimer() {
       clearInterval(T.timer);
       const min = parseInt($('interval').value, 10);
@@ -917,6 +1155,20 @@
     $('pick-folder').onclick = pickFolder;
     $('switch-signin').onclick = switchSignIn;
     $('new-team').onclick = newTeam;
+    $('del-cancel').onclick = closeDelete;
+    $('del-go').onclick = doDelete;
+
+    // The button stays dead until the name matches exactly. Case-insensitive, so
+    // this is friction against an accidental click, not a typing test.
+    $('del-input').oninput = () => {
+      const typed = $('del-input').value.trim().toLowerCase();
+      const want = (pendingDelete?.teamName || '').toLowerCase();
+      $('del-go').disabled = !want || typed !== want;
+    };
+    $('del-input').onkeydown = (e) => {
+      if (e.key === 'Enter' && !$('del-go').disabled) doDelete();
+      if (e.key === 'Escape') closeDelete();
+    };
     $('sync-now').onclick = collectAll;
     $('interval').onchange = async () => {
       T.teacher.settings.pullIntervalMin = parseInt($('interval').value, 10);
