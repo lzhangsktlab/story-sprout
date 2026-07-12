@@ -390,6 +390,25 @@
       display: none !important;
     }
 
+    .live {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink3);
+      white-space: nowrap;
+    }
+
+    .live .dot {
+      animation: livePulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes livePulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: .25; }
+    }
+
     .collect-status {
       font-size: 12px;
       font-weight: 600;
@@ -577,18 +596,14 @@
           <p style="margin:0">One team = one computer. Tape its code to that machine.</p>
         </div>
         <div class="spacer"></div>
-        <!-- Checking is a few bytes; only DOWNLOADING costs anything, and that only
-             happens when a student has actually changed something. So checking
-             often is nearly free, and 30s makes the board feel live. -->
-        <label style="font-size:12px;color:var(--ink3)">Check every
-          <select id="interval">
-            <option value="0.5" selected>30 sec</option>
-            <option value="1">1 min</option>
-            <option value="2">2 min</option>
-            <option value="5">5 min</option>
-            <option value="0">Off</option>
-          </select>
-        </label>
+        <!-- No interval picker. It used to exist because collecting was expensive, so
+             a teacher had to trade freshness against cost. That trade is gone:
+             checks are a few bytes, they pause when the tab is hidden, and they fire
+             on return. Asking a teacher to pick a number is just making them think
+             about plumbing. -->
+        <span class="live" id="live-dot" title="This board updates by itself">
+          <span class="dot fresh"></span> Updating automatically
+        </span>
         <button id="new-team">+ New team</button>
       </div>
 
@@ -1030,12 +1045,11 @@
 
       T.teacher = await readJson(T.root, 'teacher.json') || {
         fmt: 1, teacherEmail: T.email,
-        settings: { pullIntervalMin: 0.5 },
+        settings: { checkEverySec: DEFAULT_CHECK_SEC },
         teams: [],
       };
       T.klass = await readJson(T.root, 'class.json') || { fmt: 1, teams: {} };
 
-      $('interval').value = String(T.teacher.settings.pullIntervalMin ?? 0.5);
       $('class-panel').classList.remove('hide');
       $('sync-now').disabled = false;
       renderTeams();
@@ -1162,20 +1176,24 @@
       }
     }
 
+    // Checking costs one small metadata read per team, and downloads only happen when
+    // a student actually changed something — so 30s is nearly free and makes the board
+    // feel live. Still overridable by hand in teacher.json for an unusually large class.
+    const DEFAULT_CHECK_SEC = 30;
+
     function restartTimer() {
       clearInterval(T.timer);
-      const min = parseFloat($('interval').value);
+      const sec = Number(T.teacher?.settings?.checkEverySec) || DEFAULT_CHECK_SEC;
+
       // Background checks run quietly: no button flicker, no status line flashing
       // every thirty seconds. They only announce themselves when work arrives.
       //
       // And they stop entirely when nobody is looking. A dashboard left open over a
       // weekend would otherwise poll the relay a hundred thousand times to tell an
       // empty room that nothing has changed.
-      if (min > 0) {
-        T.timer = setInterval(() => {
-          if (document.visibilityState === 'visible') collectAll({ quiet: true });
-        }, min * 60000);
-      }
+      T.timer = setInterval(() => {
+        if (document.visibilityState === 'visible') collectAll({ quiet: true });
+      }, sec * 1000);
     }
 
     // Coming back to the tab: check straight away rather than waiting out the rest
@@ -1283,11 +1301,6 @@
       if (e.key === 'Escape') closeDelete();
     };
     $('sync-now').onclick = collectAll;
-    $('interval').onchange = async () => {
-      T.teacher.settings.pullIntervalMin = parseFloat($('interval').value);
-      await writeJson(T.root, 'teacher.json', T.teacher);
-      restartTimer();
-    };
   </script>
 </body>
 
