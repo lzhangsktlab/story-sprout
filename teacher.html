@@ -390,6 +390,22 @@
       display: none !important;
     }
 
+    .collect-status {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink3);
+      text-align: right;
+      max-width: 380px;
+    }
+
+    .collect-status.ok {
+      color: var(--green);
+    }
+
+    .collect-status.err {
+      color: var(--red);
+    }
+
     .team-actions {
       margin-top: 10px;
       display: flex;
@@ -520,6 +536,7 @@
     <h1>Story Sprout</h1>
     <span class="tag">Teacher</span>
     <div class="spacer"></div>
+    <span class="collect-status" id="collect-status"></span>
     <span id="who" style="font-size:12px;color:var(--ink3)"></span>
     <button class="ghost hide" id="switch-signin" style="font-size:11px;padding:6px 10px">Switch</button>
     <button class="ghost" id="sync-now" disabled>Collect work now</button>
@@ -832,16 +849,32 @@
       return removed;
     }
 
+    // Always says what it did. A collect that silently finds nothing new looks
+    // identical to a collect that's broken, and the teacher has no way to tell
+    // them apart — so spell out the outcome every time, including "nothing new".
     async function collectAll() {
       if (!T.root || !T.teacher) return;
-      $('sync-now').disabled = true;
+
+      const btn = $('sync-now');
+      btn.disabled = true;
+      btn.textContent = 'Collecting…';
       hideErr('class-err');
 
-      let changed = 0;
+      if (!T.teacher.teams.length) {
+        setCollectStatus('No teams yet — create one first.');
+        btn.disabled = false;
+        btn.textContent = 'Collect work now';
+        return;
+      }
+
+      let changed = 0, empty = 0, failed = 0;
       for (const team of T.teacher.teams) {
         try {
           if (await collectTeam(team)) { changed++; log('collected ' + team.teamName); }
+          else if ((T.klass.teams[team.teamName] || {}).lastRev > 0) { /* already up to date */ }
+          else empty++;
         } catch (e) {
+          failed++;
           const rec = T.klass.teams[team.teamName] || (T.klass.teams[team.teamName] = { teamName: team.teamName, lastRev: 0 });
           rec.status = 'error';
           rec.error = e.message;
@@ -852,8 +885,30 @@
       T.klass.updatedAt = new Date().toISOString();
       await writeJson(T.root, 'class.json', T.klass);
       renderTeams();
-      $('sync-now').disabled = false;
-      if (changed) log(changed + ' team(s) had new work');
+
+      const bits = [];
+      if (changed) bits.push(changed + ' team' + (changed > 1 ? 's' : '') + ' had new work');
+      if (failed)  bits.push(failed + ' failed');
+      if (!changed && !failed) {
+        bits.push(empty === T.teacher.teams.length
+          ? 'No work sent yet — students\' work appears about a minute after they start drawing'
+          : 'Everything is already up to date');
+      }
+      const msg = bits.join(' · ');
+      setCollectStatus(msg, failed ? 'err' : 'ok');
+      log(msg);
+
+      btn.disabled = false;
+      btn.textContent = 'Collect work now';
+    }
+
+    let collectStatusTimer = null;
+    function setCollectStatus(msg, kind) {
+      const el = $('collect-status');
+      el.textContent = msg;
+      el.className = 'collect-status ' + (kind || '');
+      clearTimeout(collectStatusTimer);
+      collectStatusTimer = setTimeout(() => { el.textContent = ''; }, 8000);
     }
 
     /* ── render ──────────────────────────────────────────────────────────────── */

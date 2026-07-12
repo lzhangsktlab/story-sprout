@@ -1623,8 +1623,8 @@ html, body {
      cached, later visits skip it entirely — the child is never asked again. -->
 <div id="team-gate">
   <div class="team-card">
-    <h2 id="team-gate-title">Join your class</h2>
-    <p id="team-gate-sub">Enter the team name and secret code your teacher gave you.</p>
+    <h2 id="team-gate-title">Who's working today?</h2>
+    <p id="team-gate-sub">Enter your team name and secret code.<br>Your story will load right back up.</p>
 
     <label for="team-name-input">Team name</label>
     <input id="team-name-input" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. Table 3">
@@ -3574,8 +3574,10 @@ const SYNC = {
 };
 
 const SYNC_DEBOUNCE_MS = 30000;   // local autosave is 5s; pushing that often is absurd
-const LS_REV = 'sprout_last_pushed_rev';
-const LS_DEV = 'sprout_device_id';
+const LS_REV   = 'sprout_last_pushed_rev';
+const LS_DEV   = 'sprout_device_id';
+const LS_CLASS = 'sprout_class_computer';  // this machine has been used for a class
+const LS_TEAM  = 'sprout_local_team';      // which team the local autosave belongs to
 
 // The version of sprout-sync.js this page is built against. A browser that served
 // a STALE cached copy would derive keys by a different recipe than the teacher's
@@ -3734,10 +3736,29 @@ async function syncRestore() {
 
   SYNC.rev = state.rev;
 
-  const localAutosave = await idbGet('storysketch_autosave');
-  const lastPushed = parseInt(localStorage.getItem(LS_REV) || '-1', 10);
+  // Computers get passed between teams. Whatever is autosaved locally belongs to
+  // whoever used this machine LAST — which may not be the team now sitting at it.
+  // Showing Team B the story Team A left behind would be a straightforward leak
+  // of one group's work to another, so a team switch discards the local copy
+  // outright and takes the relay as the only truth.
+  const previousTeam = localStorage.getItem(LS_TEAM);
+  const switched = previousTeam && previousTeam !== SYNC.keys.teamName;
 
-  if (state.rev === 0) return;                       // nothing has ever been synced
+  if (switched) {
+    await idbSet('storysketch_autosave', null);
+    localStorage.removeItem(LS_REV);
+  }
+  localStorage.setItem(LS_TEAM, SYNC.keys.teamName);
+
+  const localAutosave = switched ? null : await idbGet('storysketch_autosave');
+  const lastPushed = switched ? -1 : parseInt(localStorage.getItem(LS_REV) || '-1', 10);
+
+  if (state.rev === 0) {
+    // A brand-new team. If the last team left a story on this screen, clear it —
+    // this group should start on a blank page, not inherit someone else's.
+    if (switched) newStory();
+    return;
+  }
 
   if (localAutosave && lastPushed === state.rev) {
     loadStoryData(localAutosave);                    // our own work, already up there
@@ -3820,7 +3841,11 @@ function showTeamGate() {
         }
         if (!res.ok) throw new Error('Could not reach your class right now. Check the internet connection.');
 
-        await SproutSync.cacheKeys(keys);
+        // Deliberately NOT cached. This computer may belong to a different team
+        // tomorrow, and a team's keys are the only thing protecting its work —
+        // they should not outlive the session on a machine that gets passed around.
+        try { await SproutSync.clearCachedKeys(); } catch {}
+
         gate.classList.remove('open');
         resolve(keys);
       } catch (e) {
@@ -3841,17 +3866,22 @@ function showTeamGate() {
 }
 
 // Opens the gate and connects, if the child goes through with it. Used both by
-// the "Join class" button and by the ?class=1 first-run path.
+// the "Join class" button and by the sign-in on every load.
 async function joinClass() {
   const keys = await showTeamGate();
   if (!keys) return;                                 // child chose to work alone
+  localStorage.setItem(LS_CLASS, '1');
   document.getElementById('tb-join-btn').classList.remove('on');
   await syncStart(keys);
 }
 
 // Teacher Mode is opt-in per computer. A machine that has never joined a class is
 // completely unaffected by any of this — it just shows a "Join class" button.
-// Once joined, the cached keys keep it on and the child is never asked again.
+//
+// But once it HAS been used for a class, it asks for the team name and code on
+// EVERY load. Classroom computers get handed around between groups, and the
+// machine has no way to know which team is sitting at it today. Remembering the
+// last one would hand a child someone else's story.
 async function initTeacherMode() {
   if (typeof SproutSync === 'undefined') return;
 
@@ -3863,15 +3893,13 @@ async function initTeacherMode() {
     return;
   }
 
-  let keys = null;
-  try { keys = await SproutSync.loadCachedKeys(); } catch {}
+  const isClassComputer = localStorage.getItem(LS_CLASS) === '1';
+  const invited = new URLSearchParams(location.search).has('class');
 
-  if (keys) { await syncStart(keys); return; }       // already in a class — reconnect
+  if (isClassComputer || invited) { await joinClass(); return; }
 
-  // Never joined. Offer the button, and open the gate straight away if the
-  // teacher handed out a ?class=1 link.
+  // Never used for a class. Just offer the button.
   document.getElementById('tb-join-btn').classList.add('on');
-  if (new URLSearchParams(location.search).has('class')) await joinClass();
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
