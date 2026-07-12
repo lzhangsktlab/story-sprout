@@ -12,17 +12,43 @@
 //                      Body: { image (data URL), prompt, quality?, size? }
 //                      Returns: { image } (data URL), or { blocked: true }
 //
+//   Teacher Mode sync (zero-knowledge relay — see the big block comment below):
+//   POST /sync/register     — teacher only (Google ID token). Creates a team.
+//   GET  /sync/state        — cheap poll: { rev, updatedAt, serverTime }
+//   GET  /sync/manifest     — download the encrypted story
+//   PUT  /sync/manifest     — upload it (compare-and-set on X-Base-Rev; 409 on conflict)
+//   POST /sync/blobs/check  — { ids[] } -> { missing[] }, so a push is 1–2 requests
+//   GET  /sync/blob/<id>    — download an encrypted image
+//   PUT  /sync/blob/<id>    — upload one (idempotent)
+//   GET  /sync/assign       — the teacher's assignment (student reads)
+//   PUT  /sync/assign       — set it (teacher writes)
+//
 // Environment secret required:
 //   OPENAI_API_KEY — your OpenAI API key (set as an encrypted secret)
 //
+// Required for Teacher Mode:
+//   SPROUT_BUCKET          — R2 bucket BINDING (Settings → Bindings → R2 bucket)
+//
+// Teacher sign-in — configure EITHER or BOTH (both is recommended: the passphrase
+// means a broken OAuth config can't lock a teacher out mid-lesson):
+//   GOOGLE_CLIENT_ID       — plain var; the OAuth Web client ID from Google Cloud
+//   ALLOWED_TEACHER_EMAILS — plain var; comma-separated allowlist of teacher emails
+//   TEACHER_PASSPHRASE     — SECRET. The fallback. Make it long and random —
+//                            anyone holding it can create teams on your relay.
+//                            (It cannot read any student's work: that needs the
+//                            team's own secret code, which never reaches us.)
+//
 // Deploy: Cloudflare Dashboard → Workers & Pages → your worker → Edit code → Paste → Deploy
+//
+// ⚠ The dashboard copy and this file WILL drift. This file is the source of
+//   truth; the deploy is manual and easy to forget.
 
 const CHAT_URL       = 'https://api.openai.com/v1/chat/completions';
 const IMAGE_URL      = 'https://api.openai.com/v1/images/generations';
 const IMAGE_EDIT_URL = 'https://api.openai.com/v1/images/edits';
 
 const CHAT_MODEL  = 'gpt-4o-mini';   // conversation: fast + cheap
-const IMAGE_MODEL = 'gpt-image-1';   // illustration generation
+const IMAGE_MODEL = 'gpt-image-2';   // illustration generation
 
 // ── CORS: locked to this app's origins ───────────────────────────────────────
 // The live site plus local testing. To fully lock down, remove the localhost /
@@ -43,8 +69,11 @@ function corsHeaders(origin) {
   const allow = isAllowedOrigin(origin) ? (origin || '*') : ALLOWED_ORIGINS[0];
   return {
     'Access-Control-Allow-Origin': allow,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+    // X-Team-Auth / X-Base-Rev are the sync routes. Auth rides in a HEADER, not
+    // the URL — URLs land in Cloudflare's request logs and analytics; headers don't.
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Team-Auth, X-Base-Rev',
+    'Access-Control-Expose-Headers': 'X-Rev, X-Updated-At',
     'Vary': 'Origin',
   };
 }
@@ -267,6 +296,408 @@ async function handleImageEdit(body, env) {
   return jsonResponse({ image: `data:image/png;base64,${b64}` });
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   TEACHER MODE — zero-knowledge sync relay
+   ───────────────────────────────────────────────────────────────────────────
+   This Worker is a DEAD-DROP, not a database. Everything it stores arrives
+   already encrypted by the browser and it holds no key that can open any of it.
+   It cannot read a single word a child wrote, and that is the point.
+
+   What it does see:
+     authToken — HKDF'd from the team's secret code. Proves you belong to a team.
+                 The encryption key is a DIFFERENT HKDF branch, so possessing
+                 this token does not let the relay (or anyone who steals it)
+                 decrypt anything. It DOES let them overwrite — hence the
+                 revision history below.
+     objectKey — SHA-256(authToken), computed HERE, never sent by the client.
+                 Means an R2 key listing yields no usable tokens.
+
+   Storage layout (R2):
+     t/<objectKey>/meta.json         plaintext, SERVER-OWNED. rev counter + quota.
+     t/<objectKey>/manifest          encrypted. THE ATOMIC COMMIT POINT.
+     t/<objectKey>/rev/<n>.manifest  encrypted history — recovers from a malicious
+                                     overwrite by anyone who guessed a code.
+     t/<objectKey>/assign            encrypted. Teacher writes, student reads.
+     t/<objectKey>/b/<blobId>        encrypted images. Immutable, content-addressed.
+
+   The discipline that makes concurrent access safe without any locking:
+     UPLOAD BLOBS FIRST. PUBLISH THE MANIFEST LAST.
+   A manifest is only ever written once every image it references is durable, so
+   a teacher who pulls mid-write either sees the old story or the new one —
+   never a half-written one. Blobs are never deleted on the hot path, because
+   the teacher's older snapshots still reference them.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const MAX_BLOB_BYTES     = 8 * 1024 * 1024;   // gpt-image PNGs run 2–3MB; headroom
+const MAX_MANIFEST_BYTES = 4 * 1024 * 1024;   // real manifests are ~15KB
+const MAX_BLOBS_PER_TEAM = 500;
+const KEEP_REVISIONS     = 30;
+
+// ── Storage adapter ─────────────────────────────────────────────────────────
+// Swap THIS OBJECT to change backends; nothing else touches env.SPROUT_BUCKET.
+//
+// NB: Workers KV is NOT a valid target. It's eventually consistent (stale reads
+// for up to ~60s) and caps near 1 write/sec/key, which would make the revision
+// compare-and-set below unsafe rather than merely slow. Swap to S3/B2/another
+// object store, not KV.
+function makeStore(env) {
+  const bucket = env.SPROUT_BUCKET;
+  if (!bucket) throw new Error('SPROUT_BUCKET binding is missing — add the R2 bucket in the Worker settings.');
+  return {
+    async put(key, body, contentType) {
+      await bucket.put(key, body, {
+        httpMetadata: { contentType: contentType || 'application/octet-stream' },
+      });
+    },
+    async get(key) {
+      const o = await bucket.get(key);
+      return o ? await o.arrayBuffer() : null;
+    },
+    async getJson(key) {
+      const o = await bucket.get(key);
+      return o ? await o.json() : null;
+    },
+    async head(key) {
+      const o = await bucket.head(key);
+      return o ? { size: o.size } : null;
+    },
+    async delete(key) { await bucket.delete(key); },
+  };
+}
+
+// ── Sync rate limiting ──────────────────────────────────────────────────────
+// Keyed on the TEAM, not the IP. An entire classroom shares one school NAT
+// address, so the per-IP limiter used by the AI routes would throttle the whole
+// class the moment two Chromebooks synced at once.
+const SYNC_LIMIT = 240;             // per team…
+const SYNC_WINDOW_MS = 60_000;      // …per minute. A first sync uploads ~6–20 blobs.
+const syncHits = new Map();
+function isSyncRateLimited(objectKey) {
+  const now = Date.now();
+  const recent = (syncHits.get(objectKey) || []).filter(t => now - t < SYNC_WINDOW_MS);
+  recent.push(now);
+  syncHits.set(objectKey, recent);
+  if (syncHits.size > 2000) {
+    for (const [k, v] of syncHits) {
+      if (!v.length || now - v[v.length - 1] > SYNC_WINDOW_MS) syncHits.delete(k);
+    }
+  }
+  return recent.length > SYNC_LIMIT;
+}
+
+// Registration attempts, per IP. Deliberately far tighter than the sync budget:
+// this is what makes brute-forcing the teacher passphrase impractical.
+const REGISTER_LIMIT = 10;
+const REGISTER_WINDOW_MS = 60_000;
+const registerHits = new Map();
+function isRegisterRateLimited(ip) {
+  const now = Date.now();
+  const recent = (registerHits.get(ip) || []).filter(t => now - t < REGISTER_WINDOW_MS);
+  recent.push(now);
+  registerHits.set(ip, recent);
+  if (registerHits.size > 1000) {
+    for (const [k, v] of registerHits) {
+      if (!v.length || now - v[v.length - 1] > REGISTER_WINDOW_MS) registerHits.delete(k);
+    }
+  }
+  return recent.length > REGISTER_LIMIT;
+}
+
+function toHex(buf) {
+  const u8 = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < u8.length; i++) s += u8[i].toString(16).padStart(2, '0');
+  return s;
+}
+
+async function sha256Hex(str) {
+  return toHex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)));
+}
+
+// The team's storage prefix. Derived HERE from the token the client presents, so
+// the client never chooses where its data lands and a bucket listing leaks nothing.
+async function objectKeyFor(authToken) {
+  if (!/^[0-9a-f]{64}$/.test(authToken || '')) return null;   // reject anything malformed
+  return await sha256Hex(authToken);
+}
+
+/* ── Google ID-token verification ────────────────────────────────────────────
+   Verified properly against Google's JWKS with native WebCrypto — no npm, since
+   this Worker is deployed by pasting a single file into the dashboard.
+
+   (Google's /tokeninfo endpoint would be simpler, but Google explicitly
+   documents it as debug-only and subject to throttling.)
+   ─────────────────────────────────────────────────────────────────────────── */
+
+const JWKS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
+let jwksCache = { keys: null, expires: 0 };
+
+async function getGoogleKeys() {
+  if (jwksCache.keys && Date.now() < jwksCache.expires) return jwksCache.keys;
+  const res = await fetch(JWKS_URL);
+  if (!res.ok) throw new Error('Could not fetch Google signing keys');
+  const data = await res.json();
+  // Respect Google's own cache lifetime; they rotate these.
+  const cc = res.headers.get('Cache-Control') || '';
+  const maxAge = parseInt((cc.match(/max-age=(\d+)/) || [, '3600'])[1], 10);
+  jwksCache = { keys: data.keys, expires: Date.now() + maxAge * 1000 };
+  return data.keys;
+}
+
+function b64urlToBytes(s) {
+  const b64 = s.replace(/-/g, '+').replace(/_/g, '/') + '=='.slice(0, (4 - s.length % 4) % 4);
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+// Length-independent comparison, so a network attacker can't shave the
+// passphrase one character at a time off response timings.
+function constantTimeEqual(a, b) {
+  const A = new TextEncoder().encode(a);
+  const B = new TextEncoder().encode(b);
+  let diff = A.length ^ B.length;
+  for (let i = 0; i < Math.max(A.length, B.length); i++) {
+    diff |= (A[i] || 0) ^ (B[i] || 0);
+  }
+  return diff === 0;
+}
+
+// Returns the verified teacher identity, or throws.
+//
+// TWO ways in, deliberately. Google is the primary. The passphrase is the
+// fallback so a broken OAuth config or an expired token can't lock a teacher out
+// of their own class in the middle of a lesson — and so the whole feature works
+// for anyone who'd rather not put Google in the middle of children's work.
+async function verifyTeacher(request, env) {
+  const auth = request.headers.get('Authorization') || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  if (!token) throw httpError(401, 'Sign-in required.');
+
+  // ── Fallback: shared teacher passphrase ──────────────────────────────────
+  if (token.startsWith('pass:')) {
+    if (!env.TEACHER_PASSPHRASE) throw httpError(403, 'Passphrase sign-in is not enabled.');
+    if (!constantTimeEqual(token.slice(5), env.TEACHER_PASSPHRASE)) {
+      throw httpError(401, 'That teacher passphrase is not correct.');
+    }
+    return 'teacher@passphrase';
+  }
+
+  // ── Primary: Google ID token ─────────────────────────────────────────────
+  if (!env.GOOGLE_CLIENT_ID) throw httpError(403, 'Google sign-in is not configured on the server.');
+
+  const parts = token.split('.');
+  if (parts.length !== 3) throw httpError(401, 'Malformed sign-in token.');
+
+  const header = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[0])));
+  const claims = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[1])));
+
+  const jwk = (await getGoogleKeys()).find(k => k.kid === header.kid);
+  if (!jwk) throw httpError(401, 'Unknown signing key.');
+
+  const key = await crypto.subtle.importKey(
+    'jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify'],
+  );
+  const valid = await crypto.subtle.verify(
+    'RSASSA-PKCS1-v1_5', key,
+    b64urlToBytes(parts[2]),
+    new TextEncoder().encode(parts[0] + '.' + parts[1]),
+  );
+  if (!valid) throw httpError(401, 'Sign-in token signature is invalid.');
+
+  const now = Math.floor(Date.now() / 1000);
+  if (claims.exp <= now) throw httpError(401, 'Sign-in expired — please sign in again.');
+  if (claims.iat > now + 300) throw httpError(401, 'Sign-in token is from the future — check your clock.');
+  if (claims.aud !== env.GOOGLE_CLIENT_ID) throw httpError(401, 'Token was not issued for this app.');
+  if (!/^(https:\/\/)?accounts\.google\.com$/.test(claims.iss || '')) throw httpError(401, 'Bad token issuer.');
+  if (!claims.email || claims.email_verified !== true) throw httpError(401, 'Unverified Google account.');
+
+  // One teacher, one allowlist. Deliberately not a user table.
+  const allowed = String(env.ALLOWED_TEACHER_EMAILS || '')
+    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  if (!allowed.includes(claims.email.toLowerCase())) {
+    throw httpError(403, 'This Google account is not authorized to create classes.');
+  }
+  return claims.email.toLowerCase();
+}
+
+function httpError(status, message) {
+  const e = new Error(message);
+  e.status = status;
+  return e;
+}
+
+/* ── Sync router ─────────────────────────────────────────────────────────── */
+
+async function handleSync(path, request, env) {
+  try {
+    const store = makeStore(env);
+
+    // Registration is the ONLY route that talks to Google. It is also the single
+    // control that stops this relay being free storage for the whole internet:
+    // a team prefix does not exist until a signed-in teacher creates it, and
+    // every other route 403s on an unregistered prefix.
+    if (path === '/sync/register' && request.method === 'POST') {
+      // Registration is the one route that takes a guessable credential (the
+      // teacher passphrase), so it gets a tight per-IP budget. Creating teams is
+      // a once-a-term action; nobody legitimate does it ten times a minute.
+      const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+      if (isRegisterRateLimited(ip)) {
+        throw httpError(429, 'Too many attempts. Wait a minute and try again.');
+      }
+      const email = await verifyTeacher(request, env);
+      const { authToken } = await request.json();
+      const objectKey = await objectKeyFor(authToken);
+      if (!objectKey) throw httpError(400, 'Bad team token.');
+
+      const existing = await store.getJson(`t/${objectKey}/meta.json`);
+      if (existing) return jsonResponse({ objectKey, created: false });
+
+      await store.put(`t/${objectKey}/meta.json`, JSON.stringify({
+        createdAt: Date.now(), createdBy: email,
+        rev: 0, updatedAt: 0, bytes: 0, blobCount: 0,
+      }), 'application/json');
+      return jsonResponse({ objectKey, created: true });
+    }
+
+    // Every remaining route authenticates with the team token alone. The relay
+    // cannot tell a teacher from a student here — and doesn't need to.
+    const authToken = request.headers.get('X-Team-Auth') || '';
+    const objectKey = await objectKeyFor(authToken);
+    if (!objectKey) throw httpError(400, 'Missing or malformed team token.');
+    if (isSyncRateLimited(objectKey)) throw httpError(429, 'Syncing too fast — try again shortly.');
+
+    const metaKey = `t/${objectKey}/meta.json`;
+    const meta = await store.getJson(metaKey);
+    if (!meta) throw httpError(403, 'That team does not exist. Check the team name and secret code.');
+
+    // ── state: the cheap poll. The teacher's loop hits ONLY this, and downloads
+    //    the story only when rev actually moves.
+    if (path === '/sync/state' && request.method === 'GET') {
+      return jsonResponse({
+        exists: true, rev: meta.rev, updatedAt: meta.updatedAt,
+        bytes: meta.bytes, blobCount: meta.blobCount,
+        serverTime: Date.now(),   // clients must never trust their own clock
+      });
+    }
+
+    if (path === '/sync/manifest' && request.method === 'GET') {
+      const body = await store.get(`t/${objectKey}/manifest`);
+      if (!body) throw httpError(404, 'No work has been synced for this team yet.');
+      return new Response(body, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'X-Rev': String(meta.rev),
+          'X-Updated-At': String(meta.updatedAt),
+        },
+      });
+    }
+
+    if (path === '/sync/manifest' && request.method === 'PUT') {
+      const baseRev = parseInt(request.headers.get('X-Base-Rev') || '-1', 10);
+
+      // Compare-and-set on a SERVER-owned counter. Client clocks are worthless
+      // here — a Chromebook with the date set to 2030 would poison the ordering
+      // forever if we sorted by timestamp.
+      if (baseRev !== meta.rev) {
+        return jsonResponse({
+          error: 'conflict', rev: meta.rev, updatedAt: meta.updatedAt,
+        }, 409);
+      }
+
+      const body = await request.arrayBuffer();
+      if (body.byteLength > MAX_MANIFEST_BYTES) throw httpError(413, 'That story is too large to sync.');
+
+      const rev = meta.rev + 1;
+      const now = Date.now();
+
+      await store.put(`t/${objectKey}/manifest`, body);
+      await store.put(`t/${objectKey}/rev/${rev}.manifest`, body);   // cheap; recovers a clobbered team
+
+      meta.rev = rev;
+      meta.updatedAt = now;
+      meta.bytes = body.byteLength;
+      await store.put(metaKey, JSON.stringify(meta), 'application/json');
+
+      // Trim ancient revisions. Never touch blobs — old snapshots still need them.
+      if (rev > KEEP_REVISIONS) {
+        store.delete(`t/${objectKey}/rev/${rev - KEEP_REVISIONS}.manifest`).catch(() => {});
+      }
+
+      return jsonResponse({ rev, updatedAt: now });
+    }
+
+    // ── blobs/check: the batching that keeps a push to 1–2 requests instead of
+    //    twenty. Usually every image is already up there and nothing is missing.
+    if (path === '/sync/blobs/check' && request.method === 'POST') {
+      const { ids } = await request.json();
+      if (!Array.isArray(ids)) throw httpError(400, 'ids[] required.');
+      if (ids.length > MAX_BLOBS_PER_TEAM) throw httpError(413, 'Too many images in one story.');
+
+      const found = await Promise.all(
+        ids.map(id => store.head(`t/${objectKey}/b/${id}`).then(r => !!r).catch(() => false)),
+      );
+      return jsonResponse({ missing: ids.filter((_, i) => !found[i]) });
+    }
+
+    const blobMatch = path.match(/^\/sync\/blob\/([0-9a-f]{64})$/);
+    if (blobMatch) {
+      const blobId = blobMatch[1];
+      const key = `t/${objectKey}/b/${blobId}`;
+
+      if (request.method === 'GET') {
+        const body = await store.get(key);
+        if (!body) throw httpError(404, 'Image not found.');
+        return new Response(body, {
+          status: 200, headers: { 'Content-Type': 'application/octet-stream' },
+        });
+      }
+
+      if (request.method === 'PUT') {
+        // Blobs are immutable and content-addressed, so re-uploading one is
+        // always a no-op. Skipping it also means we never re-encrypt the same
+        // image under a fresh IV, which is one less way to get GCM wrong.
+        if (await store.head(key)) return jsonResponse({ stored: false, existed: true });
+
+        if (meta.blobCount >= MAX_BLOBS_PER_TEAM) throw httpError(413, 'This team has too many images.');
+
+        const body = await request.arrayBuffer();
+        if (body.byteLength > MAX_BLOB_BYTES) throw httpError(413, 'That image is too large.');
+
+        await store.put(key, body);
+        meta.blobCount = (meta.blobCount || 0) + 1;
+        await store.put(metaKey, JSON.stringify(meta), 'application/json');
+        return jsonResponse({ stored: true, existed: false }, 201);
+      }
+    }
+
+    // ── assign: its own object, deliberately. If the teacher wrote the
+    //    assignment into the student's manifest they would race the student's
+    //    push and one of them would lose. Teacher writes here; student only reads.
+    if (path === '/sync/assign') {
+      if (request.method === 'GET') {
+        const body = await store.get(`t/${objectKey}/assign`);
+        if (!body) throw httpError(404, 'No assignment set.');
+        return new Response(body, {
+          status: 200, headers: { 'Content-Type': 'application/octet-stream' },
+        });
+      }
+      if (request.method === 'PUT') {
+        const body = await request.arrayBuffer();
+        if (body.byteLength > MAX_MANIFEST_BYTES) throw httpError(413, 'Assignment too large.');
+        await store.put(`t/${objectKey}/assign`, body);
+        return jsonResponse({ ok: true });
+      }
+    }
+
+    throw httpError(404, 'Not found: ' + request.method + ' ' + path);
+  } catch (err) {
+    return jsonResponse({ error: err.message }, err.status || 500);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin');
@@ -275,26 +706,40 @@ export default {
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: cors });
     }
-    if (request.method !== 'POST') {
-      return withCors(jsonResponse({ error: 'POST required' }, 405), cors);
-    }
-
-    // Gentle anti-spam guard.
-    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-    if (isRateLimited(ip)) {
-      return withCors(
-        jsonResponse({ error: 'Too many requests — please slow down and try again in a moment.' }, 429),
-        cors,
-      );
-    }
 
     const url = new URL(request.url);
+    const path = url.pathname;
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+
     try {
-      const body = await request.json();
+      // ── Sync routes (Teacher Mode) ───────────────────────────────────────
+      // Handled before the AI routes: they take raw binary bodies, do their own
+      // rate limiting (a whole classroom shares ONE school NAT IP, so the
+      // per-IP budget below would 429 the entire class on day one), and must
+      // never fall through to OpenAI.
+      if (path.startsWith('/sync/')) {
+        return withCors(await handleSync(path, request, env), cors);
+      }
+
+      // ── AI routes ────────────────────────────────────────────────────────
+      if (request.method !== 'POST') {
+        return withCors(jsonResponse({ error: 'POST required' }, 405), cors);
+      }
+      if (isRateLimited(ip)) {
+        return withCors(
+          jsonResponse({ error: 'Too many requests — please slow down and try again in a moment.' }, 429),
+          cors,
+        );
+      }
+
       let resp;
-      if (url.pathname === '/image')           resp = await handleImage(body, env);
-      else if (url.pathname === '/image-edit') resp = await handleImageEdit(body, env);
-      else                                     resp = await handleChat(body, env);  // default + /chat
+      if      (path === '/image')      resp = await handleImage(await request.json(), env);
+      else if (path === '/image-edit') resp = await handleImageEdit(await request.json(), env);
+      else if (path === '/chat' || path === '/') resp = await handleChat(await request.json(), env);
+      // Everything else is a 404. It used to fall through to handleChat(), which
+      // meant a typo'd path silently called OpenAI and burned API credit.
+      else resp = jsonResponse({ error: 'Not found: ' + path }, 404);
+
       return withCors(resp, cors);
     } catch (err) {
       return withCors(jsonResponse({ error: err.message }, 500), cors);

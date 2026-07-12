@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Story Sprout — Teacher</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Shared byte-for-byte with workshop-plugin.html. If the crypto in the two pages
+     ever drifts, this page silently cannot decrypt student work. Bump ?v= together. -->
+  <script src="sprout-sync.js?v=1"></script>
+  <style>
+    :root {
+      --purple: #7c5cff;
+      --purple-dark: #5b3fd6;
+      --purple-light: #b9a6ff;
+      --purple-bg: #f2eeff;
+      --cream: #faf8f5;
+      --cream2: #f3efe9;
+      --cream3: #e9e3da;
+      --white: #fff;
+      --ink: #2c2836;
+      --ink2: #5a5470;
+      --ink3: #918aa6;
+      --border: #e6e1f0;
+      --border2: #cfc7e0;
+      --green: #38b48a;
+      --amber: #e0a03c;
+      --red: #e05c5c;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --font: 'Nunito', system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--cream);
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    header {
+      background: var(--white);
+      border-bottom: 2px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    header h1 {
+      font-size: 17px;
+      margin: 0;
+      font-weight: 800;
+      color: var(--purple-dark);
+    }
+
+    header .tag {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: var(--purple-bg);
+      color: var(--purple-dark);
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 26px 24px 60px;
+    }
+
+    button {
+      font-family: var(--font);
+      font-weight: 700;
+      font-size: 13px;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 10px 18px;
+      cursor: pointer;
+      background: var(--purple);
+      color: #fff;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--purple-dark);
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: default;
+    }
+
+    button.ghost {
+      background: var(--white);
+      color: var(--ink2);
+      border: 2px solid var(--border);
+    }
+
+    button.ghost:hover:not(:disabled) {
+      background: var(--cream2);
+    }
+
+    .panel {
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin-bottom: 18px;
+    }
+
+    .panel h2 {
+      font-size: 15px;
+      margin: 0 0 4px;
+    }
+
+    .panel p {
+      color: var(--ink3);
+      font-size: 12.5px;
+      margin: 0 0 16px;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0;
+      min-height: 58px;
+      border-top: 1px solid var(--border);
+    }
+
+    .step:first-of-type {
+      border-top: none;
+    }
+
+    .step .num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--cream3);
+      color: var(--ink2);
+      font-size: 11px;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+    }
+
+    .step.done .num {
+      background: var(--green);
+      color: #fff;
+    }
+
+    /* The label takes the slack, so whatever action sits at the end of the row
+       lands hard right and the two steps line up with each other. */
+    .step .label {
+      font-size: 13px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .step.done .label {
+      color: var(--ink3);
+    }
+
+    /* Google renders its button as a fixed-size iframe we can't restyle, so the
+       job here is just to sit it on the same baseline as our own controls
+       instead of letting it collide with them. */
+    #g-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 40px;
+    }
+
+    #g-btn:empty {
+      display: none;
+    }
+
+    .pass-link {
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink3);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .pass-link:hover {
+      background: none;
+      color: var(--purple-dark);
+    }
+
+    .or {
+      font-size: 11px;
+      color: var(--ink3);
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 16px;
+    }
+
+    .team {
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .team-thumb {
+      height: 140px;
+      background: var(--cream2);
+      display: grid;
+      place-items: center;
+      color: var(--ink3);
+      font-size: 12px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .team-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .team-body {
+      padding: 14px 16px 16px;
+    }
+
+    .team-name {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    .team-title {
+      font-size: 12.5px;
+      color: var(--ink2);
+      margin-bottom: 10px;
+    }
+
+    .team-meta {
+      font-size: 11px;
+      color: var(--ink3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--ink3);
+      flex-shrink: 0;
+    }
+
+    .dot.fresh {
+      background: var(--green);
+    }
+
+    .dot.stale {
+      background: var(--amber);
+    }
+
+    .dot.err {
+      background: var(--red);
+    }
+
+    .code {
+      margin-top: 12px;
+      padding: 9px 11px;
+      background: var(--cream);
+      border: 1.5px dashed var(--border2);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-align: center;
+      cursor: pointer;
+      color: var(--purple-dark);
+    }
+
+    .code:hover {
+      background: var(--purple-bg);
+    }
+
+    .code.hidden {
+      color: var(--ink3);
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .new-team {
+      margin-top: 18px;
+      padding: 22px;
+      border-radius: var(--radius);
+      background: var(--purple-bg);
+      border: 2px solid var(--purple-light);
+      text-align: center;
+    }
+
+    .new-team .nt-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--purple-dark);
+      margin-bottom: 6px;
+    }
+
+    .new-team .nt-name {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .new-team .nt-code {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--purple-dark);
+      letter-spacing: .07em;
+      margin-top: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .new-team .nt-hint {
+      font-size: 12px;
+      color: var(--ink2);
+      margin-top: 12px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-size: 12px;
+      padding: 11px 14px;
+      border-radius: var(--radius-sm);
+      background: #fff8e8;
+      border: 1.5px solid #f0dca8;
+      color: #8a6a1e;
+      margin-top: 14px;
+    }
+
+    .err {
+      font-size: 12.5px;
+      padding: 11px 14px;
+      border-radius: var(--radius-sm);
+      background: #fdeaea;
+      border: 1.5px solid #f2c4c4;
+      color: #b23c3c;
+      margin-top: 14px;
+      display: none;
+      font-weight: 600;
+    }
+
+    .err.show {
+      display: block;
+    }
+
+    .hide {
+      display: none !important;
+    }
+
+    select,
+    input[type=number] {
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 8px 10px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--white);
+    }
+
+    #log {
+      font-size: 11.5px;
+      color: var(--ink3);
+      margin-top: 12px;
+      white-space: pre-wrap;
+      max-height: 120px;
+      overflow-y: auto;
+      font-family: ui-monospace, monospace;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Story Sprout</h1>
+    <span class="tag">Teacher</span>
+    <div class="spacer"></div>
+    <span id="who" style="font-size:12px;color:var(--ink3)"></span>
+    <button class="ghost hide" id="switch-signin" style="font-size:11px;padding:6px 10px">Switch</button>
+    <button class="ghost" id="sync-now" disabled>Collect work now</button>
+  </header>
+
+  <main>
+
+    <!-- Setup -->
+    <div class="panel" id="setup">
+      <h2>Set up your class</h2>
+      <p>Everything your students make is stored <strong>on this computer</strong>. It is encrypted
+        on their machines before it is sent, so nobody in between — not even the relay — can read it.</p>
+
+      <div class="step" id="step-signin">
+        <span class="num">1</span>
+        <span class="label">Sign in as the teacher</span>
+        <div id="g-btn"></div>
+      </div>
+
+      <div class="step" id="step-folder">
+        <span class="num">2</span>
+        <span class="label">Choose the folder to keep your class's work in</span>
+        <button class="ghost" id="pick-folder" disabled>Choose folder…</button>
+      </div>
+
+      <div class="note" id="folder-note">
+        When Chrome asks about the folder, choose <strong>“Allow on every visit”</strong> — otherwise
+        it will ask you again every single time you open this page.
+      </div>
+      <div class="err" id="setup-err"></div>
+    </div>
+
+    <!-- Class -->
+    <div class="panel hide" id="class-panel">
+      <div class="row">
+        <div>
+          <h2 style="margin-bottom:2px">Your teams</h2>
+          <p style="margin:0">One team = one computer. Tape its code to that machine.</p>
+        </div>
+        <div class="spacer"></div>
+        <label style="font-size:12px;color:var(--ink3)">Collect every
+          <select id="interval">
+            <option value="2">2 min</option>
+            <option value="5" selected>5 min</option>
+            <option value="10">10 min</option>
+            <option value="30">30 min</option>
+            <option value="0">Off</option>
+          </select>
+        </label>
+        <button id="new-team">+ New team</button>
+      </div>
+
+      <div class="new-team hide" id="new-team-card">
+        <div class="nt-label">New team — write this down</div>
+        <div class="nt-name" id="nt-name">—</div>
+        <div class="nt-code" id="nt-code">—</div>
+        <div class="nt-hint">
+          On that computer, open the workshop with <code>?class=1</code> and enter these.<br>
+          The children only ever type this once.
+        </div>
+      </div>
+
+      <div class="err" id="class-err"></div>
+      <div id="log"></div>
+    </div>
+
+    <div class="grid" id="teams"></div>
+
+  </main>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════════════════════
+       Story Sprout — Teacher dashboard
+    
+       The teacher's disk is the system of record. The relay is a dead-drop that
+       holds encrypted bytes for a few minutes; this page is where the work actually
+       lands, in the clear, and stays.
+    
+       Chrome/Edge only: it needs showDirectoryPicker(), which Firefox and Safari do
+       not implement at all.
+       ═══════════════════════════════════════════════════════════════════════════ */
+
+    const WORKER = 'https://storysprout-pip.jackwangxyw.workers.dev';
+
+    // The version of sprout-sync.js this page is built against. If a stale cached
+    // copy loads instead, the key-derivation recipe could differ from the one the
+    // students used — and the failure would be SILENT: uploads succeed, collection
+    // succeeds, and the stories simply never open. Better to refuse to start.
+    // Bump this, ?v= in the script tag, and SproutSync.VERSION together.
+    const REQUIRE_SYNC_VERSION = 1;
+
+    // ⚠ Paste your Google OAuth Web client ID here (Google Cloud Console →
+    //   Credentials → OAuth client ID → Web application). Authorized JavaScript
+    //   origins must include https://lzhangsktlab.github.io and http://localhost:8000.
+    //   Safe to commit — a client ID is public by design. Leave '' to use the
+    //   passphrase only.
+    const GOOGLE_CLIENT_ID = '642314399737-2mitejmjcc1jdtfn7mspjuhge9mu8ub5.apps.googleusercontent.com';
+
+    // The passphrase fallback is TYPED BY THE TEACHER and kept in this browser.
+    // It is deliberately NOT a constant in this file: anything hardcoded here is
+    // published to the world by GitHub Pages, and whoever reads it could create
+    // teams on the relay. It must match TEACHER_PASSPHRASE in the Worker.
+    const LS_PASS = 'sprout_teacher_pass';
+
+    const T = {
+      idToken: null,     // Google ID token (primary)
+      pass: null,        // teacher passphrase (fallback)
+      email: null,
+      root: null,        // FileSystemDirectoryHandle for the class folder
+      teacher: null,     // teacher.json
+      klass: null,       // class.json
+      timer: null,
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const log = (m) => { $('log').textContent = (new Date().toLocaleTimeString() + '  ' + m + '\n' + $('log').textContent).slice(0, 4000); };
+    const showErr = (el, m) => { const e = $(el); e.textContent = m; e.classList.add('show'); };
+    const hideErr = (el) => $(el).classList.remove('show');
+
+    /* ── team name + code generation ─────────────────────────────────────────────
+       The code is GENERATED, never chosen. It is the only thing protecting a team's
+       work: a kid-picked "cat123" is guessable, and guessing a code lets someone
+       overwrite that team's story. Three words plus four digits is memorable enough
+       for a 7-year-old to type off a sticker and still ~35 bits of entropy.
+       Ambiguous characters are excluded so nobody loses an afternoon to O-vs-0.
+       ─────────────────────────────────────────────────────────────────────────── */
+    const ADJ = ['brave', 'sunny', 'clever', 'gentle', 'merry', 'swift', 'quiet', 'bright', 'kind', 'bold',
+      'jolly', 'lucky', 'calm', 'eager', 'fuzzy', 'happy', 'noble', 'proud', 'witty', 'zesty'];
+    const ANIMALS = ['otter', 'panda', 'fox', 'heron', 'badger', 'llama', 'robin', 'turtle', 'moose', 'wren',
+      'lynx', 'koala', 'puffin', 'ferret', 'marmot', 'osprey', 'beaver', 'sparrow', 'walrus', 'gecko'];
+    const WORDS = ['otter', 'lamp', 'river', 'maple', 'pebble', 'comet', 'lantern', 'willow', 'ember', 'fossil',
+      'meadow', 'anchor', 'cactus', 'harbor', 'juniper', 'kettle', 'marble', 'nutmeg', 'orchid', 'pepper',
+      'quartz', 'ribbon', 'saddle', 'thistle', 'velvet', 'walnut', 'yarrow', 'zephyr', 'basil', 'cinder'];
+
+    const pick = (arr) => arr[crypto.getRandomValues(new Uint32Array(1))[0] % arr.length];
+
+    function makeTeamName(existing) {
+      for (let i = 0; i < 200; i++) {
+        const n = pick(ADJ) + '-' + pick(ANIMALS);
+        if (!existing.some(t => t.teamName === n)) return n;
+      }
+      return 'team-' + Date.now().toString(36);
+    }
+
+    function makeSecretCode() {
+      const digits = String(crypto.getRandomValues(new Uint32Array(1))[0] % 10000).padStart(4, '0');
+      return (pick(WORDS) + '-' + pick(WORDS) + '-' + pick(WORDS) + '-' + digits).toUpperCase();
+    }
+
+    /* ── disk ────────────────────────────────────────────────────────────────── */
+
+    async function dir(parent, name) { return parent.getDirectoryHandle(name, { create: true }); }
+    async function writeJson(d, name, obj) { return writeBytes(d, name, new TextEncoder().encode(JSON.stringify(obj, null, 2))); }
+    async function writeBytes(d, name, bytes) {
+      const fh = await d.getFileHandle(name, { create: true });
+      const w = await fh.createWritable();
+      await w.write(bytes);
+      await w.close();
+    }
+    async function readJson(d, name) {
+      try {
+        const fh = await d.getFileHandle(name);
+        return JSON.parse(await (await fh.getFile()).text());
+      } catch { return null; }
+    }
+    async function fileExists(d, name) {
+      try { await d.getFileHandle(name); return true; } catch { return false; }
+    }
+
+    /* ── relay ───────────────────────────────────────────────────────────────── */
+
+    // Google first, passphrase second. The Worker tells them apart by the "pass:"
+    // prefix — anything else it treats as a Google ID token and verifies properly.
+    function teacherAuthHeader() {
+      const cred = T.idToken ? T.idToken : (T.pass ? 'pass:' + T.pass : '');
+      return { 'Authorization': 'Bearer ' + cred };
+    }
+
+    async function relay(path, { method = 'GET', auth, body = null, binary = false } = {}) {
+      const headers = { 'X-Team-Auth': auth };
+      if (body && !binary) headers['Content-Type'] = 'application/json';
+      return fetch(WORKER + path, {
+        method, headers,
+        body: binary ? body : (body ? JSON.stringify(body) : null),
+      });
+    }
+
+    /* ── collect one team ────────────────────────────────────────────────────────
+       Skips the download entirely when the revision hasn't moved. Without that, ten
+       teams × every 5 minutes would drag gigabytes a day onto the teacher's disk
+       re-fetching stories that hadn't changed.
+       ─────────────────────────────────────────────────────────────────────────── */
+    async function collectTeam(team) {
+      const keys = await SproutSync.deriveKeys(team.teamName, team.secretCode);
+      const rec = T.klass.teams[team.teamName] || (T.klass.teams[team.teamName] = { teamName: team.teamName, lastRev: 0 });
+
+      const sres = await relay('/sync/state', { auth: keys.authToken });
+      if (!sres.ok) throw new Error((await sres.json()).error || 'relay unreachable');
+      const state = await sres.json();
+
+      if (state.rev === 0) { rec.status = 'empty'; return false; }
+      if (state.rev === rec.lastRev) { rec.status = 'ok'; return false; }   // nothing new
+
+      const mres = await relay('/sync/manifest', { auth: keys.authToken });
+      if (!mres.ok) throw new Error('could not download the story');
+      const manifest = JSON.parse(new TextDecoder().decode(
+        await SproutSync.decrypt(keys.encKey, new Uint8Array(await mres.arrayBuffer()))
+      ));
+
+      // Images are content-addressed and shared across every team and every snapshot,
+      // so an image already on disk is never downloaded again.
+      const blobsDir = await dir(T.root, 'images');
+      const blobs = new Map();
+      for (const [hash, info] of Object.entries(manifest.blobs || {})) {
+        const ext = (info.mime || 'image/png').split('/')[1].replace('jpeg', 'jpg');
+        const fname = hash + '.' + ext;
+
+        if (await fileExists(blobsDir, fname)) {
+          const f = await (await blobsDir.getFileHandle(fname)).getFile();
+          blobs.set(hash, { bytes: new Uint8Array(await f.arrayBuffer()), mime: info.mime });
+          continue;
+        }
+
+        const bres = await relay('/sync/blob/' + info.id, { auth: keys.authToken });
+        if (!bres.ok) throw new Error('a picture is missing — will retry');   // torn state; abort, don't write
+        const bytes = await SproutSync.decrypt(keys.encKey, new Uint8Array(await bres.arrayBuffer()));
+        await writeBytes(blobsDir, fname, bytes);
+        blobs.set(hash, { bytes, mime: info.mime });
+      }
+
+      const story = await SproutSync.rehydrate(manifest.story, blobs);
+
+      const teamsDir = await dir(T.root, 'teams');
+      const tDir = await dir(teamsDir, team.teamName);
+
+      // latest.json is fat and self-contained on purpose: the teacher can open it
+      // straight in the workshop with no extra steps.
+      await writeJson(tDir, 'latest.json', story);
+
+      // Snapshots keep the REF form instead — a few KB each, sharing images/. Writing
+      // the full 50MB story 12×/hour × 10 teams would be gigabytes a day.
+      const snapDir = await dir(tDir, 'snapshots');
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      await writeJson(snapDir, stamp + '.json', manifest);
+
+      rec.lastRev = state.rev;
+      rec.lastUpdatedAt = state.updatedAt;     // server time — never a student's clock
+      rec.lastPulledAt = new Date().toISOString();
+      rec.storyTitle = story.title || 'Untitled';
+      rec.slideCount = (story.slides || []).length;
+      rec.imageCount = Object.keys(manifest.blobs || {}).length;
+      rec.thumb = (story.slides || []).map(s => s.thumb).find(Boolean) || null;
+      rec.status = 'ok';
+      rec.error = null;
+      return true;
+    }
+
+    async function collectAll() {
+      if (!T.root || !T.teacher) return;
+      $('sync-now').disabled = true;
+      hideErr('class-err');
+
+      let changed = 0;
+      for (const team of T.teacher.teams) {
+        try {
+          if (await collectTeam(team)) { changed++; log('collected ' + team.teamName); }
+        } catch (e) {
+          const rec = T.klass.teams[team.teamName] || (T.klass.teams[team.teamName] = { teamName: team.teamName, lastRev: 0 });
+          rec.status = 'error';
+          rec.error = e.message;
+          log('!! ' + team.teamName + ': ' + e.message);
+        }
+      }
+
+      T.klass.updatedAt = new Date().toISOString();
+      await writeJson(T.root, 'class.json', T.klass);
+      renderTeams();
+      $('sync-now').disabled = false;
+      if (changed) log(changed + ' team(s) had new work');
+    }
+
+    /* ── render ──────────────────────────────────────────────────────────────── */
+
+    function renderTeams() {
+      const wrap = $('teams');
+      wrap.innerHTML = '';
+      if (!T.teacher) return;
+
+      for (const team of T.teacher.teams) {
+        const rec = (T.klass.teams || {})[team.teamName] || {};
+        const el = document.createElement('div');
+        el.className = 'team';
+
+        const age = rec.lastPulledAt ? Math.round((Date.now() - new Date(rec.lastPulledAt)) / 60000) : null;
+        const dot = rec.status === 'error' ? 'err' : (age !== null && age < 15 ? 'fresh' : (rec.lastRev ? 'stale' : ''));
+        const meta = rec.status === 'error' ? rec.error
+          : rec.lastRev ? (rec.slideCount + ' pages · collected ' + (age === 0 ? 'just now' : age + ' min ago'))
+            : 'No work yet';
+
+        el.innerHTML = `
+      <div class="team-thumb">${rec.thumb ? `<img src="${rec.thumb}" alt="">` : 'No pages yet'}</div>
+      <div class="team-body">
+        <div class="team-name">${team.teamName}</div>
+        <div class="team-title">${rec.storyTitle || '—'}</div>
+        <div class="team-meta"><span class="dot ${dot}"></span>${meta}</div>
+        <div class="code hidden" data-code="${team.secretCode}">Click to show the secret code</div>
+      </div>`;
+
+        const codeEl = el.querySelector('.code');
+        codeEl.onclick = () => {
+          if (codeEl.classList.contains('hidden')) {
+            codeEl.classList.remove('hidden');
+            codeEl.textContent = team.secretCode;
+          } else {
+            navigator.clipboard?.writeText(team.secretCode);
+            codeEl.textContent = 'Copied!';
+            setTimeout(() => { codeEl.textContent = team.secretCode; }, 1200);
+          }
+        };
+        wrap.appendChild(el);
+      }
+    }
+
+    /* ── setup steps ─────────────────────────────────────────────────────────── */
+
+    async function onSignedIn(email) {
+      T.email = email;
+      $('who').textContent = email;
+      $('step-signin').classList.add('done');
+      $('pick-folder').disabled = false;
+      $('g-btn').innerHTML = '';
+      $('switch-signin').classList.remove('hide');
+    }
+
+    // A saved passphrase signs you straight back in, which is what you want day
+    // to day — but it also means the Google button never gets a chance to appear.
+    // This is the way back out.
+    function switchSignIn() {
+      localStorage.removeItem(LS_PASS);
+      T.pass = null;
+      T.idToken = null;
+      T.email = null;
+      $('who').textContent = '';
+      $('switch-signin').classList.add('hide');
+      $('step-signin').classList.remove('done');
+      $('pick-folder').disabled = true;
+      hideErr('setup-err');
+      renderSignIn();
+    }
+
+    async function pickFolder() {
+      hideErr('setup-err');
+      try {
+        T.root = await window.showDirectoryPicker({ id: 'sprout-class', mode: 'readwrite' });
+      } catch { return; }   // the teacher cancelled — not an error
+
+      $('step-folder').classList.add('done');
+      $('folder-note').classList.add('hide');
+
+      T.teacher = await readJson(T.root, 'teacher.json') || {
+        fmt: 1, teacherEmail: T.email,
+        settings: { pullIntervalMin: 5 },
+        teams: [],
+      };
+      T.klass = await readJson(T.root, 'class.json') || { fmt: 1, teams: {} };
+
+      $('interval').value = String(T.teacher.settings.pullIntervalMin ?? 5);
+      $('class-panel').classList.remove('hide');
+      $('sync-now').disabled = false;
+      renderTeams();
+      restartTimer();
+      log('class folder ready — ' + T.teacher.teams.length + ' team(s)');
+      await collectAll();
+    }
+
+    async function newTeam() {
+      hideErr('class-err');
+      const teamName = makeTeamName(T.teacher.teams);
+      const secretCode = makeSecretCode();
+
+      try {
+        // Both sides derive the same token from (team name, code) alone — no key is
+        // ever exchanged. Registering is what makes the team exist on the relay; every
+        // other route 403s on a prefix no signed-in teacher has created.
+        const keys = await SproutSync.deriveKeys(teamName, secretCode);
+        const res = await fetch(WORKER + '/sync/register', {
+          method: 'POST',
+          headers: { ...teacherAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ authToken: keys.authToken }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'could not create the team');
+
+        T.teacher.teams.push({ teamName, secretCode, createdAt: new Date().toISOString() });
+        await writeJson(T.root, 'teacher.json', T.teacher);
+
+        $('nt-name').textContent = teamName;
+        $('nt-code').textContent = secretCode;
+        $('new-team-card').classList.remove('hide');
+        renderTeams();
+        log('created team ' + teamName);
+      } catch (e) {
+        // A stored passphrase that the Worker rejects would otherwise leave the
+        // teacher permanently stuck — we'd keep replaying the bad one on every
+        // visit and never offer the prompt again. Drop it and let them re-enter.
+        if (T.pass && /passphrase/i.test(e.message)) {
+          localStorage.removeItem(LS_PASS);
+          T.pass = null;
+          $('step-signin').classList.remove('done');
+          $('who').textContent = '';
+          renderSignIn();
+        }
+        showErr('class-err', e.message);
+      }
+    }
+
+    function restartTimer() {
+      clearInterval(T.timer);
+      const min = parseInt($('interval').value, 10);
+      if (min > 0) T.timer = setInterval(collectAll, min * 60000);
+    }
+
+    /* ── boot ────────────────────────────────────────────────────────────────── */
+
+    window.onGoogleSignIn = (resp) => {
+      T.idToken = resp.credential;
+      T.pass = null;
+      const claims = JSON.parse(atob(resp.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      onSignedIn(claims.email);
+    };
+
+    // The fallback. Verified lazily — we can't check a passphrase without asking
+    // the Worker to do something, so the first "New team" is what confirms it.
+    // A wrong one surfaces there as a plain "that passphrase is not correct".
+    function usePassphrase(pass) {
+      T.pass = pass;
+      T.idToken = null;
+      localStorage.setItem(LS_PASS, pass);
+      onSignedIn('Signed in with passphrase');
+    }
+
+    function renderSignIn() {
+      const box = $('g-btn');
+      box.innerHTML = '';
+
+      if (GOOGLE_CLIENT_ID) {
+        const slot = document.createElement('div');
+        box.appendChild(slot);
+
+        const or = document.createElement('span');
+        or.className = 'or';
+        or.textContent = 'or';
+        box.appendChild(or);
+
+        const tryInit = () => {
+          if (!window.google?.accounts?.id) return setTimeout(tryInit, 100);
+          google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: window.onGoogleSignIn });
+          google.accounts.id.renderButton(slot, {
+            theme: 'outline', size: 'large', shape: 'pill',
+            text: 'signin_with', logo_alignment: 'center',
+          });
+        };
+        tryInit();
+      }
+
+      // The passphrase is the fallback, so it reads as a quiet link rather than a
+      // second competing button — but it is always reachable, because a broken
+      // OAuth config must never lock a teacher out of their own class.
+      const link = document.createElement('button');
+      link.className = 'pass-link';
+      link.textContent = GOOGLE_CLIENT_ID ? 'use a passphrase' : 'Sign in with passphrase';
+      link.onclick = () => {
+        const pass = prompt('Teacher passphrase:');
+        if (pass && pass.trim()) usePassphrase(pass.trim());
+      };
+      box.appendChild(link);
+    }
+
+    window.addEventListener('load', () => {
+      if (typeof SproutSync === 'undefined' || SproutSync.VERSION !== REQUIRE_SYNC_VERSION) {
+        showErr('setup-err',
+          'This page is out of date. Press Ctrl+Shift+R to reload it properly. ' +
+          '(Refusing to continue: an out-of-date copy could fail to open your students\' work.)');
+        return;
+      }
+      if (!window.showDirectoryPicker) {
+        showErr('setup-err', 'This page needs Chrome or Edge — Firefox and Safari cannot save to a folder on your computer.');
+        return;
+      }
+
+      // A passphrase from a previous visit gets us straight back in.
+      const saved = localStorage.getItem(LS_PASS);
+      if (saved) { usePassphrase(saved); return; }
+
+      renderSignIn();
+    });
+
+    $('pick-folder').onclick = pickFolder;
+    $('switch-signin').onclick = switchSignIn;
+    $('new-team').onclick = newTeam;
+    $('sync-now').onclick = collectAll;
+    $('interval').onchange = async () => {
+      T.teacher.settings.pullIntervalMin = parseInt($('interval').value, 10);
+      await writeJson(T.root, 'teacher.json', T.teacher);
+      restartTimer();
+    };
+  </script>
+</body>
+
+</html>

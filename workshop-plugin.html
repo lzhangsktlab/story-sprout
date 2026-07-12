@@ -6,6 +6,10 @@
 <title>Storybook Workshop</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<!-- Teacher Mode. Shared byte-for-byte with teacher.html — if the crypto in the two
+     pages ever drifts, the teacher silently cannot decrypt student work. Bump ?v=
+     on every change: a stale cached copy on one page is the same disaster. -->
+<script src="sprout-sync.js?v=1"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -149,6 +153,62 @@ html, body {
 }
 #save-status.saved { color: var(--green); }
 #save-status.saving { color: var(--amber); }
+
+/* ── Teacher sync ───────────────────────────────────────────────────────── */
+#sync-pill {
+  font-size: 11px; font-weight: 600; color: var(--ink3);
+  display: none; align-items: center; gap: 4px;
+  margin-left: 10px; transition: color .3s;
+}
+#sync-pill.on      { display: flex; }
+#sync-pill.synced  { color: var(--green); }
+#sync-pill.syncing { color: var(--amber); }
+#sync-pill.error   { color: var(--red, #e05c5c); }
+
+/* Full-screen and deliberately blocking. The canvas must not be reachable until
+   identity resolves — if a child starts drawing behind this and we then restore
+   their teacher's copy over the top, we have destroyed their work. */
+#team-gate {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(24, 20, 40, .55); backdrop-filter: blur(3px);
+  display: none; align-items: center; justify-content: center;
+}
+#team-gate.open { display: flex; }
+.team-card {
+  background: var(--white); border-radius: var(--radius);
+  padding: 30px 32px; width: 380px; max-width: 92vw;
+  box-shadow: 0 18px 50px rgba(0,0,0,.28); text-align: center;
+}
+.team-card h2 { font-size: 19px; margin: 0 0 6px; color: var(--purple-dark); }
+.team-card p  { font-size: 12.5px; color: var(--ink3); margin: 0 0 18px; line-height: 1.6; }
+.team-card label {
+  display: block; text-align: left; font-size: 11px; font-weight: 700;
+  color: var(--ink2); margin: 12px 0 5px; text-transform: uppercase; letter-spacing: .04em;
+}
+.team-card input {
+  width: 100%; box-sizing: border-box; font-family: var(--font);
+  font-size: 15px; padding: 11px 13px; border: 2px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--cream);
+}
+.team-card input:focus { outline: none; border-color: var(--purple-light); background: var(--white); }
+#team-code-input { letter-spacing: .09em; text-transform: uppercase; font-weight: 700; }
+.team-btn {
+  width: 100%; margin-top: 20px; font-family: var(--font); font-size: 14px;
+  font-weight: 700; padding: 12px; border: none; border-radius: var(--radius-sm);
+  background: var(--purple); color: #fff; cursor: pointer;
+}
+.team-btn:hover:not(:disabled) { background: var(--purple-dark); }
+.team-btn:disabled { opacity: .55; cursor: default; }
+.team-skip {
+  display: block; margin: 14px auto 0; background: none; border: none;
+  font-family: var(--font); font-size: 12px; color: var(--ink3);
+  text-decoration: underline; cursor: pointer;
+}
+.team-err {
+  display: none; margin-top: 14px; padding: 10px 12px; border-radius: var(--radius-sm);
+  background: #fdeaea; color: #b23c3c; font-size: 12px; font-weight: 600; line-height: 1.5;
+}
+.team-err.show { display: block; }
 
 /* ═══════════════════════════════════════════════
    TOOL RIBBON (below top bar)
@@ -1157,6 +1217,14 @@ html, body {
       <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>
       Not saved
     </div>
+
+    <!-- Sync state gets its OWN pill. It must not go through setStatus(), which is a
+         single shared line that other actions self-clear after 2.5s — a sync error
+         routed through it would be wiped by the next "Image added to canvas". -->
+    <div id="sync-pill" title="Teacher sync">
+      <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>
+      <span id="sync-pill-text">Offline</span>
+    </div>
     <div class="tb-sep"></div>
 
     <button class="tb-btn tb-btn-icon" id="tb-new-btn" title="New story">
@@ -1537,6 +1605,27 @@ html, body {
   </div>
 
 </div><!-- /root -->
+
+<!-- ── Teacher Mode: team gate ────────────────────────────────────────────────
+     Shown on boot when this computer belongs to a class. Once the keys are
+     cached, later visits skip it entirely — the child is never asked again. -->
+<div id="team-gate">
+  <div class="team-card">
+    <h2 id="team-gate-title">Join your class</h2>
+    <p id="team-gate-sub">Enter the team name and secret code your teacher gave you.</p>
+
+    <label for="team-name-input">Team name</label>
+    <input id="team-name-input" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. Table 3">
+
+    <label for="team-code-input">Secret code</label>
+    <input id="team-code-input" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. OTTER-LAMP-7291">
+
+    <div class="team-err" id="team-gate-err"></div>
+
+    <button class="team-btn" id="team-join-btn">Join</button>
+    <button class="team-skip" id="team-skip-btn">Just let me draw on my own</button>
+  </div>
+</div>
 
 <script>
 /* ═══════════════════════════════════════════════
@@ -2613,6 +2702,9 @@ function markDirty() {
   S.dirty = true;
   setSaveStatus('unsaved');
   scheduleAutoSave();
+  // Mirror to the teacher on a much slower timer than the 5s local autosave.
+  // No-op unless this computer has joined a class.
+  if (typeof scheduleSyncPush === 'function') scheduleSyncPush();
 }
 
 // Auto-save every 5 seconds — to file (Chrome) or IndexedDB (Firefox)
@@ -3448,6 +3540,319 @@ window.addEventListener('message', (e) => {
 /* ═══════════════════════════════════════════════
    BOOT
 ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   TEACHER MODE — student sync
+
+   The work is ALWAYS saved locally first. Sync is a background mirror and
+   nothing more: if the relay is down, the wifi drops, or the code is wrong,
+   the child keeps drawing and keeps their work. Sync must never be able to
+   block, interrupt, or destroy a child's story.
+═══════════════════════════════════════════════ */
+
+const SYNC = {
+  keys: null,          // { teamName, encKey, blobKey, authToken }
+  rev: 0,              // server-assigned revision we're based on
+  joined: false,       // this computer belongs to a class
+  active: false,       // …and mirroring is live (only after the initial restore)
+  inFlight: false,     // single-flight guard
+  again: false,        // a change landed while a push was running
+  timer: null,
+  deviceId: null,
+};
+
+const SYNC_DEBOUNCE_MS = 30000;   // local autosave is 5s; pushing that often is absurd
+const LS_REV = 'sprout_last_pushed_rev';
+const LS_DEV = 'sprout_device_id';
+
+// The version of sprout-sync.js this page is built against. A browser that served
+// a STALE cached copy would derive keys by a different recipe than the teacher's
+// machine — and it would fail silently: the upload succeeds, the teacher collects
+// it, and the story simply never opens. So we refuse to sync at all on a mismatch.
+// Bump this, ?v= in the script tag, and SproutSync.VERSION together.
+const REQUIRE_SYNC_VERSION = 1;
+
+function setSyncPill(state, text) {
+  const pill = document.getElementById('sync-pill');
+  pill.className = 'on ' + (state || '');
+  document.getElementById('sync-pill-text').textContent = text;
+}
+
+async function syncFetch(path, { method = 'GET', body = null, binary = false } = {}) {
+  const headers = { 'X-Team-Auth': SYNC.keys.authToken };
+  if (body && !binary) headers['Content-Type'] = 'application/json';
+  const res = await fetch(PIP_PROXY_URL + path, {
+    method, headers,
+    body: binary ? body : (body ? JSON.stringify(body) : null),
+  });
+  return res;
+}
+
+/* ── push ────────────────────────────────────────────────────────────────── */
+
+// Blobs go up FIRST; the manifest is published LAST. The manifest is the single
+// atomic commit point — so a teacher pulling mid-push sees either the old story
+// or the new one, never a half-written one referencing images that don't exist.
+async function syncPush() {
+  if (!SYNC.active || !SYNC.keys) return;
+  if (SYNC.inFlight) { SYNC.again = true; return; }
+
+  SYNC.inFlight = true;
+  try {
+    setSyncPill('syncing', 'Sending…');
+
+    const { json } = await buildStoryJson();
+    const story = JSON.parse(json);
+
+    const { manifestStory, blobs } = await SproutSync.stripImages(story);
+
+    // Map each image's content hash to its (HMAC'd) id on the relay.
+    const blobIndex = {};
+    const idByHash = new Map();
+    for (const [hash, b] of blobs) {
+      const id = await SproutSync.blobIdFor(SYNC.keys.blobKey, hash);
+      idByHash.set(hash, id);
+      blobIndex[hash] = { id, mime: b.mime, bytes: b.bytes.length };
+    }
+
+    // One round-trip to learn which images the relay is missing. Usually none —
+    // which is what keeps a routine sync down to two requests.
+    const ids = [...idByHash.values()];
+    let missing = ids;
+    if (ids.length) {
+      const res = await syncFetch('/sync/blobs/check', { method: 'POST', body: { ids } });
+      if (!res.ok) throw new Error((await res.json()).error || 'Could not reach the relay');
+      missing = (await res.json()).missing;
+    }
+
+    for (const [hash, b] of blobs) {
+      const id = idByHash.get(hash);
+      if (!missing.includes(id)) continue;
+      const env = await SproutSync.encrypt(SYNC.keys.encKey, b.bytes);
+      const res = await syncFetch('/sync/blob/' + id, { method: 'PUT', body: env, binary: true });
+      if (!res.ok) throw new Error('Could not upload a picture');
+    }
+
+    const manifest = {
+      fmt: 1,
+      deviceId: SYNC.deviceId,
+      clientSavedAt: new Date().toISOString(),   // display only — never trusted for ordering
+      story: manifestStory,
+      blobs: blobIndex,
+    };
+    const bytes = new TextEncoder().encode(JSON.stringify(manifest));
+    const env = await SproutSync.encrypt(SYNC.keys.encKey, bytes, { compress: true });
+
+    const res = await fetch(PIP_PROXY_URL + '/sync/manifest', {
+      method: 'PUT',
+      headers: { 'X-Team-Auth': SYNC.keys.authToken, 'X-Base-Rev': String(SYNC.rev) },
+      body: env,
+    });
+
+    if (res.status === 409) {
+      // Someone else wrote to this team since we last looked. Almost always a
+      // second tab on the same machine; possibly a second device sharing the code.
+      // There is no correct automatic merge, so we stop and let a human decide.
+      const cur = await res.json();
+      SYNC.rev = cur.rev;
+      setSyncPill('error', 'Someone else is editing');
+      console.warn('[sync] conflict — this team was changed elsewhere. Not overwriting.');
+      return;
+    }
+    if (!res.ok) throw new Error((await res.json()).error || 'Sync failed');
+
+    const out = await res.json();
+    SYNC.rev = out.rev;
+    localStorage.setItem(LS_REV, String(out.rev));
+    setSyncPill('synced', 'Sent to teacher');
+
+  } catch (e) {
+    // Never alert, never block. The child's work is already safe on this computer.
+    console.warn('[sync] push failed:', e.message);
+    setSyncPill('error', 'Will retry');
+  } finally {
+    SYNC.inFlight = false;
+    if (SYNC.again) { SYNC.again = false; scheduleSyncPush(); }
+  }
+}
+
+function scheduleSyncPush() {
+  if (!SYNC.active) return;
+  clearTimeout(SYNC.timer);
+  SYNC.timer = setTimeout(syncPush, SYNC_DEBOUNCE_MS);
+}
+
+/* ── pull ────────────────────────────────────────────────────────────────── */
+
+async function syncPullStory() {
+  const res = await syncFetch('/sync/manifest');
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error('Could not download your story');
+
+  const env = new Uint8Array(await res.arrayBuffer());
+  const manifest = JSON.parse(
+    new TextDecoder().decode(await SproutSync.decrypt(SYNC.keys.encKey, env))
+  );
+
+  const blobs = new Map();
+  for (const [hash, info] of Object.entries(manifest.blobs || {})) {
+    const r = await syncFetch('/sync/blob/' + info.id);
+    if (!r.ok) throw new Error('A picture is missing from your story — try again in a moment.');
+    const bytes = await SproutSync.decrypt(SYNC.keys.encKey, new Uint8Array(await r.arrayBuffer()));
+    blobs.set(hash, { bytes, mime: info.mime });
+  }
+
+  return SproutSync.rehydrate(manifest.story, blobs);
+}
+
+/* ── boot ────────────────────────────────────────────────────────────────── */
+
+// The decision that can destroy a child's work, so it is made explicitly.
+//
+// The app has always booted blank and never read its own autosave back. Now that
+// we restore from the relay, a stale relay copy could silently overwrite newer
+// local work. So: if this device already pushed the revision the relay is holding,
+// the local copy is ours and at least as new — resume it and don't even download.
+// If the relay has moved past us AND we have local work, we cannot know which the
+// child wants. Ask. Never guess.
+async function syncRestore() {
+  const res = await syncFetch('/sync/state');
+  if (!res.ok) throw new Error((await res.json()).error || 'Could not reach your class');
+  const state = await res.json();
+
+  SYNC.rev = state.rev;
+
+  const localAutosave = await idbGet('storysketch_autosave');
+  const lastPushed = parseInt(localStorage.getItem(LS_REV) || '-1', 10);
+
+  if (state.rev === 0) return;                       // nothing has ever been synced
+
+  if (localAutosave && lastPushed === state.rev) {
+    loadStoryData(localAutosave);                    // our own work, already up there
+    return;
+  }
+
+  if (localAutosave && state.rev > lastPushed) {
+    const takeRemote = confirm(
+      'There is newer work saved for this team.\n\n' +
+      'OK — load the version your teacher has.\n' +
+      'Cancel — keep what is on this computer.'
+    );
+    if (!takeRemote) return;
+  }
+
+  const story = await syncPullStory();
+  if (story) loadStoryData(story);
+}
+
+async function syncStart(keys) {
+  SYNC.keys = keys;
+  SYNC.joined = true;
+  SYNC.deviceId = localStorage.getItem(LS_DEV) || ('dev_' + crypto.randomUUID().slice(0, 8));
+  localStorage.setItem(LS_DEV, SYNC.deviceId);
+
+  setSyncPill('syncing', 'Connecting…');
+  try {
+    await syncRestore();
+    setSyncPill('synced', 'Connected');
+  } catch (e) {
+    // Offline, or the relay is down. Fall back to whatever is on this computer —
+    // do NOT start blank, that would look to a child like their work vanished.
+    console.warn('[sync] restore failed:', e.message);
+    const local = await idbGet('storysketch_autosave');
+    if (local) loadStoryData(local);
+    setSyncPill('error', 'Working offline');
+  }
+
+  // Mirroring goes live only NOW. Restoring a story calls loadStoryData, which
+  // trips markDirty — if we were already active, we would immediately push the
+  // story we just pulled straight back up and burn a revision for nothing.
+  SYNC.active = true;
+  clearTimeout(SYNC.timer);
+}
+
+/* ── the gate ────────────────────────────────────────────────────────────── */
+
+function showTeamGate() {
+  return new Promise((resolve) => {
+    const gate = document.getElementById('team-gate');
+    const nameEl = document.getElementById('team-name-input');
+    const codeEl = document.getElementById('team-code-input');
+    const btn = document.getElementById('team-join-btn');
+    const err = document.getElementById('team-gate-err');
+
+    const fail = (msg) => { err.textContent = msg; err.classList.add('show'); };
+
+    gate.classList.add('open');
+    nameEl.focus();
+
+    btn.onclick = async () => {
+      err.classList.remove('show');
+      const name = nameEl.value.trim();
+      const code = codeEl.value.trim();
+      if (!name || !code) return fail('Please enter both the team name and the secret code.');
+
+      btn.disabled = true;
+      btn.textContent = 'Checking…';
+      // Hand the browser a frame so the button repaints before PBKDF2 runs.
+      await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+
+      try {
+        const keys = await SproutSync.deriveKeys(name, code);
+        SYNC.keys = keys;
+        const res = await syncFetch('/sync/state');
+        if (res.status === 403) {
+          // A wrong code derives a different token, which derives a different
+          // storage prefix — so "no such team" IS how a bad code presents.
+          throw new Error('That team name and secret code do not match. Please check them and try again.');
+        }
+        if (!res.ok) throw new Error('Could not reach your class right now. Check the internet connection.');
+
+        await SproutSync.cacheKeys(keys);
+        gate.classList.remove('open');
+        resolve(keys);
+      } catch (e) {
+        SYNC.keys = null;
+        fail(e.message);
+        btn.disabled = false;
+        btn.textContent = 'Join';
+      }
+    };
+
+    codeEl.onkeydown = (e) => { if (e.key === 'Enter') btn.click(); };
+
+    document.getElementById('team-skip-btn').onclick = () => {
+      gate.classList.remove('open');
+      resolve(null);
+    };
+  });
+}
+
+// Teacher Mode is opt-in per computer: ?class=1 the first time, and from then on
+// the cached keys keep it on. A machine that has never joined a class is
+// completely unaffected by any of this.
+async function initTeacherMode() {
+  if (typeof SproutSync === 'undefined') return;
+
+  // Stale cached copy of the crypto. Do NOT sync — a mismatch here corrupts work
+  // invisibly. Drawing still works; only the teacher connection is held back.
+  if (SproutSync.VERSION !== REQUIRE_SYNC_VERSION) {
+    setSyncPill('error', 'Please refresh');
+    setStatus('This page needs refreshing (hold Shift and press Reload) before it can send work to your teacher.', 'err');
+    return;
+  }
+
+  let keys = null;
+  try { keys = await SproutSync.loadCachedKeys(); } catch {}
+
+  const wantsClass = new URLSearchParams(location.search).has('class');
+  if (!keys && !wantsClass) return;                  // not a class computer — done
+
+  if (!keys) keys = await showTeamGate();
+  if (!keys) return;                                 // child chose to work alone
+
+  await syncStart(keys);
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   initCanvas();
   wireButtons();
@@ -3469,6 +3874,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => setStatus('', ''), 4000);
     return;
   }
+
+  // Teacher Mode, if this computer belongs to a class. On a machine that has
+  // never joined one this returns immediately and nothing below changes.
+  await initTeacherMode();
+  if (SYNC.joined) return;   // syncStart() already decided what story to load
 
   // No URL params — start with a fresh, blank canvas every time.
   // (We intentionally do NOT auto-resume the last story. Use the Open button
