@@ -218,8 +218,43 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 18px;
+    }
+
+    /* Click a preview to see it properly. The card is a glance; this is a look. */
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 9500;
+      background: rgba(24, 20, 40, .8);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      cursor: zoom-out;
+    }
+
+    #lightbox.open {
+      display: flex;
+    }
+
+    #lightbox img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: var(--radius);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+      background: var(--white);
+    }
+
+    #lightbox .lb-cap {
+      position: absolute;
+      bottom: 22px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, .6);
     }
 
     /* An explicit column, so the preview is structurally incapable of sitting on
@@ -235,7 +270,7 @@
 
     .team-thumb {
       flex: 0 0 auto;
-      aspect-ratio: 3 / 2;
+      aspect-ratio: 4 / 3;
       width: 100%;
       background: var(--cream2);
       display: grid;
@@ -246,15 +281,15 @@
       overflow: hidden;
     }
 
-    /* `contain`, not `cover`: this is a page of a child's story, and cropping the
-       top and bottom off it to fill a box defeats the point of showing it at all. */
+    /* width/height 100% so it SCALES to the box (auto would leave it at its small
+       natural size), with `contain` rather than `cover` so the whole page is visible —
+       cropping the top and bottom off a child's story defeats the point of showing it. */
     .team-thumb img {
-      max-width: 100%;
-      max-height: 100%;
-      width: auto;
-      height: auto;
+      width: 100%;
+      height: 100%;
       object-fit: contain;
       display: block;
+      cursor: zoom-in;
     }
 
     .team-body {
@@ -639,6 +674,11 @@
 
   </main>
 
+  <div id="lightbox">
+    <img id="lb-img" alt="">
+    <div class="lb-cap" id="lb-cap"></div>
+  </div>
+
   <!-- Delete confirmation. Typing the team name is deliberate friction: this is
        irreversible, and the encrypted work becomes unreadable forever. -->
   <div id="confirm-back">
@@ -973,6 +1013,13 @@
     // escaping, a title like `<img src=x onerror=...>` would execute right here on
     // the teacher's dashboard — and stray markup would wreck the card layout too.
     // Never interpolate student-controlled text into innerHTML raw.
+    function showLightbox(src, caption) {
+      if (!src) return;
+      $('lb-img').src = src;
+      $('lb-cap').textContent = caption || '';
+      $('lightbox').classList.add('open');
+    }
+
     function esc(s) {
       return String(s ?? '').replace(/[&<>"']/g, c => (
         { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
@@ -1020,6 +1067,9 @@
       </div>`;
 
         el.querySelector('.del-link').onclick = () => askDelete(team);
+
+        const img = el.querySelector('.team-thumb img');
+        if (img) img.onclick = () => showLightbox(safeThumb, team.teamName + ' — ' + (rec.storyTitle || ''));
 
         const codeEl = el.querySelector('.code');
         codeEl.onclick = () => {
@@ -1317,6 +1367,10 @@
     $('new-team').onclick = newTeam;
     $('del-cancel').onclick = closeDelete;
     $('del-go').onclick = doDelete;
+    $('lightbox').onclick = () => $('lightbox').classList.remove('open');
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') $('lightbox').classList.remove('open');
+    });
 
     // The button stays dead until the name matches exactly. Case-insensitive, so
     // this is friction against an accidental click, not a typing test.
