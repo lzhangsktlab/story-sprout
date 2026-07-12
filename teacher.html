@@ -758,6 +758,13 @@
       if (!sres.ok) throw new Error((await sres.json()).error || 'relay unreachable');
       const state = await sres.json();
 
+      // Record the check itself, whether or not anything came back. Otherwise the
+      // card keeps showing the time of the last CHANGE and drifts ever more stale,
+      // which reads as "the teacher page has stopped collecting" when in fact it is
+      // checking perfectly and the student simply hasn't drawn anything new.
+      rec.lastCheckedAt = new Date().toISOString();
+      rec.error = null;
+
       if (state.rev === 0) { rec.status = 'empty'; return false; }
       if (state.rev === rec.lastRev) { rec.status = 'ok'; return false; }   // nothing new
 
@@ -927,11 +934,20 @@
         const el = document.createElement('div');
         el.className = 'team';
 
-        const age = rec.lastPulledAt ? Math.round((Date.now() - new Date(rec.lastPulledAt)) / 60000) : null;
-        const dot = rec.status === 'error' ? 'err' : (age !== null && age < 15 ? 'fresh' : (rec.lastRev ? 'stale' : ''));
+        // Show when the CHILD last changed their story (server time — never their
+        // clock), not when the file was last written. "Collected 8 minutes ago" is
+        // an answer to a question no teacher is asking; "worked on 8 minutes ago"
+        // tells them whether that group is actually doing anything.
+        const changedMin = rec.lastUpdatedAt ? Math.round((Date.now() - rec.lastUpdatedAt) / 60000) : null;
+        const dot = rec.status === 'error' ? 'err'
+          : (changedMin !== null && changedMin < 15 ? 'fresh' : (rec.lastRev ? 'stale' : ''));
+
         const meta = rec.status === 'error' ? rec.error
-          : rec.lastRev ? (rec.slideCount + ' pages · collected ' + (age === 0 ? 'just now' : age + ' min ago'))
-            : 'No work yet';
+          : rec.lastRev
+            ? (rec.slideCount + ' page' + (rec.slideCount === 1 ? '' : 's') + ' · worked on '
+               + (changedMin < 1 ? 'just now' : changedMin < 60 ? changedMin + ' min ago'
+                  : Math.round(changedMin / 60) + ' hr ago'))
+            : 'Nothing sent yet';
 
         el.innerHTML = `
       <div class="team-thumb">${rec.thumb ? `<img src="${rec.thumb}" alt="">` : 'No pages yet'}</div>
@@ -1135,6 +1151,10 @@
       const min = parseInt($('interval').value, 10);
       if (min > 0) T.timer = setInterval(collectAll, min * 60000);
     }
+
+    // The cards show relative times ("worked on 3 min ago"), which would otherwise
+    // sit frozen at whatever they said during the last collect and look stuck.
+    setInterval(() => { if (T.teacher) renderTeams(); }, 30000);
 
     /* ── boot ────────────────────────────────────────────────────────────────── */
 
