@@ -1167,8 +1167,24 @@
       const min = parseFloat($('interval').value);
       // Background checks run quietly: no button flicker, no status line flashing
       // every thirty seconds. They only announce themselves when work arrives.
-      if (min > 0) T.timer = setInterval(() => collectAll({ quiet: true }), min * 60000);
+      //
+      // And they stop entirely when nobody is looking. A dashboard left open over a
+      // weekend would otherwise poll the relay a hundred thousand times to tell an
+      // empty room that nothing has changed.
+      if (min > 0) {
+        T.timer = setInterval(() => {
+          if (document.visibilityState === 'visible') collectAll({ quiet: true });
+        }, min * 60000);
+      }
     }
+
+    // Coming back to the tab: check straight away rather than waiting out the rest
+    // of the interval, so the board is current by the time the teacher has looked at it.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && T.root && T.teacher) {
+        collectAll({ quiet: true });
+      }
+    });
 
     // The cards show relative times ("worked on 3 min ago"), which would otherwise
     // sit frozen at whatever they said during the last collect and look stuck.
