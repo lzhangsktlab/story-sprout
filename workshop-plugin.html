@@ -161,16 +161,15 @@ html, body {
   margin-left: 10px; transition: color .3s;
   flex-shrink: 0; white-space: nowrap;   /* a crowded toolbar must not squash it away */
 }
-#sync-pill.on      { display: flex; cursor: pointer; }
-#sync-pill.on:hover { color: var(--purple); }
+#sync-pill.on      { display: flex; }
 #sync-pill.synced  { color: var(--green); }
 #sync-pill.syncing { color: var(--amber); }
 #sync-pill.error   { color: var(--red, #e05c5c); }
 
 /* Hidden by default: a computer that has never joined a class should look exactly
-   as it always did. JS reveals it, and hides it again once the class is joined. */
-#tb-join-btn { display: none; }
-#tb-join-btn.on { display: inline-flex; }
+   as it always did. JS reveals whichever one applies. */
+#tb-join-btn, #tb-send-btn { display: none; }
+#tb-join-btn.on, #tb-send-btn.on { display: inline-flex; }
 
 /* Full-screen and deliberately blocking. The canvas must not be reachable until
    identity resolves — if a child starts drawing behind this and we then restore
@@ -1227,11 +1226,17 @@ html, body {
 
     <!-- Sync state gets its OWN pill. It must not go through setStatus(), which is a
          single shared line that other actions self-clear after 2.5s — a sync error
-         routed through it would be wiped by the next "Image added to canvas". -->
-    <div id="sync-pill" title="Click to send your work to your teacher right now">
+         routed through it would be wiped by the next "Image added to canvas".
+         This is a STATUS READOUT ONLY — the button to send is separate, below. -->
+    <div id="sync-pill" title="Whether your work has reached your teacher">
       <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>
       <span id="sync-pill-text">Offline</span>
     </div>
+
+    <button class="tb-btn tb-btn-icon" id="tb-send-btn" title="Send your work to your teacher now">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M14 2L7 9M14 2l-4.5 12-2.5-5-5-2.5L14 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      Send
+    </button>
 
     <!-- Shown only on a computer that has never joined a class. Once it has, the
          cached keys take over and the sync pill replaces this. -->
@@ -3412,12 +3417,11 @@ function wireButtons() {
   document.getElementById('tb-back-btn').onclick     = () => { history.back(); };
   document.getElementById('tb-join-btn').onclick     = joinClass;
 
-  // Clicking the pill forces a send, for when a teacher is standing there waiting.
-  // A repeat send costs no requests (syncPush bails on an unchanged story), but
-  // it still re-serializes the canvas — which is far from free on a 50MB story —
-  // so a short cooldown stops a bored child pegging the CPU with it.
+  // A repeat send costs no requests (syncPush bails on an unchanged story), but it
+  // still re-serializes the canvas — far from free on a 50MB story — so a short
+  // cooldown stops a bored child pegging the CPU with it.
   let lastManualPush = 0;
-  document.getElementById('sync-pill').onclick = () => {
+  document.getElementById('tb-send-btn').onclick = () => {
     if (!SYNC.active) return;
     const now = Date.now();
     if (now - lastManualPush < 3000) return;
@@ -3902,6 +3906,7 @@ async function syncStart(keys) {
   // story we just pulled straight back up and burn a revision for nothing.
   SYNC.active = true;
   clearTimeout(SYNC.timer);
+  document.getElementById('tb-send-btn').classList.add('on');
 
   // Work that never reached the relay: the tab was closed before it could send, or
   // it closed with new pictures that were too big to flush on the way out. Get it

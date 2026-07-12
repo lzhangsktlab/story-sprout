@@ -577,12 +577,15 @@
           <p style="margin:0">One team = one computer. Tape its code to that machine.</p>
         </div>
         <div class="spacer"></div>
-        <label style="font-size:12px;color:var(--ink3)">Collect every
+        <!-- Checking is a few bytes; only DOWNLOADING costs anything, and that only
+             happens when a student has actually changed something. So checking
+             often is nearly free, and 30s makes the board feel live. -->
+        <label style="font-size:12px;color:var(--ink3)">Check every
           <select id="interval">
+            <option value="0.5" selected>30 sec</option>
+            <option value="1">1 min</option>
             <option value="2">2 min</option>
-            <option value="5" selected>5 min</option>
-            <option value="10">10 min</option>
-            <option value="30">30 min</option>
+            <option value="5">5 min</option>
             <option value="0">Off</option>
           </select>
         </label>
@@ -859,18 +862,23 @@
     // Always says what it did. A collect that silently finds nothing new looks
     // identical to a collect that's broken, and the teacher has no way to tell
     // them apart — so spell out the outcome every time, including "nothing new".
-    async function collectAll() {
+    async function collectAll({ quiet = false } = {}) {
       if (!T.root || !T.teacher) return;
+      if (collecting) return;                 // a check is already running
+      collecting = true;
 
       const btn = $('sync-now');
-      btn.disabled = true;
-      btn.textContent = 'Collecting…';
-      hideErr('class-err');
+      if (!quiet) {
+        btn.disabled = true;
+        btn.textContent = 'Collecting…';
+        hideErr('class-err');
+      }
 
       if (!T.teacher.teams.length) {
-        setCollectStatus('No teams yet — create one first.');
+        if (!quiet) setCollectStatus('No teams yet — create one first.');
         btn.disabled = false;
         btn.textContent = 'Collect work now';
+        collecting = false;
         return;
       }
 
@@ -903,15 +911,23 @@
       if (!changed && !failed) {
         bits.push(empty === T.teacher.teams.length
           ? 'Nothing sent yet — work arrives a few seconds after a student stops drawing'
-          : 'Nothing new since the last collect');
+          : 'Nothing new since the last check');
       }
       const msg = bits.join(' · ');
-      setCollectStatus(msg, failed ? 'err' : (changed ? 'ok' : ''));
-      log(msg);
+
+      // A background check only speaks up when it has something to say. Flashing
+      // "nothing new" every thirty seconds would be noise, and would train the
+      // teacher to ignore the one line that matters.
+      if (!quiet || changed || failed) {
+        setCollectStatus(msg, failed ? 'err' : (changed ? 'ok' : ''));
+        log(msg);
+      }
 
       btn.disabled = false;
       btn.textContent = 'Collect work now';
+      collecting = false;
     }
+    let collecting = false;
 
     let collectStatusTimer = null;
     function setCollectStatus(msg, kind) {
@@ -1014,12 +1030,12 @@
 
       T.teacher = await readJson(T.root, 'teacher.json') || {
         fmt: 1, teacherEmail: T.email,
-        settings: { pullIntervalMin: 5 },
+        settings: { pullIntervalMin: 0.5 },
         teams: [],
       };
       T.klass = await readJson(T.root, 'class.json') || { fmt: 1, teams: {} };
 
-      $('interval').value = String(T.teacher.settings.pullIntervalMin ?? 5);
+      $('interval').value = String(T.teacher.settings.pullIntervalMin ?? 0.5);
       $('class-panel').classList.remove('hide');
       $('sync-now').disabled = false;
       renderTeams();
@@ -1148,8 +1164,10 @@
 
     function restartTimer() {
       clearInterval(T.timer);
-      const min = parseInt($('interval').value, 10);
-      if (min > 0) T.timer = setInterval(collectAll, min * 60000);
+      const min = parseFloat($('interval').value);
+      // Background checks run quietly: no button flicker, no status line flashing
+      // every thirty seconds. They only announce themselves when work arrives.
+      if (min > 0) T.timer = setInterval(() => collectAll({ quiet: true }), min * 60000);
     }
 
     // The cards show relative times ("worked on 3 min ago"), which would otherwise
@@ -1250,7 +1268,7 @@
     };
     $('sync-now').onclick = collectAll;
     $('interval').onchange = async () => {
-      T.teacher.settings.pullIntervalMin = parseInt($('interval').value, 10);
+      T.teacher.settings.pullIntervalMin = parseFloat($('interval').value);
       await writeJson(T.root, 'teacher.json', T.teacher);
       restartTimer();
     };
