@@ -3596,8 +3596,9 @@ const SYNC = {
 const SYNC_DEBOUNCE_MS = 12000;
 const LS_REV   = 'sprout_last_pushed_rev';
 const LS_DEV   = 'sprout_device_id';
-const LS_CLASS = 'sprout_class_computer';  // this machine has been used for a class
-const LS_TEAM  = 'sprout_local_team';      // which team the local autosave belongs to
+const LS_CLASS  = 'sprout_class_computer'; // this machine has been used for a class
+const LS_TEAM   = 'sprout_local_team';     // which team the local autosave belongs to
+const LS_UNSENT = 'sprout_unsent';         // local work never made it to the relay
 
 // The version of sprout-sync.js this page is built against. A browser that served
 // a STALE cached copy would derive keys by a different recipe than the teacher's
@@ -3610,6 +3611,17 @@ function setSyncPill(state, text) {
   const pill = document.getElementById('sync-pill');
   pill.className = 'on ' + (state || '');
   document.getElementById('sync-pill-text').textContent = text;
+}
+
+// A hash of the story's CONTENT, ignoring the fields that change on every save.
+// buildStoryJson() stamps `saved` and `session.savedAt` with the current time, so
+// hashing its output raw would differ on every call and the "nothing changed"
+// check below would never once fire.
+async function storyContentHash(story) {
+  const c = JSON.parse(JSON.stringify(story));
+  delete c.saved;
+  if (c.session) delete c.session.savedAt;
+  return SproutSync.sha256Hex(new TextEncoder().encode(JSON.stringify(c)));
 }
 
 async function syncFetch(path, { method = 'GET', body = null, binary = false } = {}) {
@@ -3627,7 +3639,9 @@ async function syncFetch(path, { method = 'GET', body = null, binary = false } =
 // Blobs go up FIRST; the manifest is published LAST. The manifest is the single
 // atomic commit point — so a teacher pulling mid-push sees either the old story
 // or the new one, never a half-written one referencing images that don't exist.
-async function syncPush() {
+// `closing` means the page is going away, so we get one shot and very little time.
+// See the blob-upload guard below for what that costs us.
+async function syncPush({ closing = false } = {}) {
   if (!SYNC.active || !SYNC.keys) return;
   if (SYNC.inFlight) { SYNC.again = true; return; }
 
@@ -3638,11 +3652,10 @@ async function syncPush() {
     const { json } = await buildStoryJson();
     const story = JSON.parse(json);
 
-    // If the story is byte-for-byte what we last sent, send nothing. Without this,
-    // a child leaning on the send button would re-upload an identical manifest and
-    // burn a revision every time — pure waste. Now a repeat push costs zero
-    // requests, so there is nothing to spam.
-    const contentHash = await SproutSync.sha256Hex(new TextEncoder().encode(json));
+    // If the story is what we last sent, send nothing. Without this, a child
+    // leaning on the send button would re-upload an identical manifest and burn a
+    // revision every time. Now a repeat push costs zero requests.
+    const contentHash = await storyContentHash(story);
     if (contentHash === SYNC.lastHash) {
       setSyncPill('synced', 'Sent to teacher');
       return;
@@ -3669,6 +3682,20 @@ async function syncPush() {
       missing = (await res.json()).missing;
     }
 
+    // A closing page cannot reliably upload megabytes of new images — the browser
+    // will kill the requests as it tears the page down. And publishing a manifest
+    // whose images never made it would leave the teacher permanently unable to
+    // open the story, which is far worse than a slightly stale copy.
+    //
+    // So: if there are new pictures and we're closing, send nothing. The work is
+    // already safe in local storage, and the next time this team signs in, the
+    // restore below pushes it. Text-only edits still flush on close, since those
+    // need no new images.
+    if (closing && missing.length) {
+      localStorage.setItem(LS_UNSENT, '1');
+      return;
+    }
+
     for (const [hash, b] of blobs) {
       const id = idByHash.get(hash);
       if (!missing.includes(id)) continue;
@@ -3687,10 +3714,19 @@ async function syncPush() {
     const bytes = new TextEncoder().encode(JSON.stringify(manifest));
     const env = await SproutSync.encrypt(SYNC.keys.encKey, bytes, { compress: true });
 
+    // keepalive lets the request outlive the page — this is what actually gets a
+    // child's last edit out the door when they close the tab. It is capped at 64KB,
+    // so fall back to a normal request for a big manifest (a story with many pages
+    // carries a thumbnail per page). A normal request during unload usually still
+    // lands; it just isn't guaranteed, which is what LS_UNSENT is for.
+    const useKeepalive = closing && env.length < 60000;
+    if (closing && !useKeepalive) localStorage.setItem(LS_UNSENT, '1');
+
     const res = await fetch(PIP_PROXY_URL + '/sync/manifest', {
       method: 'PUT',
       headers: { 'X-Team-Auth': SYNC.keys.authToken, 'X-Base-Rev': String(SYNC.rev) },
       body: env,
+      keepalive: useKeepalive,
     });
 
     if (res.status === 409) {
@@ -3709,11 +3745,14 @@ async function syncPush() {
     SYNC.rev = out.rev;
     SYNC.lastHash = contentHash;         // only on success — a failed push must retry
     localStorage.setItem(LS_REV, String(out.rev));
+    localStorage.removeItem(LS_UNSENT);
     setSyncPill('synced', 'Sent to teacher');
 
   } catch (e) {
     // Never alert, never block. The child's work is already safe on this computer.
+    // The flag is what gets it out next time this team signs in.
     console.warn('[sync] push failed:', e.message);
+    localStorage.setItem(LS_UNSENT, '1');
     setSyncPill('error', 'Will retry');
   } finally {
     SYNC.inFlight = false;
@@ -3729,18 +3768,24 @@ function scheduleSyncPush() {
 
 // Send straight away, skipping the debounce. Used when the child stops working —
 // which is precisely the moment a teacher is likely to go and collect.
-function syncPushNow() {
-  if (!SYNC.active || !S.dirty) return;
+function syncPushNow(opts) {
+  if (!SYNC.active) return;
   clearTimeout(SYNC.timer);
-  syncPush();
+  syncPush(opts);
 }
 
 // The child switched tabs, minimised, or put the laptop down. Flush now rather
 // than sitting on their last change for another twelve seconds.
+window.addEventListener('blur', () => syncPushNow());
+
+// The page is going away — closing the tab, closing the lid, navigating off.
+// `visibilitychange -> hidden` is the one event that reliably fires in all three
+// cases (browsers routinely skip `unload` entirely), so it, not `unload`, is where
+// the last-gasp send belongs.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') syncPushNow();
+  if (document.visibilityState === 'hidden') syncPushNow({ closing: true });
 });
-window.addEventListener('blur', syncPushNow);
+window.addEventListener('pagehide', () => syncPushNow({ closing: true }));
 
 /* ── pull ────────────────────────────────────────────────────────────────── */
 
@@ -3807,7 +3852,10 @@ async function syncRestore() {
   }
 
   if (localAutosave && lastPushed === state.rev) {
-    loadStoryData(localAutosave);                    // our own work, already up there
+    // Our own work, and the relay agrees. But it may hold edits that never made it
+    // out — the tab was closed mid-drawing, or the wifi was down. Leaving lastHash
+    // null means the first push after this will send them.
+    loadStoryData(localAutosave);
     return;
   }
 
@@ -3821,7 +3869,12 @@ async function syncRestore() {
   }
 
   const story = await syncPullStory();
-  if (story) loadStoryData(story);
+  if (story) {
+    loadStoryData(story);
+    // This came FROM the relay, so it is already there. Recording its hash means
+    // we don't immediately push it straight back and burn a revision for nothing.
+    SYNC.lastHash = await storyContentHash(story);
+  }
 }
 
 async function syncStart(keys) {
@@ -3848,6 +3901,15 @@ async function syncStart(keys) {
   // story we just pulled straight back up and burn a revision for nothing.
   SYNC.active = true;
   clearTimeout(SYNC.timer);
+
+  // Work that never reached the relay: the tab was closed before it could send, or
+  // it closed with new pictures that were too big to flush on the way out. Get it
+  // out now, before the child touches anything. The content hash makes this free if
+  // it turns out everything was already sent.
+  if (localStorage.getItem(LS_UNSENT) === '1') {
+    setSyncPill('syncing', 'Catching up…');
+    syncPush();
+  }
 }
 
 /* ── the gate ────────────────────────────────────────────────────────────── */
