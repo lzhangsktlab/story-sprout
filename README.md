@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌱 StorySketch Workshop
+# 🌱 Storybook Workshop
 
 **A single-file, client-side web app where kids create multi-slide illustrated stories — with Pip, a friendly AI illustrator.**
 
@@ -15,17 +15,6 @@
 </div>
 
 ---
-
-## 🔗 The two apps
-
-| | Who it's for | Link |
-|---|---|---|
-| **🎨 Workshop** | Children — draw with Pip, build the story | [workshop-plugin.html](https://lzhangsktlab.github.io/story-sprout/workshop-plugin.html) |
-| **🍎 Teacher Mode** | The teacher — make teams, collect the class's work | [teacher.html](https://lzhangsktlab.github.io/story-sprout/teacher.html) |
-
-> The first time a classroom computer joins a class, open the workshop with **[`?class=1`](https://lzhangsktlab.github.io/story-sprout/workshop-plugin.html?class=1)** so it asks for the team name and secret code. After that it remembers, and the child is never asked again.
->
-> Teacher Mode needs **Chrome or Edge** — saving to a folder on your computer uses an API that Firefox and Safari don't implement.
 
 ## ✨ What is this?
 
