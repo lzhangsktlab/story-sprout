@@ -4,7 +4,8 @@
 
 **A single-file, client-side web app where kids create multi-slide illustrated stories — with Pip, a friendly AI illustrator.**
 
-[![Live Demo](https://img.shields.io/badge/▶_Live_Demo-lzhangsktlab.github.io-7C5CFF?style=for-the-badge)](https://lzhangsktlab.github.io/story-sprout/)
+[![Open the Workshop](https://img.shields.io/badge/🎨_Open_the_Workshop-for_kids-7C5CFF?style=for-the-badge)](https://lzhangsktlab.github.io/story-sprout/workshop-plugin.html)
+[![Open Teacher Mode](https://img.shields.io/badge/🍎_Open_Teacher_Mode-for_teachers-38B48A?style=for-the-badge)](https://lzhangsktlab.github.io/story-sprout/teacher.html)
 
 ![No build step](https://img.shields.io/badge/build-none-success?style=flat-square)
 ![Client-side](https://img.shields.io/badge/runs-100%25_in_browser-blue?style=flat-square)
@@ -14,6 +15,17 @@
 </div>
 
 ---
+
+## 🔗 The two apps
+
+| | Who it's for | Link |
+|---|---|---|
+| **🎨 Workshop** | Children — draw with Pip, build the story | [workshop-plugin.html](https://lzhangsktlab.github.io/story-sprout/workshop-plugin.html) |
+| **🍎 Teacher Mode** | The teacher — make teams, collect the class's work | [teacher.html](https://lzhangsktlab.github.io/story-sprout/teacher.html) |
+
+> The first time a classroom computer joins a class, open the workshop with **[`?class=1`](https://lzhangsktlab.github.io/story-sprout/workshop-plugin.html?class=1)** so it asks for the team name and secret code. After that it remembers, and the child is never asked again.
+>
+> Teacher Mode needs **Chrome or Edge** — saving to a folder on your computer uses an API that Firefox and Safari don't implement.
 
 ## ✨ What is this?
 
