@@ -222,32 +222,46 @@
       gap: 16px;
     }
 
+    /* An explicit column, so the preview is structurally incapable of sitting on
+       top of the text no matter what the story thumbnail turns out to be. */
     .team {
       background: var(--white);
       border: 2px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .team-thumb {
-      height: 140px;
+      flex: 0 0 auto;
+      aspect-ratio: 3 / 2;
+      width: 100%;
       background: var(--cream2);
       display: grid;
       place-items: center;
       color: var(--ink3);
       font-size: 12px;
       border-bottom: 2px solid var(--border);
+      overflow: hidden;
     }
 
+    /* `contain`, not `cover`: this is a page of a child's story, and cropping the
+       top and bottom off it to fill a box defeats the point of showing it at all. */
     .team-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
       display: block;
     }
 
     .team-body {
+      flex: 1 1 auto;
       padding: 14px 16px 16px;
+      position: relative;
+      background: var(--white);
     }
 
     .team-name {
@@ -955,6 +969,16 @@
 
     /* ── render ──────────────────────────────────────────────────────────────── */
 
+    // Story titles are typed by CHILDREN and land in this page's HTML. Without
+    // escaping, a title like `<img src=x onerror=...>` would execute right here on
+    // the teacher's dashboard — and stray markup would wreck the card layout too.
+    // Never interpolate student-controlled text into innerHTML raw.
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+      ));
+    }
+
     function renderTeams() {
       const wrap = $('teams');
       wrap.innerHTML = '';
@@ -980,13 +1004,18 @@
                   : Math.round(changedMin / 60) + ' hr ago'))
             : 'Nothing sent yet';
 
+        // Only rec.thumb is trusted as a URL, and only because it is a data: URL we
+        // produced ourselves from the decrypted story. Everything else is escaped.
+        const safeThumb = (typeof rec.thumb === 'string' && rec.thumb.startsWith('data:image/'))
+          ? rec.thumb : null;
+
         el.innerHTML = `
-      <div class="team-thumb">${rec.thumb ? `<img src="${rec.thumb}" alt="">` : 'No pages yet'}</div>
+      <div class="team-thumb">${safeThumb ? `<img src="${safeThumb}" alt="">` : '<span>No pages yet</span>'}</div>
       <div class="team-body">
-        <div class="team-name">${team.teamName}</div>
-        <div class="team-title">${rec.storyTitle || '—'}</div>
-        <div class="team-meta"><span class="dot ${dot}"></span>${meta}</div>
-        <div class="code hidden" data-code="${team.secretCode}">Click to show the secret code</div>
+        <div class="team-name">${esc(team.teamName)}</div>
+        <div class="team-title">${esc(rec.storyTitle || '—')}</div>
+        <div class="team-meta"><span class="dot ${dot}"></span><span>${esc(meta)}</span></div>
+        <div class="code hidden">Click to show the secret code</div>
         <div class="team-actions"><button class="del-link">Delete team</button></div>
       </div>`;
 
