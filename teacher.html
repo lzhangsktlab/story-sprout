@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Story Sprout — Teacher</title>
+  <title>Storybook Workshop — Teacher</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- Shared byte-for-byte with workshop-plugin.html. If the crypto in the two pages
@@ -601,7 +601,14 @@
 <body>
 
   <header>
-    <h1>Story Sprout</h1>
+    <!-- Same mark and wording as the student page: a teacher opening this should
+         recognise it instantly as the same app, not wonder what "Story Sprout" is. -->
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M12 3C8 3 5 6 5 10c0 2.5 1.2 4.7 3 6.1V18h8v-1.9c1.8-1.4 3-3.6 3-6.1 0-4-3-7-7-7z" fill="#9779D2" opacity=".25"/>
+      <path d="M9 18h6v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z" fill="#9779D2"/>
+      <path d="M12 7v6M9.5 9.5l2.5 2M14.5 9.5L12 12" stroke="#7C5CBF" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <h1>Storybook Workshop</h1>
     <span class="tag">Teacher</span>
     <div class="spacer"></div>
     <span class="collect-status" id="collect-status"></span>
@@ -702,7 +709,7 @@
 
   <script>
     /* ═══════════════════════════════════════════════════════════════════════════
-       Story Sprout — Teacher dashboard
+       Storybook Workshop — Teacher dashboard
     
        The teacher's disk is the system of record. The relay is a dead-drop that
        holds encrypted bytes for a few minutes; this page is where the work actually
