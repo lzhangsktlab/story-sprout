@@ -3410,8 +3410,20 @@ function wireButtons() {
   // Top bar
   document.getElementById('tb-back-btn').onclick     = () => { history.back(); };
   document.getElementById('tb-join-btn').onclick     = joinClass;
+
   // Clicking the pill forces a send, for when a teacher is standing there waiting.
-  document.getElementById('sync-pill').onclick       = () => { if (SYNC.active) { clearTimeout(SYNC.timer); syncPush(); } };
+  // A repeat send costs no requests (syncPush bails on an unchanged story), but
+  // it still re-serializes the canvas — which is far from free on a 50MB story —
+  // so a short cooldown stops a bored child pegging the CPU with it.
+  let lastManualPush = 0;
+  document.getElementById('sync-pill').onclick = () => {
+    if (!SYNC.active) return;
+    const now = Date.now();
+    if (now - lastManualPush < 3000) return;
+    lastManualPush = now;
+    clearTimeout(SYNC.timer);
+    syncPush();
+  };
   document.getElementById('tb-new-btn').onclick      = newStory;
   document.getElementById('tb-save-btn').onclick    = saveStory;
   document.getElementById('tb-saveas-btn').onclick  = saveStoryAs;
@@ -3574,6 +3586,7 @@ const SYNC = {
   again: false,        // a change landed while a push was running
   timer: null,
   deviceId: null,
+  lastHash: null,      // content hash of the last thing we successfully sent
 };
 
 // Local autosave is 5s; pushing that often would re-upload on every brushstroke.
@@ -3624,6 +3637,16 @@ async function syncPush() {
 
     const { json } = await buildStoryJson();
     const story = JSON.parse(json);
+
+    // If the story is byte-for-byte what we last sent, send nothing. Without this,
+    // a child leaning on the send button would re-upload an identical manifest and
+    // burn a revision every time — pure waste. Now a repeat push costs zero
+    // requests, so there is nothing to spam.
+    const contentHash = await SproutSync.sha256Hex(new TextEncoder().encode(json));
+    if (contentHash === SYNC.lastHash) {
+      setSyncPill('synced', 'Sent to teacher');
+      return;
+    }
 
     const { manifestStory, blobs } = await SproutSync.stripImages(story);
 
@@ -3684,6 +3707,7 @@ async function syncPush() {
 
     const out = await res.json();
     SYNC.rev = out.rev;
+    SYNC.lastHash = contentHash;         // only on success — a failed push must retry
     localStorage.setItem(LS_REV, String(out.rev));
     setSyncPill('synced', 'Sent to teacher');
 
