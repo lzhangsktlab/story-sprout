@@ -18,7 +18,7 @@
 
 ## ✨ What is this?
 
-StorySketch Workshop is a kid-friendly storybook maker that runs entirely in the browser — no install, no build step, no framework. Children describe the pictures they imagine, and **Pip**, a conversational AI illustrator, draws them right onto the canvas. They can arrange text and shapes, build a story across multiple slides, and save everything to a local folder.
+Storybook Workshop is a kid-friendly storybook maker that runs entirely in the browser — no install, no build step, no framework. Children describe the pictures they imagine, and **Pip**, a conversational AI illustrator, draws them right onto the canvas. They can arrange text and shapes, build a story across multiple slides, and save everything to a local folder.
 
 It doubles as a research tool for studying how children learn to write and refine prompts (see [`RESEARCH_DATA.md`](RESEARCH_DATA.md)).
 
