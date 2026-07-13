@@ -381,6 +381,26 @@ html, body {
 .slide-thumb:hover { border-color: var(--purple-light); box-shadow: var(--shadow-sm); }
 .slide-thumb.active { border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-bg); }
 
+/* Drag to reorder pages. */
+.slide-thumb:active { cursor: grabbing; }
+.slide-thumb.dragging { opacity: .4; }
+
+/* A solid bar on the edge the page will land on. Thumbnails are tall, so without
+   this the child is guessing whether the drop goes above or below.
+   Sits INSIDE the tile: .slide-thumb has overflow:hidden, so a bar placed outside
+   its bounds would simply be clipped away and never seen. */
+.slide-thumb.drop-before::before,
+.slide-thumb.drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 4px;
+  background: var(--purple);
+  z-index: 3;
+}
+.slide-thumb.drop-before::before { top: 0; }
+.slide-thumb.drop-after::after   { bottom: 0; }
+
 .slide-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .slide-thumb-placeholder { width: 100%; height: 100%; background: var(--cream3); }
 
@@ -1745,6 +1765,14 @@ function initCanvas() {
 
   fitCanvas();
   bindCanvas();
+
+  // Seed the history baseline for the first page. loadSlide() does this whenever you
+  // switch pages, but nothing calls loadSlide() on a fresh boot — so without this,
+  // S.history[0] stays empty, undo's `length < 2` guard swallows the very first
+  // undo, and you can never get back to a blank page.
+  S.history[S.cur] = [ JSON.stringify(S.canvas.toJSON(['id', 'selectable', 'historyId'])) ];
+  S.redo[S.cur]    = [];
+
   renderSlideThumbs();
   updateSlideLabel();
 }
@@ -1846,12 +1874,45 @@ async function deleteSlide(idx) {
   markDirty();
 }
 
+/* ── Reordering pages by dragging ─────────────────────────────────────────────
+   The slide index is load-bearing: S.cur points into S.slides, and S.history and
+   S.redo are parallel arrays indexed the same way. So a reorder has to move all
+   three in step, and fix up S.cur — otherwise a child drags page 3 to the front
+   and their undo stack silently belongs to somebody else's page.
+   ─────────────────────────────────────────────────────────────────────────── */
+let dragFromIdx = null;
+
+async function movePage(from, to) {
+  if (from === to || from == null || to == null) return;
+  if (to < 0 || to >= S.slides.length) return;
+
+  // Flush the page being looked at, or its latest edits are lost in the shuffle.
+  await saveCurrentSlide(true);
+
+  const move = (arr) => { const [item] = arr.splice(from, 1); arr.splice(to, 0, item); };
+  move(S.slides);
+  move(S.history);
+  move(S.redo);
+
+  // Follow the page the child was on, wherever it has ended up.
+  if (S.cur === from)                            S.cur = to;
+  else if (from < S.cur && to >= S.cur)          S.cur--;
+  else if (from > S.cur && to <= S.cur)          S.cur++;
+
+  renderSlideThumbs();
+  updateSlideLabel();
+  markDirty();
+  setStatus('Page moved', 'ok');
+  setTimeout(() => setStatus('', ''), 1500);
+}
+
 function renderSlideThumbs() {
   const list = document.getElementById('slide-list');
   list.innerHTML = '';
   S.slides.forEach((s, i) => {
     const div = document.createElement('div');
     div.className = 'slide-thumb' + (i === S.cur ? ' active' : '');
+    div.draggable = true;
 
     const inner = s.thumb
       ? `<img src="${s.thumb}" alt="Page ${i+1}">`
@@ -1870,6 +1931,51 @@ function renderSlideThumbs() {
       e.stopPropagation();
       deleteSlide(i);
     });
+
+    div.addEventListener('dragstart', e => {
+      dragFromIdx = i;
+      div.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      // Firefox refuses to start a drag at all unless something is set here.
+      try { e.dataTransfer.setData('text/plain', String(i)); } catch {}
+    });
+
+    div.addEventListener('dragend', () => {
+      dragFromIdx = null;
+      document.querySelectorAll('.slide-thumb').forEach(t =>
+        t.classList.remove('dragging', 'drop-before', 'drop-after'));
+    });
+
+    div.addEventListener('dragover', e => {
+      if (dragFromIdx === null || dragFromIdx === i) return;
+      e.preventDefault();                       // without this, no drop is allowed
+      e.dataTransfer.dropEffect = 'move';
+      // Show which side it will land on, so the drop is predictable rather than a
+      // guess — the thumbnails are tall, and "before or after?" is not obvious.
+      const r = div.getBoundingClientRect();
+      const after = (e.clientY - r.top) > r.height / 2;
+      div.classList.toggle('drop-after', after);
+      div.classList.toggle('drop-before', !after);
+    });
+
+    div.addEventListener('dragleave', () => {
+      div.classList.remove('drop-before', 'drop-after');
+    });
+
+    div.addEventListener('drop', e => {
+      e.preventDefault();
+      const from = dragFromIdx;
+      if (from === null || from === i) return;
+
+      const r = div.getBoundingClientRect();
+      const after = (e.clientY - r.top) > r.height / 2;
+      let to = after ? i + 1 : i;
+      if (from < to) to--;                      // the source leaves a gap behind it
+
+      div.classList.remove('drop-before', 'drop-after');
+      movePage(from, to);
+    });
+
     list.appendChild(div);
   });
 }
@@ -1892,6 +1998,9 @@ function pushHistory() {
   markDirty();
 }
 
+// Both of these must markDirty(). Undoing IS a change to the story — without it the
+// autosave never fires and the undo is never sent to the teacher, so undoing
+// something and closing the tab would quietly bring it back.
 function undo() {
   const h = S.history[S.cur];
   // history[0] is the slide's baseline snapshot, so we need at least one edit
@@ -1901,7 +2010,8 @@ function undo() {
   const snap = h[h.length - 1];       // the previous state becomes current
   S.supressHist = true;
   S.canvas.loadFromJSON(snap, () => {
-    S.canvas.renderAll(); S.supressHist = false; updateUndoRedo(); saveCurrentSlide(); renderSlideThumbs(); syncPageBgControl();
+    S.canvas.renderAll(); S.supressHist = false; updateUndoRedo();
+    saveCurrentSlide(); renderSlideThumbs(); syncPageBgControl(); markDirty();
   });
 }
 
@@ -1912,7 +2022,8 @@ function redo() {
   S.history[S.cur].push(snap);
   S.supressHist = true;
   S.canvas.loadFromJSON(snap, () => {
-    S.canvas.renderAll(); S.supressHist = false; updateUndoRedo(); saveCurrentSlide(); renderSlideThumbs(); syncPageBgControl();
+    S.canvas.renderAll(); S.supressHist = false; updateUndoRedo();
+    saveCurrentSlide(); renderSlideThumbs(); syncPageBgControl(); markDirty();
   });
 }
 
@@ -2081,9 +2192,14 @@ function addShape(kind = 'rounded') {
     default:
       obj = new fabric.Rect({ ...base, width: 200, height: 130, rx: 16, ry: 16 }); break;
   }
-  S.canvas.add(obj);
-  S.canvas.centerObject(obj);   // drop it in the middle of the page regardless of type
+  // Centre it BEFORE adding it. `canvas.add()` fires object:added synchronously,
+  // which snapshots the canvas for undo and regenerates the thumbnail — so adding
+  // first would record the shape at its default 0,0 and only then move it to the
+  // middle. The canvas would look right while the history and the thumbnail both
+  // held a top-left version, and undo would faithfully restore the wrong one.
+  S.canvas.centerObject(obj);
   obj.setCoords();
+  S.canvas.add(obj);
   S.canvas.setActiveObject(obj);
   S.canvas.renderAll();
 }
