@@ -240,6 +240,20 @@ Recognised text lands in the input box for the child to read, edit and send. It 
 
 **Never collected:** a child's name, age, school, or any account of any kind.
 
+### What the proxy achieves — and the paper undersells it
+
+§4.4 currently says only that *"prompts pass through the stateless proxy to the model provider … under the provider's API terms."* That is honest, but it describes the proxy as a **key-hiding** measure and stops there. It does considerably more, and the stronger claim is available:
+
+> **The proxy makes the child unidentifiable to the model provider.**
+
+All three OpenAI calls are made **server-side, from the worker**. The child's browser never contacts `api.openai.com` at all. The worker builds a fresh request and sends only the API key, a content type, and a JSON body it constructs itself — it does not forward the child's IP address, user-agent, cookies, or any other client header.
+
+So what actually crosses that boundary is **a scene description and nothing else.** OpenAI cannot correlate a request to a child, a device, or a session, because no identifier ever reaches it. There is no identity there to attribute anything to. Combined with a zero-retention configuration on the provider side, the provider retains nothing — and could not attribute it if it did.
+
+**Why this belongs in an agency paper, not just a privacy footnote.** It is the same instinct as the rest of the design: *give the model exactly what it needs to do its one job, and nothing else.* The model is allowed to render. It is not allowed to originate the story, judge the result — or know who it is working for. The proxy is where that last restriction is enforced, and it is a design contribution rather than a compliance measure.
+
+It also sharpens what the residual disclosure actually is. A scene description — *"a fluffy white dog in a snowy park"* — carries no personal information. The channel is not the exposure; **the content is**, and only when a child volunteers something about themselves. Which is precisely what the two risks below are about, and precisely what Pip's prompt and the safety notice are aimed at.
+
 ### Two residual risks the paper should name
 
 Neither is fixable in code, and both belong in the Ethics statement:
