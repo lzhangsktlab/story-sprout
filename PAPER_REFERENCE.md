@@ -240,56 +240,27 @@ Recognised text lands in the input box for the child to read, edit and send. It 
 
 **Never collected:** a child's name, age, school, or any account of any kind.
 
----
+### Two residual risks the paper should name
 
-## 9. COPPA posture
+Neither is fixable in code, and both belong in the Ethics statement:
 
-**Not legal advice** — an inventory so counsel can assess it. The paper's existing framing — *"a data-minimization measure, not a claim of exemption or compliance"* — is correct and should be kept **verbatim**.
+- **A child can volunteer personal information in free text.** Pip's system prompt forbids it from *asking for or repeating* personal information, but nothing can stop a child typing their own name into a prompt. The safety notice (above) is the mitigation, and it is a notice, not a control.
+- **A child can import any local image onto the canvas** — including a photograph of themselves. That image stays in the story file and syncs encrypted to the teacher. It is **never** sent to OpenAI.
 
-The amended Rule has been in force since **23 June 2025** (full compliance from **22 April 2026**). It expanded "personal information" to include **voice data**, and now requires **separate parental consent for third-party disclosure**, a **written retention policy**, and a **written security program**.
+### On the paper's legal framing
 
-**Done (engineering).** No child accounts. No third-party requests from the child's browser. No persistent identifiers on the child's device. Voice on-device, failing closed. Zero-knowledge relay. `store: false`. A safety notice before a child reaches Pip. Deletion implemented.
+The manuscript's posture — *"local custody is a data-minimization measure, not a claim of exemption or compliance"* — is **correct, and should be kept verbatim.** The engineering above strengthens the *minimisation* claim considerably; it does not, and should not be read to, convert it into a compliance claim.
 
-**Outstanding (contractual and procedural — not engineering).**
+Two facts that bear directly on the **Ethics statement** as currently written:
 
-1. **Zero Data Retention from OpenAI.** Their developer terms say you should *not* process under-13 personal data without it. **Not self-serve** — OpenAI grants it at the organisation level. **Get it in writing whether it covers the image endpoints**, not just chat: image endpoints can have different retention rules, and the images are the product.
-2. **Consent that covers *this* system.** Any consent predating the Pip integration was for a different system, and the amended Rule requires *separate* consent for the OpenAI disclosure.
-3. **Threshold question:** does COPPA even apply? It is enforced under the FTC Act, which generally reaches entities organised for profit. A nonprofit/academic operator may fall outside it — fact-specific, evaporates on commercialisation, and IRB obligations are independent regardless.
-4. **The school-consent route may not be available.** FTC guidance lets *schools* consent for parents. A community after-school programme is likely not a school — which would mean consent per family.
-5. **Written retention policy and security program** (drafts in the appendices).
+- **Voice is now explicitly personal information** under the amended COPPA Rule (in force since June 2025), which expanded the definition to cover voice data. The manuscript describes voice input as a designed feature and its Ethics statement does not mention that, until 14 July 2026, the audio left the device. It now does not.
+- **"No telemetry" is now true, and was not before.** Every page load previously fetched Google Fonts and Fabric.js from third-party CDNs, disclosing the child's IP address to Google and Cloudflare before the child had done anything. Both are self-hosted.
 
-**Two residual risks no code change removes:** a child can type their own name into free text (Pip is forbidden to *solicit* it, but cannot prevent it being volunteered), and a child can import any local image — including a photo of themselves — which stays local and syncs encrypted to the teacher, and is **never** sent to OpenAI.
+Everything else — consent instruments, provider agreements, retention and security documentation — is operational and outside this document's scope.
 
 ---
 
-## Appendix A — draft data retention policy
-
-*For counsel to redline. Not legal advice.*
-
-1. **Children's work** is retained **on the supervising adult's computer** for the duration of the programme and no longer than necessary for the educational and research purposes for which it was collected. At the end of each cycle the supervising adult deletes the class folder, unless a family has consented to retention for research.
-2. **The relay** holds only encrypted objects the operator cannot read, expiring after **30 days** by bucket lifecycle rule. It is a transport buffer, not a store of record.
-3. **The relay retains no identifying data** — no names, no emails, no device identifiers. Ciphertext, a revision counter, and timestamps.
-4. **OpenAI** retains API content per its own terms. **Zero Data Retention must be obtained before use with children.**
-5. **Deletion on request.** A parent may request deletion. The teacher deletes the team, which erases the relay copy, the local copy, and any images no other team references. Implemented and tested.
-6. **Microphone audio is never retained** by anyone — recognition is on-device.
-
-## Appendix B — draft information security program
-
-*For counsel to redline. Not legal advice.*
-
-- **In transit:** HTTPS throughout.
-- **At rest:** children's work is encrypted **in the child's browser** (AES-GCM-256; key derived by PBKDF2 at 600,000 iterations, then HKDF, from a generated secret code). **The operator never holds the key.**
-- **Key custody:** the only keys are the secret codes on the supervising adult's computer. Loss of that file makes the work permanently unreadable — an accepted, documented consequence of the design.
-- **Access control:** creating and deleting a team requires a verified Google account on an allowlist, or a shared passphrase. Reading a team's work requires its secret code.
-- **API keys:** the OpenAI key exists only as an encrypted secret in the Worker and never reaches a browser.
-- **Abuse controls:** per-IP rate limiting on AI routes, per-team on sync, tight per-IP limits on team creation and deletion.
-- **Data minimisation:** no child accounts, no persistent identifiers, no third-party assets, no telemetry.
-- **Integrity:** the last 30 revisions are retained, allowing recovery from an accidental or malicious overwrite.
-- **Residual risks:** a generated team code is proof against a classmate, not against a determined attacker holding the ciphertext; children can volunteer personal information in free text; the secret-code file is unencrypted key escrow on the teacher's disk.
-
----
-
-## Appendix C — things a reviewer might catch
+## Appendix A — things a reviewer might catch
 
 - Teacher Mode requires **Chrome or Edge** (File System Access API). Firefox and Safari cannot do it.
 - `S.imgMap` and `S.dirHandle` are **dead** — always `{}` / `null`. Vestiges of a removed scheme.
