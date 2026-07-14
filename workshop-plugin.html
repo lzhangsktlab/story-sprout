@@ -2499,13 +2499,7 @@ function scaleAndPlace(img, historyId) {
 }
 
 function logRemoval(obj) {
-  if (obj.historyId) {
-    const item = aiHistory.find(h => h.historyId === obj.historyId);
-    if (item) {
-      item.actions = item.actions || [];
-      item.actions.push({ type: 'removed_from_canvas', at: new Date().toISOString(), slideIdx: S.cur });
-    }
-  }
+  if (obj.historyId) logAction(obj.historyId, 'removed_from_canvas');
 }
 
 function deleteSelected() {
@@ -2707,8 +2701,40 @@ function clearPropsPanel() {
 ═══════════════════════════════════════════════ */
 
 // Image generation history [{dataUrl, prompt}]
+// aiHistory is the IMAGE cache that feeds the history strip and the image bank.
+// Each entry carries a 2–3MB base64 image, which is why it is capped at 20.
 const aiHistory = [];
 let aiSelectedIdx = -1;
+
+/* ── Research record ──────────────────────────────────────────────────────────
+   The research data is kept SEPARATE from the image cache above, and is never
+   capped, because the two have wildly different sizes: an image is megabytes, a
+   prompt is a few hundred bytes. Keeping them in one array is what forced the
+   20-item cap — which silently discarded a child's EARLIEST generations, exactly
+   the ones a study of prompt-writing progression most wants.
+
+   It also records what aiHistory could not. In the Pip flow the child never
+   writes the image prompt: they converse with Pip, and gpt-4o-mini authors the
+   `image_prompt` that is actually sent to the image model. aiHistory[].prompt
+   therefore holds the MODEL's words, not the child's. The child's own words lived
+   only in pipMessages, which was never saved — so the very thing the research is
+   about was being thrown away on every page load.
+
+   Both are now recorded, and kept distinguishable.
+   ─────────────────────────────────────────────────────────────────────────── */
+const promptLog = [];          // one entry per generation attempt. No images. Never capped.
+const pipConversation = [];    // the full child ↔ Pip transcript, with timestamps.
+
+// Mirror an action onto BOTH the image cache and the research record. The cache
+// entry may have been evicted by the 20-item cap; the research entry never is.
+function logAction(historyId, type) {
+  if (!historyId) return;
+  const action = { type, at: new Date().toISOString(), slideIdx: S.cur };
+  const item = aiHistory.find(h => h.historyId === historyId);
+  if (item) (item.actions = item.actions || []).push(action);
+  const rec = promptLog.find(r => r.historyId === historyId);
+  if (rec) (rec.actions = rec.actions || []).push(action);
+}
 
 function closePipDrawer() {
   document.getElementById('pip-drawer').classList.remove('open');
@@ -2898,20 +2924,45 @@ function showAiError(msg) {
 }
 
 /* ── History strip ── */
-function addToHistory(dataUrl, prompt, settings = {}, parentId = null) {
+// `meta` carries what the research needs but the image cache doesn't:
+//   source     — 'pip' (conversational) or 'manual' (the legacy drawer)
+//   childWords — what the CHILD actually said, verbatim. Null on the manual path,
+//                where `prompt` already IS the child's own text.
+//   turnIndex  — index into pipConversation, so a whole exchange can be replayed
+function addToHistory(dataUrl, prompt, settings = {}, parentId = null, meta = {}) {
+  const historyId = 'ai_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  const timestamp = new Date().toISOString();
+
   aiHistory.unshift({
-    historyId: 'ai_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    historyId,
     dataUrl, prompt,
-    timestamp: new Date().toISOString(),
+    timestamp,
     settings,
     parentId,
     actions: [],
   });
-  if (aiHistory.length > 20) aiHistory.pop();
+  if (aiHistory.length > 20) aiHistory.pop();   // IMAGE cache only — see promptLog
+
+  // The research record. No image, so it stays small and is NEVER dropped: a child
+  // who makes 40 attempts keeps all 40 prompts, including the earliest and least
+  // refined ones, which is precisely what a study of prompt-writing wants.
+  promptLog.push({
+    historyId,
+    at: timestamp,
+    source:      meta.source || 'manual',
+    childWords:  meta.childWords ?? null,   // the child's own words (Pip flow)
+    imagePrompt: prompt,                    // what was actually sent to the image model
+    turnIndex:   meta.turnIndex ?? null,
+    settings,
+    parentId,
+    actions: [],
+  });
+
   aiSelectedIdx = 0;
   renderHistoryStrip();
   // Keep the image bank fresh if it's currently open.
   if (document.getElementById('pip-bank').classList.contains('open')) renderImageBank();
+  return historyId;
 }
 
 function renderHistoryStrip() {
@@ -2960,6 +3011,9 @@ function deleteHistoryItem(idx) {
   markDirty();
 }
 
+// Clears the IMAGE cache only. promptLog and pipConversation are deliberately left
+// alone: a child tidying up their picture strip must not silently erase the record
+// of how they got there.
 function clearAiHistory() {
   if (aiHistory.length && !confirm('Clear all generated images?')) return;
   aiHistory.length = 0;
@@ -3053,6 +3107,14 @@ function newStory() {
   aiHistory.length = 0;
   aiSelectedIdx = -1;
   renderHistoryStrip();
+
+  // A genuinely new story starts a fresh record — this is the ONE place the
+  // research data is reset, and only because the child chose to begin again.
+  promptLog.length = 0;
+  pipConversation.length = 0;
+  pipMessages.length = 0;
+  pipSeeded = false;
+
   idbSet('storysketch_autosave', null);
   document.getElementById('story-title-input').value = 'My Story';
   clearPropsPanel();
@@ -3070,13 +3132,26 @@ async function buildStoryJson() {
     storyTitle,
     suggestedName: storyTitle.replace(/[^a-zA-Z0-9 _-]/g, '').trim() || 'My Story',
     json: JSON.stringify({
-      v:      5,
+      v:      6,   // v6 adds pipConversation + promptLog. v5 files still load.
       title:  storyTitle,
       saved:  Date.now(),
       session: { startedAt: SESSION_START, savedAt: new Date().toISOString(), totalSlides: S.slides.length },
       imgMap: S.imgMap,
       storyText: storyTextLines,
+
+      // ── Research data ──────────────────────────────────────────────────────
+      // pipConversation: the child's own words, verbatim, with timestamps. This is
+      //   the primary artifact for a study of prompt-writing: it is what the CHILD
+      //   wrote. Before v6 it was never saved and died with the page.
+      // promptLog: one record per generation attempt, uncapped. Holds both the
+      //   child's words AND the model-authored image prompt, so the two can be
+      //   compared rather than conflated.
+      // aiHistory: the image cache. Capped at 20 because each entry is megabytes.
+      //   Use promptLog, NOT aiHistory, to count or analyse attempts.
+      pipConversation: pipConversation,
+      promptLog: promptLog,
       aiHistory: aiHistory,
+
       slides: S.slides.map(s => ({ json: s.json || null, thumb: s.thumb || null, imgMap: s.imgMap || {} })),
     }, null, 2),
   };
@@ -3235,6 +3310,20 @@ async function loadStoryData(d) {
     renderHistoryStrip();
   }
 
+  // Research data (v6+). Absent in v5 files, which simply resume with empty ones —
+  // their conversations were never recorded and cannot be recovered.
+  promptLog.length = 0;
+  (d.promptLog || []).forEach(r => promptLog.push(r));
+
+  pipConversation.length = 0;
+  (d.pipConversation || []).forEach(m => pipConversation.push(m));
+
+  // Rebuild the live chat context from the saved transcript, so reopening a story
+  // lets the child carry on talking to Pip about the pictures already in the book
+  // instead of starting from nothing.
+  pipMessages.length = 0;
+  pipConversation.forEach(m => pipMessages.push({ role: m.role, content: m.content }));
+
   // pid is runtime-only — it is deliberately NOT written to story.json (see
   // buildStoryJson), so a story loaded from disk or pulled from the relay gets
   // fresh ids here. Nothing outside this session depends on them.
@@ -3326,7 +3415,13 @@ function pipAddImage(dataUrl) {
       const maxW = CANVAS_W * 0.42;   // narrower so two fit side by side
       const maxH = CANVAS_H * 0.55;
       const scale = Math.min(1, maxW / img.width, maxH / img.height);
-      img.set({ id: makeId(), scaleX: scale, scaleY: scale, selectable: true });
+      // historyId links this canvas object back to its research record. Without it,
+      // logRemoval() (which is gated on obj.historyId) could never fire, so NOTHING
+      // a child did with a Pip image — accepting it, later deleting it — was recorded.
+      img.set({
+        id: makeId(), historyId: pipPendingHistoryId || null,
+        scaleX: scale, scaleY: scale, selectable: true,
+      });
 
       const isRevision = !!(pipLastImage && S.canvas.contains(pipLastImage));
       if (isRevision) {
@@ -3388,6 +3483,16 @@ function pipPreviewSpinner(on) {
 
 // The picture Pip has drawn into the preview but NOT yet added to the book.
 let pipPendingImage = null;
+let pipPendingHistoryId = null;   // links the previewed image back to its research record
+
+// Every Pip turn goes through here. pipMessages is what the model sees (and the
+// Worker strips it back to {role, content} anyway); pipConversation is the durable
+// transcript, timestamped, that gets saved with the story. Keeping the two in step
+// in one place is the only way the child's words don't quietly go missing again.
+function pipRec(role, content) {
+  pipMessages.push({ role, content });
+  pipConversation.push({ role, content, at: new Date().toISOString() });
+}
 
 function pipShowApprove() { document.getElementById('pip-approve-bar').classList.add('active'); }
 function pipHideApprove() { document.getElementById('pip-approve-bar').classList.remove('active'); }
@@ -3397,11 +3502,13 @@ async function pipApproveImage() {
   if (!pipPendingImage) return;
   pipHideApprove();
   await pipAddImage(pipPendingImage);
+  logAction(pipPendingHistoryId, 'added_to_canvas');   // the child ACCEPTED this draw
   markDirty();
   pipPendingImage = null;
+  pipPendingHistoryId = null;
   const msg = "Added it to your book! 🎉";
   pipRenderMessage('pip', msg);
-  pipMessages.push({ role: 'assistant', content: msg });
+  pipRec('assistant', msg);
   setStatus('Image added to your book', 'ok');
   setTimeout(() => { setStatus('', ''); closePipDrawer(); pipResetPreview(); }, 650);
 }
@@ -3411,7 +3518,7 @@ function pipRequestChange() {
   pipHideApprove();
   const msg = "No problem — tell me one thing to change and I'll draw it again.";
   pipRenderMessage('pip', msg);
-  pipMessages.push({ role: 'assistant', content: msg });
+  pipRec('assistant', msg);
   document.getElementById('pip-input').focus();
 }
 
@@ -3427,6 +3534,10 @@ function pipEnsureGreeting() {
   if (pipSeeded) return;
   pipSeeded = true;
   pipRenderMessage('pip', PIP_GREETING);
+  // Recorded in the transcript but NOT in pipMessages: the model is never sent its
+  // own greeting (it is client-side text), yet a researcher reading the transcript
+  // needs the turn the child was actually replying to.
+  pipConversation.push({ role: 'assistant', content: PIP_GREETING, at: new Date().toISOString() });
 }
 function pipRenderMessage(role, text) {
   const t = document.getElementById('pip-transcript');
@@ -3457,7 +3568,7 @@ async function pipSubmit() {
   if (!text) return;
   inp.value = '';
   pipRenderMessage('user', text);
-  pipMessages.push({ role: 'user', content: text });
+  pipRec('user', text);
 
   pipSetBusy(true);
   const stopTyping = pipShowTyping();
@@ -3472,7 +3583,7 @@ async function pipSubmit() {
     if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
 
     pipRenderMessage('pip', data.reply);
-    pipMessages.push({ role: 'assistant', content: data.reply });
+    pipRec('assistant', data.reply);
 
     if (data.remove_old) pipRemoveOldImage();
 
@@ -3526,7 +3637,7 @@ async function pipGenerate(imagePrompt) {
     if (data.blocked) {
       const msg = "Hmm, I can't draw that one. Let's try a different picture — what else would you like me to make?";
       pipRenderMessage('pip', msg);
-      pipMessages.push({ role: 'assistant', content: msg });
+      pipRec('assistant', msg);
       pipPreviewSpinner(false);
       setStatus('', '');
       return;
@@ -3537,13 +3648,23 @@ async function pipGenerate(imagePrompt) {
     pipSetPreview(data.image);
     pipPreviewSpinner(false);
     pipPendingImage = data.image;
-    addToHistory(data.image, imagePrompt);
+
+    // The child never writes the image prompt — they talk to Pip, and the chat model
+    // authors `imagePrompt` from the conversation. So record BOTH: the child's own
+    // last words, and the model's rendering of them. Without the former, the research
+    // data is a record of what the MODEL wrote, not what the child did.
+    const lastChildTurn = [...pipConversation].reverse().find(m => m.role === 'user');
+    pipPendingHistoryId = addToHistory(data.image, imagePrompt, {}, null, {
+      source: 'pip',
+      childWords: lastChildTurn ? lastChildTurn.content : null,
+      turnIndex: pipConversation.length - 1,
+    });
     // Ask whether the child likes it, then let them approve via the bar.
     pipShowApprove();
     const check = PIP_IMAGE_CHECKS[pipImageCount++ % PIP_IMAGE_CHECKS.length];
     const msg = check + " If you like it, tap “Add to book” and I'll pop it into your story. If not, just tell me what to change.";
     pipRenderMessage('pip', msg);
-    pipMessages.push({ role: 'assistant', content: msg });
+    pipRec('assistant', msg);
     setStatus('Pip drew a picture — add it to your book if you like it', 'ok');
     setTimeout(() => setStatus('', ''), 3500);
   } catch (err) {
@@ -3559,7 +3680,8 @@ async function pipGenerate(imagePrompt) {
    IMAGE BANK — every picture Pip has generated.
    Browse them, drag one onto the page, or click to add.
 ═══════════════════════════════════════════════ */
-let bankDragSrc = null;   // dataUrl of the image currently being dragged from the bank
+let bankDragSrc = null;         // dataUrl of the image currently being dragged from the bank
+let bankDragHistoryId = null;   // …and its research record, so the link survives the drop
 
 function renderImageBank() {
   const grid = document.getElementById('pip-bank-grid');
@@ -3578,11 +3700,16 @@ function renderImageBank() {
     cell.appendChild(img);
     cell.addEventListener('dragstart', e => {
       bankDragSrc = item.dataUrl;
+      bankDragHistoryId = item.historyId;   // so a dragged image stays linked to its record
       e.dataTransfer.effectAllowed = 'copy';
       try { e.dataTransfer.setData('text/plain', 'pip-bank-image'); } catch {}
     });
     // Click also drops it onto the page (keyboard/no-drag fallback).
-    cell.addEventListener('click', () => { addImageSrc(item.dataUrl, item.historyId); markDirty(); });
+    cell.addEventListener('click', () => {
+      addImageSrc(item.dataUrl, item.historyId);
+      logAction(item.historyId, 'added_to_canvas');   // reusing a picture IS a decision
+      markDirty();
+    });
     grid.appendChild(cell);
   });
 }
@@ -3597,7 +3724,7 @@ function toggleImageBank(force) {
 }
 
 // Place a bank image on the page at the point where it was dropped.
-function placeImageAtClient(src, clientX, clientY) {
+function placeImageAtClient(src, clientX, clientY, historyId = null) {
   fabric.Image.fromURL(src, img => {
     if (!img) { setStatus('Could not place the picture', 'err'); return; }
     const maxW = CANVAS_W * 0.55, maxH = CANVAS_H * 0.55;
@@ -3613,12 +3740,13 @@ function placeImageAtClient(src, clientX, clientY) {
       cx = CANVAS_W / 2; cy = CANVAS_H / 2;   // dropped off-canvas → center it
     }
     img.set({
-      id: makeId(),
+      id: makeId(), historyId: historyId || null,   // keep the link to the research record
       scaleX: scale, scaleY: scale,
       left: Math.max(0, Math.min(CANVAS_W - sw, cx - sw / 2)),
       top:  Math.max(0, Math.min(CANVAS_H - sh, cy - sh / 2)),
       selectable: true,
     });
+    logAction(historyId, 'added_to_canvas');
     S.canvas.add(img);
     S.canvas.setActiveObject(img);
     S.canvas.renderAll();
@@ -3641,11 +3769,13 @@ function setupBankDrop() {
     if (!bankDragSrc) return;
     e.preventDefault();
     const src = bankDragSrc;
+    const hid = bankDragHistoryId;
     bankDragSrc = null;
-    placeImageAtClient(src, e.clientX, e.clientY);
+    bankDragHistoryId = null;
+    placeImageAtClient(src, e.clientX, e.clientY, hid);
   });
   // Drop fires before dragend, so clearing here can't swallow a real drop.
-  document.addEventListener('dragend', () => { bankDragSrc = null; });
+  document.addEventListener('dragend', () => { bankDragSrc = null; bankDragHistoryId = null; });
 }
 
 /* ═══════════════════════════════════════════════
@@ -3784,10 +3914,7 @@ function wireButtons() {
     if (S.aiImgSrc) {
       const histItem = (aiSelectedIdx >= 0) ? aiHistory[aiSelectedIdx] : null;
       addImageSrc(S.aiImgSrc, histItem?.historyId);
-      if (histItem) {
-        histItem.actions = histItem.actions || [];
-        histItem.actions.push({ type: 'added_to_canvas', at: new Date().toISOString(), slideIdx: S.cur });
-      }
+      logAction(histItem?.historyId, 'added_to_canvas');
       closePipDrawer();
       markDirty();
     }
