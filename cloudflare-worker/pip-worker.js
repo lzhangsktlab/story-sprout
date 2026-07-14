@@ -559,7 +559,10 @@ async function handleSync(path, request, env) {
       if (isRegisterRateLimited(ip)) {
         throw httpError(429, 'Too many attempts. Wait a minute and try again.');
       }
-      const email = await verifyTeacher(request, env);
+      // Verified, then deliberately discarded — we check WHO you are, and keep nothing
+      // about it. The identity is used to authorise the call and for nothing else.
+      await verifyTeacher(request, env);
+
       const { authToken } = await request.json();
       const objectKey = await objectKeyFor(authToken);
       if (!objectKey) throw httpError(400, 'Bad team token.');
@@ -567,8 +570,12 @@ async function handleSync(path, request, env) {
       const existing = await store.getJson(`t/${objectKey}/meta.json`);
       if (existing) return jsonResponse({ objectKey, created: false });
 
+      // meta.json is the ONE thing on the relay that is not encrypted, so nothing
+      // identifying goes in it. It used to record the teacher's email address in
+      // plaintext — and nothing ever read it back. Everything else here is opaque
+      // ciphertext; there is no reason for this file to be the exception.
       await store.put(`t/${objectKey}/meta.json`, JSON.stringify({
-        createdAt: Date.now(), createdBy: email,
+        createdAt: Date.now(),
         rev: 0, updatedAt: 0, bytes: 0, blobCount: 0,
       }), 'application/json');
       return jsonResponse({ objectKey, created: true });

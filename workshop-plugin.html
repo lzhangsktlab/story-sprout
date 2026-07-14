@@ -4,8 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Storybook Workshop</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<!-- Font and canvas library are served from OUR origin, deliberately. Loading them
+     from fonts.googleapis.com and cdnjs would send every child's IP address to Google
+     and to Cloudflare on every page load, before the child has done anything — and an
+     IP is a persistent identifier. See vendor/README.md. Do not repoint these at a CDN. -->
+<link href="vendor/fonts.css" rel="stylesheet">
+<script src="vendor/fabric.min.js"></script>
 <!-- Teacher Mode. Shared byte-for-byte with teacher.html — if the crypto in the two
      pages ever drifts, the teacher silently cannot decrypt student work. Bump ?v=
      on every change: a stale cached copy on one page is the same disaster. -->
@@ -902,6 +906,50 @@ html, body {
 /* ═══════════════════════════════════════════════
    PIP DRAWER — right-docked vertical rail (home to Pip)
 ═══════════════════════════════════════════════ */
+/* ── "Keep yourself secret" notice ─────────────────────────────────────────────
+   Covers Pip's whole panel, so the chat box cannot be reached until it is
+   acknowledged. Once per session (a plain JS flag — a reload shows it again, which
+   is the safe direction). */
+#pip-safety {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: rgba(255,255,255,.97);
+  backdrop-filter: blur(2px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+#pip-safety.show { display: flex; }
+.pip-safety-card { text-align: center; max-width: 340px; }
+.pip-safety-icon { font-size: 40px; line-height: 1; margin-bottom: 10px; }
+.pip-safety-card h3 {
+  font-size: 20px; color: var(--purple-dark); margin-bottom: 10px; font-weight: 800;
+}
+.pip-safety-card p { font-size: 13.5px; color: var(--ink2); line-height: 1.6; margin-bottom: 12px; }
+.pip-safety-card ul {
+  list-style: none; text-align: left; margin: 0 0 14px;
+  background: var(--cream); border-radius: var(--radius-sm); padding: 12px 14px;
+}
+.pip-safety-card li {
+  font-size: 13.5px; color: var(--ink); line-height: 1.7; padding-left: 20px; position: relative;
+}
+.pip-safety-card li::before {
+  content: '🚫'; position: absolute; left: 0; font-size: 11px; top: 4px;
+}
+.pip-safety-tip {
+  background: var(--purple-bg); border-radius: var(--radius-sm);
+  padding: 11px 13px; font-size: 13px !important; color: var(--ink2) !important;
+}
+.pip-safety-tip i { font-style: italic; }
+#pip-safety-ok {
+  width: 100%; margin-top: 6px; font-family: var(--font); font-size: 14px; font-weight: 700;
+  padding: 12px; border: none; border-radius: var(--radius-sm);
+  background: var(--purple); color: #fff; cursor: pointer;
+}
+#pip-safety-ok:hover { background: var(--purple-dark); }
+
 #pip-drawer {
   position: absolute;
   top: 0; right: 0; bottom: 0;   /* full-height rail on the right */
@@ -1497,6 +1545,28 @@ html, body {
 
     <!-- PIP DRAWER — spans full width of #main; home to Pip's chat -->
     <div id="pip-drawer">
+
+      <!-- Shown the first time Pip is opened each session. Everything a child types
+           here is sent to the image model, and now also saved into the story file that
+           goes to their teacher — so the one thing they must not do is identify
+           themselves. It ends by REDIRECTING rather than only prohibiting: a child who
+           wants a person in their picture is told how to ask for one. -->
+      <div id="pip-safety">
+        <div class="pip-safety-card">
+          <div class="pip-safety-icon">🤫</div>
+          <h3>Keep yourself secret!</h3>
+          <p>Pip draws pictures — but Pip is a computer, not a friend.</p>
+          <ul>
+            <li>Don't tell Pip your <b>real name</b></li>
+            <li>Don't tell Pip your <b>school</b> or <b>where you live</b></li>
+          </ul>
+          <p class="pip-safety-tip">
+            Want a person in your picture? Just say what they <i>look like</i> —
+            like <b>“a girl with red boots”</b>.
+          </p>
+          <button id="pip-safety-ok">Okay, I understand</button>
+        </div>
+      </div>
 
       <!-- Top bar -->
       <div id="pip-drawer-topbar">
@@ -3456,12 +3526,32 @@ function pipRemoveOldImage() {
   pipPrevImage = null;
 }
 
+// Deliberately NOT persisted. A session flag means a reload shows the notice again —
+// which is the safe direction, and on a shared classroom computer a reload is often
+// exactly when a different child sits down.
+let pipSafetyAck = false;
+
 function openPipDrawer() {
   document.getElementById('pip-drawer').classList.add('open');
   toggleImageBank(false);   // start on the chat, not the bank
   fitCanvas();   // slide the active page left of the rail
   pipEnsureGreeting();
+
+  if (!pipSafetyAck) {
+    // Cover the panel before focusing anything — the chat box must not be reachable
+    // until the child has seen this.
+    document.getElementById('pip-safety').classList.add('show');
+    setTimeout(() => document.getElementById('pip-safety-ok').focus(), 60);
+    return;
+  }
+
   setTimeout(() => document.getElementById('pip-input').focus(), 60);
+}
+
+function pipAckSafety() {
+  pipSafetyAck = true;
+  document.getElementById('pip-safety').classList.remove('show');
+  document.getElementById('pip-input').focus();
 }
 
 // Show the picture Pip just drew in the left-hand preview pane.
@@ -3913,6 +4003,7 @@ function wireButtons() {
   document.getElementById('story-text-close').onclick = () => {
     document.getElementById('story-text-panel').classList.remove('open');
   };
+  document.getElementById('pip-safety-ok').onclick = pipAckSafety;
   document.getElementById('pip-send').onclick = pipSubmit;
   document.getElementById('pip-approve-add').onclick = pipApproveImage;
   document.getElementById('pip-approve-redo').onclick = pipRequestChange;
@@ -4062,7 +4153,6 @@ const SYNC = {
   inFlight: false,     // single-flight guard
   again: false,        // a change landed while a push was running
   timer: null,
-  deviceId: null,
   lastHash: null,      // content hash of the last thing we successfully sent
 };
 
@@ -4072,7 +4162,7 @@ const SYNC = {
 // away (see below), makes "collect now" land on fresh work in practice.
 const SYNC_DEBOUNCE_MS = 12000;
 const LS_REV   = 'sprout_last_pushed_rev';
-const LS_DEV   = 'sprout_device_id';
+const LS_DEV   = 'sprout_device_id';       // RETIRED — kept only so we can delete it (see syncStart)
 const LS_CLASS  = 'sprout_class_computer'; // this machine has been used for a class
 const LS_TEAM   = 'sprout_local_team';     // which team the local autosave belongs to
 const LS_UNSENT = 'sprout_unsent';         // local work never made it to the relay
@@ -4183,7 +4273,6 @@ async function syncPush({ closing = false } = {}) {
 
     const manifest = {
       fmt: 1,
-      deviceId: SYNC.deviceId,
       clientSavedAt: new Date().toISOString(),   // display only — never trusted for ordering
       story: manifestStory,
       blobs: blobIndex,
@@ -4357,8 +4446,12 @@ async function syncRestore() {
 async function syncStart(keys) {
   SYNC.keys = keys;
   SYNC.joined = true;
-  SYNC.deviceId = localStorage.getItem(LS_DEV) || ('dev_' + crypto.randomUUID().slice(0, 8));
-  localStorage.setItem(LS_DEV, SYNC.deviceId);
+  // No persistent device id. There used to be one — a random UUID planted in every
+  // child's localStorage and written into every sync — and NOTHING ever read it back.
+  // A persistent identifier is personal information under COPPA (16 C.F.R. §312.2),
+  // and this one bought us exactly nothing. Conflicts are already detected by the
+  // server-assigned revision counter, which needs no identifier at all.
+  localStorage.removeItem(LS_DEV);   // clear it from machines that already have one
 
   setSyncPill('syncing', 'Connecting…');
   try {
