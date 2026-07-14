@@ -197,6 +197,18 @@ async function handleChat(body, env) {
       temperature: 0.5,      // lower = more consistent draw-vs-ask routing
       max_tokens: 400,
       response_format: { type: 'json_object' },
+
+      // Never let OpenAI keep these turns. This is already the default for
+      // /chat/completions, but the content here is authored by 7-to-9-year-olds and
+      // the default is not the place to leave that resting — state it, so it is
+      // visible to anyone auditing this file and cannot be flipped by a default change.
+      //
+      // NOTE: this is NOT Zero Data Retention. ZDR removes OpenAI's ~30-day abuse-
+      // monitoring retention as well, and it can only be granted by OpenAI at the
+      // organisation level. OpenAI's own developer terms say you should not process
+      // under-13 personal data without it. Applying for ZDR is a prerequisite for
+      // running this with children, and it is NOT something this file can do.
+      store: false,
     }),
   });
 
