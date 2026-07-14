@@ -3651,11 +3651,80 @@ function pipSetBusy(busy) {
   document.getElementById('pip-send').disabled = busy;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRE-TRANSMISSION FILTER — stop personal information reaching OpenAI at all.
+
+   This runs in the browser, BEFORE the request is made, so a blocked message never
+   leaves the child's computer. That is strictly stronger than filtering at the
+   worker, where the text has already left the machine. The worker filters too, as a
+   backstop, in case a stale client slips through.
+
+   WHAT IT DOES NOT DO — and must never do — IS BLOCK NAMES.
+   Storybooks are made of names. "Emma the brave knight rides a dragon" is the entire
+   point of this app, and it is *textually identical* to a child naming a real friend.
+   You cannot distinguish them, and a name filter would either break every story or
+   catch nothing. So we do not try.
+
+   What IS reliably detectable is a child IDENTIFYING THEMSELVES — "my name is…",
+   "I live at 12 Oak Street", an email, a phone number. The distinction is between a
+   name APPEARING (creative work, leave it alone) and a child TELLING THE MODEL WHO
+   THEY ARE (blocked). The second has a grammar; the first doesn't.
+
+   Blocking is a control. The safety notice is only a notice. This is the difference.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const PII_PATTERNS = [
+  { what: 'your email address',  re: /[\w.+-]+@[\w-]+\.[a-z]{2,}/i },
+  { what: 'a phone number',      re: /(\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/ },
+  { what: 'a web address',       re: /\bhttps?:\/\/\S+|\bwww\.\S+\.\S+/i },
+  // A house number followed by a street word. "5 Candy Lane" in a fairy tale trips
+  // this too — a harmless false positive, and erring toward blocking is correct here.
+  { what: 'where you live',      re: /\b\d{1,5}\s+[\w.'-]+(\s+[\w.'-]+){0,3}\s+(street|st|avenue|ave|road|rd|drive|dr|lane|ln|boulevard|blvd|court|ct|way|place|pl)\b/i },
+  { what: 'your name',           re: /\bmy\s+(full\s+|first\s+|last\s+|real\s+)?names?\b\s*(is|are|'s|:)?/i },
+  { what: 'your name',           re: /\bi(\s+am|'m)\s+called\b/i },
+  { what: 'where you live',      re: /\bmy\s+(address|street|zip\s*code|postcode|house\s+number)\b/i },
+  { what: 'where you live',      re: /\bi\s+live\s+(at|on)\s+\d/i },
+  { what: 'your school',         re: /\bmy\s+school('s)?\s+(is|name|is\s+called)\b/i },
+  { what: 'your phone number',   re: /\bmy\s+(phone|cell|mobile)\b/i },
+  { what: 'your email address',  re: /\bmy\s+e-?mail\b/i },
+  { what: 'your birthday',       re: /\bmy\s+birthday\s+(is|:)/i },
+];
+
+// Returns a plain-language description of what was found, or null.
+function findPersonalInfo(text) {
+  for (const p of PII_PATTERNS) if (p.re.test(text)) return p.what;
+  return null;
+}
+
 async function pipSubmit() {
   if (pipBusy) return;
   const inp = document.getElementById('pip-input');
   const text = inp.value.trim();
   if (!text) return;
+
+  // Blocked BEFORE the fetch: this text never leaves the computer. It is also never
+  // written to the story file — we record that a block happened and what KIND, but
+  // not the offending words themselves. Storing the personal information in order to
+  // note that we refused to send it would rather defeat the exercise.
+  const found = findPersonalInfo(text);
+  if (found) {
+    pipRenderMessage('user', text);   // the child still sees what they typed
+    pipRenderMessage('pip',
+      `Let's keep ${found} secret! 🤫 I don't need to know that to draw. ` +
+      `If you want a person in the picture, just tell me what they look like — ` +
+      `like “a girl with red boots”.`
+    );
+    promptLog.push({
+      at: new Date().toISOString(),
+      type: 'blocked_personal_info',
+      category: found,          // WHAT kind — never the text itself
+      source: 'pip',
+    });
+    inp.value = '';
+    inp.focus();
+    markDirty();
+    return;
+  }
+
   inp.value = '';
   pipRenderMessage('user', text);
   pipRec('user', text);

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Personal-info filter — test harness</title>
+<style>
+  body { font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+         background: #12111a; color: #e6e3f0; margin: 0; padding: 28px; line-height: 1.6; }
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  .sub { color: #8b86a3; font-size: 12px; margin-bottom: 22px; max-width: 720px; }
+  button { font: inherit; background: #7c5cff; color: #fff; border: 0; padding: 10px 20px;
+           border-radius: 8px; cursor: pointer; font-weight: 600; }
+  #out { margin-top: 22px; white-space: pre-wrap; font-size: 12.5px; }
+  .pass { color: #4ade80; }
+  .fail { color: #f87171; font-weight: 700; }
+  .info { color: #8b86a3; }
+  .hd   { color: #c4b5fd; font-weight: 700; margin-top: 16px; display: block; }
+</style>
+</head>
+<body>
+
+<h1>Personal-info filter</h1>
+<div class="sub">
+  Guards both directions. <b>Catching a child who identifies themselves</b> is the point —
+  but <b>a false positive is worse</b>, because it breaks the product: storybooks are made of
+  names, and blocking "Emma the brave knight" would make it impossible to write a story.
+  Change a pattern in <code>workshop-plugin.html</code> and run this before you commit.
+</div>
+<button id="run">Run tests</button>
+<div id="out"></div>
+
+<script>
+/* ────────────────────────────────────────────────────────────────────────────
+   These MUST be kept identical to PII_PATTERNS in workshop-plugin.html (and in
+   step with PII_REDACTIONS in the worker). Copied rather than imported because
+   the app is a single file with no build step.
+   ──────────────────────────────────────────────────────────────────────────── */
+const PII_PATTERNS = [
+  { what: 'your email address',  re: /[\w.+-]+@[\w-]+\.[a-z]{2,}/i },
+  { what: 'a phone number',      re: /(\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/ },
+  { what: 'a web address',       re: /\bhttps?:\/\/\S+|\bwww\.\S+\.\S+/i },
+  { what: 'where you live',      re: /\b\d{1,5}\s+[\w.'-]+(\s+[\w.'-]+){0,3}\s+(street|st|avenue|ave|road|rd|drive|dr|lane|ln|boulevard|blvd|court|ct|way|place|pl)\b/i },
+  { what: 'your name',           re: /\bmy\s+(full\s+|first\s+|last\s+|real\s+)?names?\b\s*(is|are|'s|:)?/i },
+  { what: 'your name',           re: /\bi(\s+am|'m)\s+called\b/i },
+  { what: 'where you live',      re: /\bmy\s+(address|street|zip\s*code|postcode|house\s+number)\b/i },
+  { what: 'where you live',      re: /\bi\s+live\s+(at|on)\s+\d/i },
+  { what: 'your school',         re: /\bmy\s+school('s)?\s+(is|name|is\s+called)\b/i },
+  { what: 'your phone number',   re: /\bmy\s+(phone|cell|mobile)\b/i },
+  { what: 'your email address',  re: /\bmy\s+e-?mail\b/i },
+  { what: 'your birthday',       re: /\bmy\s+birthday\s+(is|:)/i },
+];
+function findPersonalInfo(text) {
+  for (const p of PII_PATTERNS) if (p.re.test(text)) return p.what;
+  return null;
+}
+
+// A child identifying themselves. Must be blocked.
+const MUST_BLOCK = [
+  "my name is Jamie",
+  "My name's Sofia and I want a dragon",
+  "i'm called Ben",
+  "my last name is Rivera",
+  "my school is Lincoln Elementary",
+  "my phone is 555-123-4567",
+  "call me at (555) 123 4567",
+  "my mobile is 5551234567",
+  "my email is kid@gmail.com",
+  "email me at jamie.smith@school.org",
+  "I live at 12 Oak Street",
+  "my address is 44 Maple Avenue",
+  "draw my house at 7 Birch Lane",
+  "go to www.myschool.com",
+  "https://example.com/me",
+  "my birthday is June 3rd",
+];
+
+// Ordinary creative work. A false positive here BREAKS THE PRODUCT.
+const MUST_PASS = [
+  "a fluffy white dog in a snowy park",
+  "Emma the brave knight rides a dragon",
+  "draw Max the cat wearing a crown",
+  "Mr. Whiskers is flying over a castle",
+  "a princess called Aurora in a tower",
+  "my dog is called Rex",                 // pet name — creative, not identifying
+  "my brother's dragon is bigger",        // possessive, no identifier
+  "I live in a castle made of candy",     // fantasy, not an address
+  "my school bus is yellow",              // no school NAME given
+  "my favourite colour is purple",
+  "a girl with red boots jumping in puddles",
+  "make it a comic book style",
+  "the dragon should be green and friendly",
+  "put 3 stars in the sky",
+  "a house with 5 windows",
+  "the year 12345 in space",
+  "make the knight look happier",
+  "add a red collar to the dog",
+  "draw me a robot",
+  "I want a spooky forest",
+];
+
+const out = document.getElementById('out');
+const line = (cls, msg) => { const s = document.createElement('span'); s.className = cls; s.textContent = msg + '\n'; out.appendChild(s); };
+
+document.getElementById('run').onclick = () => {
+  out.textContent = '';
+  let fails = 0;
+
+  line('hd', 'MUST BLOCK — a child identifying themselves');
+  for (const t of MUST_BLOCK) {
+    const got = findPersonalInfo(t);
+    if (got) line('pass', '   PASS   ' + JSON.stringify(t) + '  →  ' + got);
+    else { fails++; line('fail', '   MISSED ' + JSON.stringify(t) + '  →  NOT CAUGHT'); }
+  }
+
+  line('hd', 'MUST PASS — ordinary creative work (a false positive breaks the app)');
+  for (const t of MUST_PASS) {
+    const got = findPersonalInfo(t);
+    if (!got) line('pass', '   PASS   ' + JSON.stringify(t));
+    else { fails++; line('fail', '   BLOCKED! ' + JSON.stringify(t) + '  →  wrongly flagged as ' + got); }
+  }
+
+  line('info', '');
+  line('info', 'Names are deliberately NOT filtered. "Emma the brave knight" is textually');
+  line('info', 'identical to a child naming a real friend — you cannot tell them apart, and a');
+  line('info', 'name filter would either break every story or catch nothing. What IS detectable');
+  line('info', 'is a child TELLING THE MODEL WHO THEY ARE. That has a grammar; a name does not.');
+
+  line('hd', fails === 0 ? '\nALL PASS' : '\n' + fails + ' FAILURE(S)');
+};
+</script>
+</body>
+</html>

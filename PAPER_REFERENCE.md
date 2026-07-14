@@ -215,7 +215,26 @@ That is a strong story. But these sentences, which appear in the **Abstract, §3
 2. **A server-side safety clause** is appended to *every* image request, after truncation, so the client cannot strip it: *"The image must be wholesome and appropriate for young children: no violence, gore, weapons, blood, scary or frightening imagery, and no adult content."*
 3. **It is deliberately silent about aesthetics.** A child asking for watercolour gets watercolour. The guardrail constrains *what may be depicted*, never *how it looks* — the same allocation as §3, made from the other side.
 4. **OpenAI's moderation refusals** are caught and translated into a soft redirect: *"Hmm, I can't draw that one. Let's try a different picture."*
-5. **A safety notice** now blocks Pip's chat box the first time it is opened each session: *don't tell Pip your real name, your school, or where you live* — and it **redirects** rather than only prohibiting (*"want a person in your picture? just say what they look like — 'a girl with red boots'"*). It is a **notice, not a control**: it cannot stop a determined child, and is not a substitute for supervision or consent.
+5. **A safety notice** blocks Pip's chat box the first time it is opened each session: *don't tell Pip your real name, your school, or where you live* — and it **redirects** rather than only prohibiting (*"want a person in your picture? just say what they look like — 'a girl with red boots'"*). It is a **notice, not a control**.
+6. **A pre-transmission filter** — which *is* a control. See below.
+
+### The pre-transmission filter, and why it does not block names
+
+A message containing personal information is **blocked in the browser, before the request is made** — so it never leaves the child's computer at all. That is strictly stronger than filtering at the worker, where the text has already left the machine. The worker redacts as well, on both the chat and image routes, as a backstop against a stale client.
+
+**What it blocks:** email addresses, phone numbers, URLs, street addresses, and self-identifying constructions — *"my name is…"*, *"I'm called…"*, *"my school is…"*, *"I live at 12 Oak Street"*, *"my address…"*, *"my phone…"*.
+
+**What it deliberately does not touch: names.** This is the design decision, and it is the one worth defending in the paper:
+
+> *"Emma the brave knight rides a dragon"* is **textually identical** to a child naming a real friend. There is no feature that separates them, and a name filter would either break every story or catch nothing. Storybooks are made of names — filtering them would destroy the thing the system exists for.
+>
+> But a child **telling the model who they are** has a *grammar*: `my name is …`, `I live at …`, `my school is …`. A name merely *appearing* does not. **We filter the grammar, not the noun.**
+
+`pii-filter-test.html` guards both directions, and the false-positive direction is the one that matters more: *"a princess called Aurora"*, *"my dog is called Rex"*, *"I live in a castle made of candy"* and *"my school bus is yellow"* all pass untouched, while *"my name is Jamie"* and *"I live at 12 Oak Street"* are caught.
+
+**Blocked text is never stored** — not in the story file, not synced to the teacher. The system records that a block occurred and *what category*, never the words. Retaining a child's personal information in order to note that it refused to transmit it would rather defeat the exercise.
+
+**For the paper:** this is what turns "reasonable steps" from a claim into a mechanism. It is also the third thing the model is not permitted to do — it may not originate the story, may not judge the result, and may not learn who it is working for (§ below). The filter and the proxy enforce that last one from opposite ends: the proxy strips every identifier the *system* would attach; the filter strips the ones a *child* might volunteer.
 
 ### Speech is now on-device, and fails closed
 
@@ -229,7 +248,7 @@ Recognised text lands in the input box for the child to read, edit and send. It 
 
 | Data | Destination |
 |---|---|
-| Conversation + image prompts | **OpenAI** (via our worker). This is the product; unavoidable. |
+| Conversation + image prompts | **OpenAI** (via our worker), **after the pre-transmission filter**. This is the product; the channel is unavoidable, the personal information in it is not. |
 | Encrypted story + images | **Cloudflare R2** — class mode only, zero-knowledge, expires. |
 | Client IP | Our worker, in memory, 60 s, no durable log. |
 | Microphone audio | **Nowhere.** On-device. |
@@ -256,9 +275,9 @@ It also sharpens what the residual disclosure actually is. A scene description �
 
 ### Two residual risks the paper should name
 
-Neither is fixable in code, and both belong in the Ethics statement:
+Both belong in the Ethics statement:
 
-- **A child can volunteer personal information in free text.** Pip's system prompt forbids it from *asking for or repeating* personal information, but nothing can stop a child typing their own name into a prompt. The safety notice (above) is the mitigation, and it is a notice, not a control.
+- **The filter catches self-identification, not every possible disclosure.** It blocks a child *telling the model who they are*, and it cannot block a child who works around it — writing their own name as a character name, for instance, which is by construction indistinguishable from creative work. The filter is a real control and a substantial one; it is not a guarantee, and the paper should not claim it as one.
 - **A child can import any local image onto the canvas** — including a photograph of themselves. That image stays in the story file and syncs encrypted to the teacher. It is **never** sent to OpenAI.
 
 ### On the paper's legal framing

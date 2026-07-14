@@ -176,13 +176,45 @@ OUTPUT — respond with ONLY a JSON object, nothing else:
 const MAX_TURNS = 24;       // cap conversation length sent to the model
 const MAX_MSG_LEN = 2000;   // cap each message's length
 
+/* ── Pre-transmission redaction — the BACKSTOP ───────────────────────────────
+   The real control is in the browser (see PII_PATTERNS in workshop-plugin.html): it
+   blocks the message before the request is made, so the text never leaves the child's
+   computer at all. This is the second line, for a stale or bypassed client — by the
+   time we see it the text has reached US, but we are not the third party. OpenAI is.
+   Nothing gets past here.
+
+   These patterns must stay in step with the client's. Deliberately NOT a name filter:
+   storybooks are made of names, and "Emma the brave knight" is indistinguishable from
+   a child naming a real friend. We block a child IDENTIFYING THEMSELVES, not names.
+   ─────────────────────────────────────────────────────────────────────────── */
+const PII_REDACTIONS = [
+  /[\w.+-]+@[\w-]+\.[a-z]{2,}/ig,                                    // email
+  /(\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g,           // phone
+  /\bhttps?:\/\/\S+|\bwww\.\S+\.\S+/ig,                              // url
+  /\b\d{1,5}\s+[\w.'-]+(\s+[\w.'-]+){0,3}\s+(street|st|avenue|ave|road|rd|drive|dr|lane|ln|boulevard|blvd|court|ct|way|place|pl)\b/ig,
+  /\bmy\s+(full\s+|first\s+|last\s+|real\s+)?names?\b\s*(is|are|'s|:)?[^.!?\n]*/ig,
+  /\bi(\s+am|'m)\s+called\b[^.!?\n]*/ig,
+  /\bmy\s+(address|street|zip\s*code|postcode|house\s+number)\b[^.!?\n]*/ig,
+  /\bi\s+live\s+(at|on)\s+\d[^.!?\n]*/ig,
+  /\bmy\s+school('s)?\s+(is|name|is\s+called)\b[^.!?\n]*/ig,
+  /\bmy\s+(phone|cell|mobile)\b[^.!?\n]*/ig,
+  /\bmy\s+e-?mail\b[^.!?\n]*/ig,
+];
+
+function redactPersonalInfo(text) {
+  let out = String(text);
+  for (const re of PII_REDACTIONS) out = out.replace(re, '[removed]');
+  return out;
+}
+
 async function handleChat(body, env) {
-  // Sanitize incoming history: only valid roles + string content, bounded size.
+  // Sanitize incoming history: only valid roles + string content, bounded size, and
+  // NOTHING that identifies the child — see redactPersonalInfo above.
   const incoming = Array.isArray(body.messages) ? body.messages : [];
   const history = incoming
     .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
     .slice(-MAX_TURNS)
-    .map(m => ({ role: m.role, content: m.content.slice(0, MAX_MSG_LEN) }));
+    .map(m => ({ role: m.role, content: redactPersonalInfo(m.content.slice(0, MAX_MSG_LEN)) }));
   const messages = [{ role: 'system', content: PIP_SYSTEM }, ...history];
 
   const res = await fetch(CHAT_URL, {
@@ -252,7 +284,10 @@ function imageErrorResponse(status, errText) {
 async function handleImage(body, env) {
   let prompt = (typeof body.prompt === 'string') ? body.prompt.trim() : '';
   if (!prompt) return jsonResponse({ error: 'prompt is required' }, 400);
-  prompt = prompt.slice(0, 1500) + SAFE_STYLE;
+  // Redact before it reaches OpenAI. Pip's image_prompt is model-authored from an
+  // already-filtered conversation, but the legacy drawer sends the child's raw text
+  // straight through — so the filter belongs here too, not only on /chat.
+  prompt = redactPersonalInfo(prompt).slice(0, 1500) + SAFE_STYLE;
 
   // SPEED KNOB: caller may request 'low'/'medium'/'high'; defaults to 'medium'.
   const quality = ALLOWED_QUALITY.includes(body.quality) ? body.quality : 'medium';
@@ -282,7 +317,10 @@ async function handleImageEdit(body, env) {
   if (typeof body.image !== 'string' || !body.image.startsWith('data:')) {
     return jsonResponse({ error: 'image (data URL) is required' }, 400);
   }
-  prompt = prompt.slice(0, 1500) + SAFE_STYLE;
+  // Redact before it reaches OpenAI. Pip's image_prompt is model-authored from an
+  // already-filtered conversation, but the legacy drawer sends the child's raw text
+  // straight through — so the filter belongs here too, not only on /chat.
+  prompt = redactPersonalInfo(prompt).slice(0, 1500) + SAFE_STYLE;
   const quality = ALLOWED_QUALITY.includes(body.quality) ? body.quality : 'medium';
   const size = ALLOWED_SIZE.includes(body.size) ? body.size : '1536x1024';
 
