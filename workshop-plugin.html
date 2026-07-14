@@ -1680,10 +1680,25 @@ const SESSION_START = new Date().toISOString();
    STATE
 ═══════════════════════════════════════════════ */
 const S = {
-  slides:       [{ json: null, thumb: null }],
+  slides:       [{ json: null, thumb: null, pid: 'p0' }],
   cur:          0,
   history:      [[]],
   redo:         [[]],
+
+  // Document-level undo, layered ABOVE the per-page canvas history below.
+  //
+  // S.history/S.redo only ever knew about canvas edits within a single page, so
+  // deleting a page destroyed it and its history with no record that it had ever
+  // existed — undo had nothing to look at, and a child lost the page for good.
+  // These two stacks are the ordered log of everything undoable, so a page
+  // deletion and a brush stroke sit on the same timeline and undo reverses
+  // whichever actually happened last.
+  //   { kind: 'canvas', pid }            — a snapshot was pushed onto that page's stack
+  //   { kind: 'delete', at, pid, … }     — carries the whole page so it can come back
+  //   { kind: 'add',    pid }
+  //   { kind: 'move',   from, to }
+  undoStack:    [],
+  redoStack:    [],
   canvas:       null,
   zoom:         1,
   supressHist:  false,
@@ -1841,10 +1856,17 @@ async function loadSlide(idx, { skipSave = false } = {}) {
     S.supressHist = false;
   }
 
-  // Establish this slide's history baseline: index 0 is the state as loaded, so
-  // the first real edit lands at index 1 and undo has somewhere to return to.
-  S.history[S.cur] = [ JSON.stringify(S.canvas.toJSON(['id', 'selectable', 'historyId'])) ];
-  S.redo[S.cur]    = [];
+  // Establish this page's history baseline ONLY if it doesn't have one: index 0 is
+  // the state as loaded, so the first real edit lands at index 1 and undo has
+  // somewhere to return to.
+  //
+  // This used to reseed unconditionally, which threw away a page's entire undo
+  // history every time you switched to it — leave a page and come back and your
+  // undos were gone.
+  if (!S.history[S.cur] || !S.history[S.cur].length) {
+    S.history[S.cur] = [ JSON.stringify(S.canvas.toJSON(['id', 'selectable', 'historyId'])) ];
+    S.redo[S.cur]    = [];
+  }
 
   clearPropsPanel();
   updateSlideLabel();
@@ -1852,26 +1874,63 @@ async function loadSlide(idx, { skipSave = false } = {}) {
   syncPageBgControl();
 }
 
+// Pages are identified by a stable id, not by index — indices shift the moment a
+// page is added, deleted or dragged, and an undo entry that says "page 3" would
+// end up pointing at somebody else's page.
+let pidSeq = 1;
+const newPid = () => 'p' + (pidSeq++);
+const pageIndexOf = (pid) => S.slides.findIndex(s => s.pid === pid);
+
+// Anything that records an undo entry invalidates the redo timeline.
+function recordOp(entry) {
+  S.undoStack.push(entry);
+  if (S.undoStack.length > 60) S.undoStack.shift();
+  S.redoStack.length = 0;
+}
+
 async function addSlide() {
   await saveCurrentSlide();
-  S.slides.push({ json: null, thumb: null });
+  const pid = newPid();
+  S.slides.push({ json: null, thumb: null, pid });
   S.history.push([]);
   S.redo.push([]);
   await loadSlide(S.slides.length - 1);
+  recordOp({ kind: 'add', pid });
   markDirty();
 }
 
 async function deleteSlide(idx) {
   if (S.slides.length === 1) { setStatus('Need at least one page', 'err'); return; }
-  // Save the current slide first, but only if we're NOT deleting it
-  if (idx !== S.cur) await saveCurrentSlide();
+
+  // Always flush the live canvas first — INCLUDING when we're deleting the very page
+  // being looked at. The old code skipped that as a pointless write; it isn't, now
+  // that the page has to be restorable: without it, undo would bring the page back
+  // missing everything drawn since the last autosave.
+  await saveCurrentSlide(true);
+
+  // Keep the whole page — canvas, thumbnail and both its undo stacks — so undo can
+  // put it back exactly as it was. Without this the work on it was simply gone.
+  const entry = {
+    kind: 'delete',
+    at: idx,
+    pid: S.slides[idx].pid,
+    slide: S.slides[idx],
+    hist: S.history[idx],
+    red: S.redo[idx],
+  };
+
   S.slides.splice(idx, 1);
   S.history.splice(idx, 1);
   S.redo.splice(idx, 1);
+
   const newIdx = Math.min(S.slides.length - 1, Math.max(0, idx - 1));
   S.cur = newIdx;
   await loadSlide(newIdx, { skipSave: true });
+
+  recordOp(entry);
   markDirty();
+  setStatus('Page deleted — press Ctrl+Z to bring it back', 'info');
+  setTimeout(() => setStatus('', ''), 3000);
 }
 
 /* ── Reordering pages by dragging ─────────────────────────────────────────────
@@ -1882,7 +1941,7 @@ async function deleteSlide(idx) {
    ─────────────────────────────────────────────────────────────────────────── */
 let dragFromIdx = null;
 
-async function movePage(from, to) {
+async function movePage(from, to, { record = true } = {}) {
   if (from === to || from == null || to == null) return;
   if (to < 0 || to >= S.slides.length) return;
 
@@ -1898,6 +1957,11 @@ async function movePage(from, to) {
   if (S.cur === from)                            S.cur = to;
   else if (from < S.cur && to >= S.cur)          S.cur--;
   else if (from > S.cur && to <= S.cur)          S.cur++;
+
+  // `record: false` when undo/redo is the one doing the moving — otherwise
+  // reversing a move would itself be recorded as a new move, and undo could never
+  // get past it.
+  if (record) recordOp({ kind: 'move', from, to });
 
   renderSlideThumbs();
   updateSlideLabel();
@@ -1994,37 +2058,131 @@ function pushHistory() {
   S.history[S.cur].push(snap);
   S.redo[S.cur] = [];
   if (S.history[S.cur].length > 50) S.history[S.cur].shift();
+  recordOp({ kind: 'canvas', pid: S.slides[S.cur].pid });
   updateUndoRedo();
   markDirty();
 }
 
-// Both of these must markDirty(). Undoing IS a change to the story — without it the
-// autosave never fires and the undo is never sent to the teacher, so undoing
-// something and closing the tab would quietly bring it back.
-function undo() {
-  const h = S.history[S.cur];
-  // history[0] is the slide's baseline snapshot, so we need at least one edit
-  // on top of it to have somewhere to go back to.
-  if (h.length < 2) return;
-  S.redo[S.cur].push(h.pop());        // current state moves onto the redo stack
-  const snap = h[h.length - 1];       // the previous state becomes current
+// Paint a canvas snapshot onto a page, switching to that page first if the edit
+// being undone happened somewhere else.
+async function applySnapshot(idx, snap) {
+  if (idx !== S.cur) await loadSlide(idx);   // saves the current page on the way out
   S.supressHist = true;
-  S.canvas.loadFromJSON(snap, () => {
-    S.canvas.renderAll(); S.supressHist = false; updateUndoRedo();
-    saveCurrentSlide(); renderSlideThumbs(); syncPageBgControl(); markDirty();
+  await new Promise(resolve => {
+    S.canvas.loadFromJSON(snap, () => {
+      S.canvas.renderAll();
+      S.supressHist = false;
+      resolve();
+    });
   });
+  await saveCurrentSlide(true);
 }
 
-function redo() {
-  const r = S.redo[S.cur];
-  if (!r.length) return;
-  const snap = r.pop();
-  S.history[S.cur].push(snap);
-  S.supressHist = true;
-  S.canvas.loadFromJSON(snap, () => {
-    S.canvas.renderAll(); S.supressHist = false; updateUndoRedo();
-    saveCurrentSlide(); renderSlideThumbs(); syncPageBgControl(); markDirty();
-  });
+// Undo walks the document timeline, so it reverses whatever actually happened last
+// — a brush stroke, or a deleted page — rather than only ever looking at the
+// current page's canvas.
+//
+// Every branch must markDirty(). Undoing IS a change to the story: without it the
+// autosave never fires and the undo is never sent to the teacher, so undoing
+// something and closing the tab would quietly bring it back.
+async function undo() {
+  const e = S.undoStack.pop();
+  if (!e) return;
+
+  if (e.kind === 'canvas') {
+    const idx = pageIndexOf(e.pid);
+    if (idx === -1) return;                  // page is gone; its delete undoes first
+    const h = S.history[idx];
+    if (h.length < 2) return;                // h[0] is the page's baseline
+    S.redo[idx].push(h.pop());
+    await applySnapshot(idx, h[h.length - 1]);
+    S.redoStack.push(e);
+
+  } else if (e.kind === 'delete') {
+    // Put the page back exactly where it was, with its own undo history intact.
+    await saveCurrentSlide(true);
+    S.slides.splice(e.at, 0, e.slide);
+    S.history.splice(e.at, 0, e.hist);
+    S.redo.splice(e.at, 0, e.red);
+    S.cur = e.at;
+    await loadSlide(e.at, { skipSave: true });
+    S.redoStack.push(e);
+    setStatus('Page restored', 'ok');
+    setTimeout(() => setStatus('', ''), 2000);
+
+  } else if (e.kind === 'add') {
+    const idx = pageIndexOf(e.pid);
+    if (idx === -1) return;
+    if (S.slides.length === 1) { S.undoStack.push(e); return; }   // never leave zero pages
+    await saveCurrentSlide(true);
+    // Carry the page along so redo can put the same one back.
+    const stash = { ...e, at: idx, slide: S.slides[idx], hist: S.history[idx], red: S.redo[idx] };
+    S.slides.splice(idx, 1);
+    S.history.splice(idx, 1);
+    S.redo.splice(idx, 1);
+    S.cur = Math.min(S.slides.length - 1, Math.max(0, idx - 1));
+    await loadSlide(S.cur, { skipSave: true });
+    S.redoStack.push(stash);
+
+  } else if (e.kind === 'move') {
+    await movePage(e.to, e.from, { record: false });
+    S.redoStack.push(e);
+  }
+
+  renderSlideThumbs();
+  updateSlideLabel();
+  syncPageBgControl();
+  updateUndoRedo();
+  markDirty();
+}
+
+async function redo() {
+  const e = S.redoStack.pop();
+  if (!e) return;
+
+  if (e.kind === 'canvas') {
+    const idx = pageIndexOf(e.pid);
+    if (idx === -1) return;
+    const r = S.redo[idx];
+    if (!r.length) return;
+    const snap = r.pop();
+    S.history[idx].push(snap);
+    await applySnapshot(idx, snap);
+    S.undoStack.push(e);
+
+  } else if (e.kind === 'delete') {
+    // Redoing a deletion removes the page again — but keep carrying it, so undo can
+    // still bring it back afterwards.
+    const idx = pageIndexOf(e.pid);
+    if (idx === -1) return;
+    if (S.slides.length === 1) { S.redoStack.push(e); return; }
+    await saveCurrentSlide(true);
+    S.slides.splice(idx, 1);
+    S.history.splice(idx, 1);
+    S.redo.splice(idx, 1);
+    S.cur = Math.min(S.slides.length - 1, Math.max(0, idx - 1));
+    await loadSlide(S.cur, { skipSave: true });
+    S.undoStack.push(e);
+
+  } else if (e.kind === 'add') {
+    await saveCurrentSlide(true);
+    S.slides.splice(e.at, 0, e.slide);
+    S.history.splice(e.at, 0, e.hist);
+    S.redo.splice(e.at, 0, e.red);
+    S.cur = e.at;
+    await loadSlide(e.at, { skipSave: true });
+    S.undoStack.push({ kind: 'add', pid: e.pid });
+
+  } else if (e.kind === 'move') {
+    await movePage(e.from, e.to, { record: false });
+    S.undoStack.push(e);
+  }
+
+  renderSlideThumbs();
+  updateSlideLabel();
+  syncPageBgControl();
+  updateUndoRedo();
+  markDirty();
 }
 
 // Undo/redo buttons stay full-colour and clickable at all times (they simply
@@ -2880,9 +3038,11 @@ function newStory() {
   S.canvas.clear();
   S.canvas.backgroundColor = '#FFFFFF';
   S.canvas.renderAll();
-  S.slides = [{ json: null, thumb: null }];
+  S.slides = [{ json: null, thumb: null, pid: newPid() }];
   S.history = [[]];
   S.redo = [[]];
+  S.undoStack = [];
+  S.redoStack = [];
   S.cur = 0;
   S.dirHandle = null;
   S.fileHandle = null;
@@ -3075,13 +3235,19 @@ async function loadStoryData(d) {
     renderHistoryStrip();
   }
 
+  // pid is runtime-only — it is deliberately NOT written to story.json (see
+  // buildStoryJson), so a story loaded from disk or pulled from the relay gets
+  // fresh ids here. Nothing outside this session depends on them.
   S.slides = (d.slides || [{ json: null, thumb: null }]).map(s => ({
     json:   s.json   || null,
     thumb:  s.thumb  || null,
     imgMap: s.imgMap || {},
+    pid:    newPid(),
   }));
   S.history = S.slides.map(() => []);
   S.redo    = S.slides.map(() => []);
+  S.undoStack = [];
+  S.redoStack = [];
   S.cur = 0;
   document.getElementById('story-title-input').value = d.title || 'My Story';
 
