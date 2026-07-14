@@ -3786,17 +3786,71 @@ function setupBankDrop() {
 let pipRecognition = null;
 let pipListening = false;
 
-function pipToggleMic() {
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPEECH TO TEXT — ON-DEVICE ONLY, AND IT FAILS CLOSED.
+
+   The Web Speech API is SERVER-BASED BY DEFAULT: Chrome streams the microphone
+   audio to Google for recognition. For an app used by 7-to-9-year-olds that is
+   not acceptable — a recording of a child's voice is exactly the kind of thing
+   COPPA names as personal information (16 C.F.R. §312.2 includes "a photograph,
+   video, or audio file where such file contains a child's image or voice"), and
+   sending it to a third party is a disclosure, not a technicality.
+
+   So: `processLocally = true` (Chrome 139+), which keeps both the audio and the
+   transcript on the machine.
+
+   The load-bearing decision is what happens when on-device recognition ISN'T
+   available. We REFUSE. We do not fall back to server recognition, because a
+   silent fallback is precisely the failure that would ship a child's voice to
+   Google while everyone believed it was local. The button goes dead and says why.
+   A missing feature is recoverable; a quiet privacy breach is not.
+   ═══════════════════════════════════════════════════════════════════════════ */
+async function pipToggleMic() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const micBtn = document.getElementById('pip-mic');
+
   if (!SR) {
     setStatus('Speech to text is not supported in this browser', 'err');
-    setTimeout(() => setStatus('', ''), 2500);
+    setTimeout(() => setStatus('', ''), 3000);
     return;
   }
+
+  // No processLocally support at all → this browser can only do server-side
+  // recognition. Refuse; do not send a child's voice off the device.
+  if (!('processLocally' in SR.prototype) || typeof SR.available !== 'function') {
+    micBtn.disabled = true;
+    setStatus('Talking to Pip needs a newer version of Chrome — please type instead.', 'err');
+    setTimeout(() => setStatus('', ''), 5000);
+    return;
+  }
+
   if (pipListening) { if (pipRecognition) pipRecognition.stop(); return; }
 
+  // Is the on-device language pack actually here?
+  let state;
+  try {
+    state = await SR.available({ langs: ['en-US'], processLocally: true });
+  } catch {
+    state = 'unavailable';
+  }
+
+  if (state === 'unavailable') {
+    micBtn.disabled = true;
+    setStatus('Talking out loud isn\'t available on this computer — please type instead.', 'err');
+    setTimeout(() => setStatus('', ''), 5000);
+    return;
+  }
+
+  if (state !== 'available') {
+    // 'downloadable' / 'downloading' — fetch the pack, then ask the child to retry.
+    setStatus('Getting ready to listen… try the microphone again in a moment.', 'info');
+    try { await SR.install({ langs: ['en-US'], processLocally: true }); } catch {}
+    setTimeout(() => setStatus('', ''), 4000);
+    return;
+  }
+
   pipRecognition = new SR();
+  pipRecognition.processLocally = true;   // ← the whole point. Never remove this.
   pipRecognition.lang = 'en-US';
   pipRecognition.interimResults = false;
   pipRecognition.continuous = false;
@@ -3806,6 +3860,15 @@ function pipToggleMic() {
     setStatus('Listening… speak now', 'info');
   };
   pipRecognition.onerror = e => {
+    // 'language-not-supported' is what Chrome throws when processLocally is set but
+    // the on-device pack isn't installed. It is the good failure: it means the
+    // browser refused rather than quietly recognising the audio in the cloud.
+    if (e.error === 'language-not-supported' || e.error === 'service-not-allowed') {
+      micBtn.disabled = true;
+      setStatus('Talking out loud isn\'t available on this computer — please type instead.', 'err');
+      setTimeout(() => setStatus('', ''), 5000);
+      return;
+    }
     setStatus('Could not hear you' + (e.error ? ` (${e.error})` : ''), 'err');
     setTimeout(() => setStatus('', ''), 2500);
   };
