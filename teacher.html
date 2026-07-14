@@ -894,8 +894,18 @@
        The code is GENERATED, never chosen. It is the only thing protecting a team's
        work: a kid-picked "cat123" is guessable, and guessing a code lets someone
        overwrite that team's story. Three words plus four digits is memorable enough
-       for a 7-year-old to type off a sticker and still ~35 bits of entropy.
-       Ambiguous characters are excluded so nobody loses an afternoon to O-vs-0.
+       for a 7-year-old to type off a sticker.
+
+       ENTROPY, measured rather than guessed: 30 words, drawn 3 times with replacement,
+       plus 4 digits = 30^3 x 10^4 = 2.7e8 combinations = 28.0 BITS.
+       (An earlier version of this comment claimed ~35 bits. That was simply wrong —
+       reaching 35 bits with this format would need a 151-word list. Do not quote the
+       old figure; it is repeated in the paper and needs correcting there too.)
+
+       28 bits is fine against a curious classmate and is NOT fine against a determined
+       attacker who already holds the ciphertext. That limit is stated honestly in
+       SYSTEM_REFERENCE.md rather than papered over. If it ever needs to be stronger,
+       lengthen WORDS — the format does not have to change.
        ─────────────────────────────────────────────────────────────────────────── */
     const ADJ = ['brave', 'sunny', 'clever', 'gentle', 'merry', 'swift', 'quiet', 'bright', 'kind', 'bold',
       'jolly', 'lucky', 'calm', 'eager', 'fuzzy', 'happy', 'noble', 'proud', 'witty', 'zesty'];
