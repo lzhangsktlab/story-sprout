@@ -178,6 +178,8 @@ That is a strong story. But these sentences, which appear in the **Abstract, §3
 
 **One thing to say out loud:** the secret codes are the only keys that exist. They live in plaintext in a file on the teacher's computer. If that file is lost, every child's work becomes permanently unreadable — by the teacher, by us, by Cloudflare. That is the exact price of the zero-knowledge property, and a paper that claims the privacy benefit should state the cost.
 
+**And a second:** the codes are deliberately short — six digits, ~20 bits — because a seven-year-old has to type one off a sticker. That is protection against a curious classmate, not against a determined adversary who pulls the ciphertext and grinds the keyspace (PBKDF2's 600k iterations raise the price of each guess; they do not change the arithmetic of a million-code space). The threat model here is honest: the encryption exists so that *the infrastructure* — us, Cloudflare — cannot read children's work, not to survive a targeted attack. If the paper cites the encryption, it should state the trade in the same breath.
+
 ---
 
 ## 7. Corrections to the paper

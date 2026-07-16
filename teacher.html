@@ -724,7 +724,7 @@
           <div>
             <b>Make a team for each computer.</b>
             You'll get a team name and a secret code — something like <i>brave-otter</i> and
-            <i>OTTER-LAMP-RIVER-7291</i>. Write it down, or tape it to that machine. You only do this once.
+            <i>481533</i>. Write it down, or tape it to that machine. You only do this once.
           </div>
         </div>
         <div class="how-step">
@@ -893,27 +893,29 @@
     /* ── team name + code generation ─────────────────────────────────────────────
        The code is GENERATED, never chosen. It is the only thing protecting a team's
        work: a kid-picked "cat123" is guessable, and guessing a code lets someone
-       overwrite that team's story. Three words plus four digits is memorable enough
-       for a 7-year-old to type off a sticker.
+       overwrite that team's story. Six digits is what a 7-year-old can type off a
+       sticker without a mistake — and digits have no upper/lower case to get wrong.
+       (The old word codes did: they derived keys case-sensitively while the entry
+       box only LOOKED uppercase via CSS text-transform. A silent trap.)
 
-       ENTROPY, measured rather than guessed: 30 words, drawn 3 times with replacement,
-       plus 4 digits = 30^3 x 10^4 = 2.7e8 combinations = 28.0 BITS.
-       (An earlier version of this comment claimed ~35 bits. That was simply wrong —
-       reaching 35 bits with this format would need a 151-word list. Do not quote the
-       old figure; it is repeated in the paper and needs correcting there too.)
+       ENTROPY, measured rather than guessed: 10^6 codes = 19.9 BITS.
+       (History of this number: the previous format — three words + four digits —
+       was 28.0 bits, and an even earlier comment claimed ~35, which was simply
+       wrong. Quote none of these for the current format.)
 
-       28 bits is fine against a curious classmate and is NOT fine against a determined
-       attacker who already holds the ciphertext. That limit is stated honestly in
-       SYSTEM_REFERENCE.md rather than papered over. If it ever needs to be stronger,
-       lengthen WORDS — the format does not have to change.
+       19.9 bits is fine against a curious classmate and is NOT fine against a
+       determined attacker who holds the ciphertext — and note the sync rate limit
+       is per TEAM, not per IP, so it does not slow online code guessing either.
+       That trade was made deliberately, for typability, and is stated in
+       PAPER_REFERENCE.md rather than papered over. If it ever needs to be
+       stronger, add digits here — nothing else has to change: key derivation
+       takes the code as an opaque string, so teams created under the old word
+       format keep working unchanged.
        ─────────────────────────────────────────────────────────────────────────── */
     const ADJ = ['brave', 'sunny', 'clever', 'gentle', 'merry', 'swift', 'quiet', 'bright', 'kind', 'bold',
       'jolly', 'lucky', 'calm', 'eager', 'fuzzy', 'happy', 'noble', 'proud', 'witty', 'zesty'];
     const ANIMALS = ['otter', 'panda', 'fox', 'heron', 'badger', 'llama', 'robin', 'turtle', 'moose', 'wren',
       'lynx', 'koala', 'puffin', 'ferret', 'marmot', 'osprey', 'beaver', 'sparrow', 'walrus', 'gecko'];
-    const WORDS = ['otter', 'lamp', 'river', 'maple', 'pebble', 'comet', 'lantern', 'willow', 'ember', 'fossil',
-      'meadow', 'anchor', 'cactus', 'harbor', 'juniper', 'kettle', 'marble', 'nutmeg', 'orchid', 'pepper',
-      'quartz', 'ribbon', 'saddle', 'thistle', 'velvet', 'walnut', 'yarrow', 'zephyr', 'basil', 'cinder'];
 
     const pick = (arr) => arr[crypto.getRandomValues(new Uint32Array(1))[0] % arr.length];
 
@@ -926,8 +928,7 @@
     }
 
     function makeSecretCode() {
-      const digits = String(crypto.getRandomValues(new Uint32Array(1))[0] % 10000).padStart(4, '0');
-      return (pick(WORDS) + '-' + pick(WORDS) + '-' + pick(WORDS) + '-' + digits).toUpperCase();
+      return String(crypto.getRandomValues(new Uint32Array(1))[0] % 1000000).padStart(6, '0');
     }
 
     /* ── disk ────────────────────────────────────────────────────────────────── */

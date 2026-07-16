@@ -1727,7 +1727,7 @@ html, body {
     <input id="team-name-input" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. Table 3">
 
     <label for="team-code-input">Secret code</label>
-    <input id="team-code-input" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. OTTER-LAMP-7291">
+    <input id="team-code-input" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. 481533">
 
     <div class="team-err" id="team-gate-err"></div>
 
@@ -4570,7 +4570,11 @@ function showTeamGate() {
     btn.onclick = async () => {
       err.classList.remove('show');
       const name = nameEl.value.trim();
-      const code = codeEl.value.trim();
+      // Uppercased because key derivation is case-sensitive but the input box only
+      // DISPLAYS uppercase (CSS text-transform) — a child typing an old word code in
+      // lowercase would silently derive the wrong keys. Every code ever generated is
+      // either digits (current format) or uppercase (old word format), so this is safe.
+      const code = codeEl.value.trim().toUpperCase();
       if (!name || !code) return fail('Please enter both the team name and the secret code.');
 
       btn.disabled = true;
