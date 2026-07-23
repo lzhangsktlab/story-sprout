@@ -69,5 +69,56 @@
   ],
   "adjudication_notes": "Every omission flag (19 across 3 reps) is in the replacement subset or a tokenizer edge, NOT a dropped child detail: (a) H60 accounts for 12 — the child superseded 'paper lanterns'; the scorer's superseded set lists only {night,lanterns}, so 'paper' and 'lit' are orphaned modifiers the model correctly dropped. (b) H57 x2 — 'scene' framing word. (c) H15 x1 — 'shark' vs 'shark's' tokenization; the shark is present. (d) H56 x4 — GENUINE but minor and inconsistent across reps: on 'make the treehouse small and cozy instead' the model sometimes dropped 'oak'/'rope swing' though only 'big' was superseded. Zero additions and zero typo losses in any rep. Provisional; author adjudication governs.",
   "timestamp_utc": "2026-07-23T20:21:31.796718+00:00",
-  "reruns": []
+  "reruns": [],
+  "scorer_errata": [
+    "H60 superseded set under-specified: dependent modifiers of a superseded noun were not listed; added 'paper','lit' (fixed, re-scored).",
+    "possessive tokenization normalized: trailing 's stripped so \"shark's\" matches \"shark\" (fixed, re-scored).",
+    "style-unprompted scope corrected: flag only STYLE_WORDS the child did NOT use (w in ipt and w not in pool); previously any style word flagged, so the child's own narrative noun 'storybook's' false-positived on H17 (fixed, re-scored).",
+    "'scene' added to STOP: it frames the picture ('a winter scene of a fox') and names nothing drawable, so its absence from a composed prompt is not an omission (fixed, re-scored); cleared H57."
+  ],
+  "scorings_released": {
+    "original": {
+      "files": "runN/summary.txt, runN/audit_log.jsonl",
+      "ruler": "as-elicited scorer (scribe_audit_v3_heldout.py at commit 8a72a61)",
+      "totals": {
+        "verbatim": "240/240 x3",
+        "additions": "0/720",
+        "omissions": "19/720",
+        "rules": "84/84",
+        "style_unprompted": "0"
+      }
+    },
+    "rescored_pass1": {
+      "files": "runN/summary_rescored_pass1.txt, runN/audit_log_rescored_pass1.jsonl",
+      "ruler": "patches 1-2 only (H60 superseded set + possessive normalization)",
+      "note": "diagnostic intermediate: reproducible by reverting patches 3-4 (the style-scope one-liner and the 'scene' stopword). Revealed the possessive/STYLE_WORDS collision that patch 3 fixes.",
+      "totals": {
+        "verbatim": "240/240 x3",
+        "additions": "0/720",
+        "omissions": "9/720 (H56 x7, H57 x2)",
+        "rules": "84/84",
+        "style_unprompted": "3 (H17 t3, false positive)"
+      }
+    },
+    "rescored_final": {
+      "files": "runN/summary_rescored.txt, runN/audit_log_rescored.jsonl",
+      "ruler": "all four patches; the committed harness reproduces this via `python3 scribe_audit_v3_heldout.py --rescore`",
+      "FROZEN_FOR_PAPER": true,
+      "totals": {
+        "verbatim": "240/240 x3",
+        "additions": "0/720",
+        "omissions": "7/720 (all H56, one sequence, disclosed)",
+        "rules": "84/84",
+        "style_unprompted": "0"
+      }
+    }
+  },
+  "rescore_tripwire": "PASS — vs original: only omission flags changed (19->7, all H56); style-unprompted 3->0 (pass1->final); verbatim, additions, expected-draw, and all rule flags byte-identical. No new API calls, no elicitation, no sequence edits.",
+  "frozen_final_numbers": {
+    "verbatim": "240/240 x3",
+    "additions": "0/720",
+    "omissions": "7/720",
+    "rules": "84/84",
+    "reps": 3
+  }
 }

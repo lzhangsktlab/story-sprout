@@ -1,0 +1,3 @@
+{"seq": "H17", "turn": 3, "kind": "style-unprompted", "prompt": "a mother dragon reading a bedtime story in a cave, add two dragon hatchlings under a patchwork blanket, put glowing crystals like nightlights on the walls, add the storybook's pages lighting up with sparks", "rep": 1}
+{"seq": "H56", "turn": 2, "kind": "omission", "tokens": ["oak", "rope", "swing"], "prompt": "a small and cozy treehouse with fairy lights along the railing", "rep": 1}
+{"seq": "H56", "turn": 3, "kind": "omission", "tokens": ["oak", "rope", "swing"], "prompt": "a small and cozy treehouse with fairy lights along the railing and an owl mail slot on the door", "rep": 1}

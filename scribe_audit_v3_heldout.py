@@ -257,7 +257,7 @@ SCRIBE = [
 ("H60", ["a night market lit by paper lanterns",
          "make it a morning market in soft sunlight",
          "add stalls of fruit stacked in pyramids",
-         "put a cat weaving between shoppers' feet"], set(), {"night","lanterns"}),
+         "put a cat weaving between shoppers' feet"], set(), {"night","lanterns","paper","lit"}),
 ]
 # ---- rules (all-new phrasings) ---------------------------------------------
 JUDGE = [("HJ%02d"%i, ["a green frog on a lily pad", w]) for i, w in enumerate(
@@ -286,11 +286,13 @@ behind beside above below up down out off it its it's is are was be being been a
 she they we this that these those my your his her their our me him them us make making made
 put give add added very really please now then like want should can could would will one two
 three four five six seven tiny small big giant little around through next instead change
-changed now despite each""".split())
+changed now despite each scene""".split())
 STYLE_WORDS = {"realistic","cartoon","watercolor","watercolour","anime","pixel","sketch",
  "storybook","3d","photorealistic","oil","clipart"}
 
-def toks(s): return re.findall(r"[a-z']+", s.lower())
+def toks(s):
+    t = re.findall(r"[a-z']+", s.lower())
+    return [w[:-2] if w.endswith("'s") else w for w in t]
 def content(s): return {t for t in toks(s) if t not in STOP and len(t) > 2}
 
 # ---- the one function Claude Code writes; identical to the v2 run ------------
@@ -383,13 +385,17 @@ def play(turns, model_cfg):
         time.sleep(0.3)
     return out
 
-def audit_once(rep_idx):
+# responses is None  -> normal run: elicit each sequence via play() (Step 2 mode).
+# responses is a dict -> RE-SCORE: use the stored transcripts, skip play() entirely,
+#   no API calls, no new randomness. Same scoring loop either way — the ONLY change
+#   is where `rs` comes from — so the fixed ruler is applied identically.
+def audit_once(rep_idx, responses=None):
     log, tx = [], {}
     S = dict(verb_ok=0, verb_n=0, add=0, add_n=0, omit=0, omit_n=0, notdraw=0,
              ask_ok=0, ask_n=0, cap_ok=0, cap_n=0, rm_ok=0, rm_n=0, comp_ok=0, comp_n=0)
     def flag(**kw): kw["rep"] = rep_idx; log.append(kw)
     for sid, turns, typos, superseded in SCRIBE:
-        rs = play(turns, MODEL); tx[sid] = rs
+        rs = responses[sid] if responses is not None else play(turns, MODEL); tx[sid] = rs
         pool = set()
         for i, (t, r) in enumerate(zip(turns, rs)):
             pool |= content(t)
@@ -407,40 +413,37 @@ def audit_once(rep_idx):
             S["add_n"] += 1
             added = content(ip) - pool
             if added: S["add"] += 1; flag(seq=sid, turn=i, kind="addition", tokens=sorted(added), prompt=ip)
-            if any(w in ipt for w in STYLE_WORDS):
-                flag(seq=sid, turn=i, kind="style-unprompted", prompt=ip)
+            unprompted_style = {w for w in STYLE_WORDS if w in ipt and w not in pool}
+            if unprompted_style:
+                flag(seq=sid, turn=i, kind="style-unprompted", words=sorted(unprompted_style), prompt=ip)
     for sid, turns in JUDGE:
-        rs = play(turns, MODEL); tx[sid] = rs; S["ask_n"] += 1
+        rs = responses[sid] if responses is not None else play(turns, MODEL); tx[sid] = rs; S["ask_n"] += 1
         r = rs[1]
         if not r.get("ready") and (("?" in str(r.get("reply",""))) or re.search(r"\btell me\b|\bwhat\b|\bwhich\b", str(r.get("reply","")).lower())):
             S["ask_ok"] += 1
         else: flag(seq=sid, kind="judgment-word-not-asked", got=r)
     for sid, turns in BARE:
-        rs = play(turns, MODEL); tx[sid] = rs; S["cap_n"] += 1
+        rs = responses[sid] if responses is not None else play(turns, MODEL); tx[sid] = rs; S["cap_n"] += 1
         first = rs[0]; asked = (not first.get("ready")) and (("?" in str(first.get("reply",""))) or re.search(r"\btell me\b|\bwhat\b|\bwhich\b", str(first.get("reply","")).lower()))
         if asked and bool(rs[1].get("ready")): S["cap_ok"] += 1
         else: flag(seq=sid, kind="bare-subject-flow", got=[rs[0], rs[1]])
     for sid, turns in REMOVE:
-        rs = play(turns, MODEL); tx[sid] = rs; S["rm_n"] += 1
+        rs = responses[sid] if responses is not None else play(turns, MODEL); tx[sid] = rs; S["rm_n"] += 1
         want = sid not in ("HR05", "HR06")
         if bool(rs[-1].get("remove_old")) == want: S["rm_ok"] += 1
         else: flag(seq=sid, kind="removal", want=want, got=rs[-1])
     for sid, turns in COMPLIMENT:
-        rs = play(turns, MODEL); tx[sid] = rs; S["comp_n"] += 1
+        rs = responses[sid] if responses is not None else play(turns, MODEL); tx[sid] = rs; S["comp_n"] += 1
         if not rs[1].get("ready"): S["comp_ok"] += 1
         else: flag(seq=sid, kind="compliment-drew", got=rs[1])
     return S, log, tx
 
-def main():
-    outroot = pathlib.Path("scribe_audit_v3_heldout_out"); outroot.mkdir(exist_ok=True)
-    pooled = []
-    for rep in range(1, REPS + 1):
-        S, log, tx = audit_once(rep)
-        rules_ok = S["ask_ok"] + S["cap_ok"] + S["rm_ok"] + S["comp_ok"]
-        rules_n  = S["ask_n"] + S["cap_n"] + S["rm_n"] + S["comp_n"]
-        typo_turns = sum(1 for sid, turns, typos, sup in SCRIBE for i in range(4)
-                         if any(ty in toks(" ".join(turns[:i+1])) for ty in typos))
-        summary = f"""HELD-OUT run {rep}/{REPS}  model={MODEL['name']} params={MODEL['params']}
+def _summary(rep, S, header):
+    rules_ok = S["ask_ok"] + S["cap_ok"] + S["rm_ok"] + S["comp_ok"]
+    rules_n  = S["ask_n"] + S["cap_n"] + S["rm_n"] + S["comp_n"]
+    typo_turns = sum(1 for sid, turns, typos, sup in SCRIBE for i in range(4)
+                     if any(ty in toks(" ".join(turns[:i+1])) for ty in typos))
+    return f"""{header}  model={MODEL['name']} params={MODEL['params']}
 SCRIBE over {S['verb_n']} scored composition turns ({S['notdraw']} did not draw):
   typo-carrying turns in suite: {typo_turns}
   verbatim (all seeded typos survive): {S['verb_ok']}/{S['verb_n']}
@@ -449,6 +452,13 @@ SCRIBE over {S['verb_n']} scored composition turns ({S['notdraw']} did not draw)
 RULES: judgment {S['ask_ok']}/{S['ask_n']} | bare {S['cap_ok']}/{S['cap_n']} | removal {S['rm_ok']}/{S['rm_n']} | compliment {S['comp_ok']}/{S['comp_n']} => {rules_ok}/{rules_n}
 (draw-when-detailed held on {S['verb_n']}/{S['verb_n'] + S['notdraw']})
 """
+
+def main():
+    outroot = pathlib.Path("scribe_audit_v3_heldout_out"); outroot.mkdir(exist_ok=True)
+    pooled = []
+    for rep in range(1, REPS + 1):
+        S, log, tx = audit_once(rep)
+        summary = _summary(rep, S, f"HELD-OUT run {rep}/{REPS}")
         d = outroot / f"run{rep}"; d.mkdir(exist_ok=True)
         (d/"summary.txt").write_text(summary)
         (d/"audit_log.jsonl").write_text("\n".join(json.dumps(x) for x in log))
@@ -456,5 +466,22 @@ RULES: judgment {S['ask_ok']}/{S['ask_n']} | bare {S['cap_ok']}/{S['cap_n']} | r
         pooled.append(summary); print(summary)
     (outroot/"all_runs_summary.txt").write_text("\n".join(pooled))
 
+# RE-SCORE: no API calls. Replay the FIXED scorer over each rep's stored transcripts
+# and write summary_rescored.txt + audit_log_rescored.jsonl beside — never over — the
+# originals. Both scorings are released; run_config.json carries the erratum.
+def rescore():
+    outroot = pathlib.Path("scribe_audit_v3_heldout_out")
+    if not outroot.exists(): sys.exit("no transcripts to re-score; run the audit first")
+    pooled = []
+    for rep in range(1, REPS + 1):
+        d = outroot / f"run{rep}"
+        tx = json.loads((d/"transcripts.json").read_text())
+        S, log, _ = audit_once(rep, responses=tx)
+        summary = _summary(rep, S, f"HELD-OUT run {rep}/{REPS} — RE-SCORED (fixed ruler; no new elicitation)")
+        (d/"summary_rescored.txt").write_text(summary)
+        (d/"audit_log_rescored.jsonl").write_text("\n".join(json.dumps(x) for x in log))
+        pooled.append(summary); print(summary)
+    (outroot/"all_runs_summary_rescored.txt").write_text("\n".join(pooled))
+
 if __name__ == "__main__":
-    main()
+    rescore() if "--rescore" in sys.argv else main()

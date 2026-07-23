@@ -1,0 +1,5 @@
+{"seq": "H17", "turn": 3, "kind": "style-unprompted", "prompt": "a mother dragon reading a bedtime story in a cave, two dragon hatchlings under a patchwork blanket, glowing crystals like nightlights on the walls, the storybook's pages lighting up with sparks", "rep": 2}
+{"seq": "H56", "turn": 2, "kind": "omission", "tokens": ["oak", "rope", "swing"], "prompt": "small and cozy treehouse with fairy lights along the railing", "rep": 2}
+{"seq": "H56", "turn": 3, "kind": "omission", "tokens": ["oak"], "prompt": "a small and cozy treehouse with a rope swing, fairy lights along the railing, and an owl mail slot on the door", "rep": 2}
+{"seq": "H57", "turn": 2, "kind": "omission", "tokens": ["scene"], "prompt": "a fox by a pond in summer with green grass, dragonflies skimming the pond", "rep": 2}
+{"seq": "H57", "turn": 3, "kind": "omission", "tokens": ["scene"], "prompt": "a fox by a pond in summer with green grass, dragonflies skimming the pond, and a picnic basket open on a checked cloth", "rep": 2}

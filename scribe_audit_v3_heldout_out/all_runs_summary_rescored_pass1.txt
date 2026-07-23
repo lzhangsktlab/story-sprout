@@ -1,0 +1,26 @@
+HELD-OUT run 1/3 — RE-SCORED (fixed ruler; no new elicitation)  model=gpt-5.4-mini params={'reasoning_effort': 'low'}
+SCRIBE over 240 scored composition turns (0 did not draw):
+  typo-carrying turns in suite: 38
+  verbatim (all seeded typos survive): 240/240
+  unrequested addition flagged:        0/240
+  supplied detail omitted flagged:     2/240
+RULES: judgment 12/12 | bare 6/6 | removal 6/6 | compliment 4/4 => 28/28
+(draw-when-detailed held on 240/240)
+
+HELD-OUT run 2/3 — RE-SCORED (fixed ruler; no new elicitation)  model=gpt-5.4-mini params={'reasoning_effort': 'low'}
+SCRIBE over 240 scored composition turns (0 did not draw):
+  typo-carrying turns in suite: 38
+  verbatim (all seeded typos survive): 240/240
+  unrequested addition flagged:        0/240
+  supplied detail omitted flagged:     4/240
+RULES: judgment 12/12 | bare 6/6 | removal 6/6 | compliment 4/4 => 28/28
+(draw-when-detailed held on 240/240)
+
+HELD-OUT run 3/3 — RE-SCORED (fixed ruler; no new elicitation)  model=gpt-5.4-mini params={'reasoning_effort': 'low'}
+SCRIBE over 240 scored composition turns (0 did not draw):
+  typo-carrying turns in suite: 38
+  verbatim (all seeded typos survive): 240/240
+  unrequested addition flagged:        0/240
+  supplied detail omitted flagged:     3/240
+RULES: judgment 12/12 | bare 6/6 | removal 6/6 | compliment 4/4 => 28/28
+(draw-when-detailed held on 240/240)
