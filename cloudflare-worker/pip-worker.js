@@ -48,7 +48,13 @@ const CHAT_URL       = 'https://api.openai.com/v1/chat/completions';
 const IMAGE_URL      = 'https://api.openai.com/v1/images/generations';
 const IMAGE_EDIT_URL = 'https://api.openai.com/v1/images/edits';
 
-const CHAT_MODEL  = 'gpt-5.6-luna';  // conversation: a reasoning model — see handleChat
+// Conversation. A reasoning model — it rejects the temperature/max_tokens pair this
+// file used to send, so read handleChat before changing it. Chosen on the contract
+// audit, not on tier: it was the only model tested that carried every child's words
+// back unaltered (44/44 verbatim, 0 unrequested additions), and it is cheaper than
+// the larger gpt-5.6-luna. Note its reasoning_effort DEFAULT is 'none' — the setting
+// measured losing spellings — so handleChat states 'low' explicitly.
+const CHAT_MODEL  = 'gpt-5.4-mini';
 const IMAGE_MODEL = 'gpt-image-2';   // illustration generation
 
 // ── CORS: locked to this app's origins ───────────────────────────────────────
@@ -242,26 +248,27 @@ async function handleChat(body, env) {
       // except when it is actually needed.
       max_completion_tokens: 1000,
 
-      // Stated rather than left to the default, for the same reason store:false is:
-      // the default is 'medium' today and could move.
-      // Pip's job looks mechanical — route the message to draw-or-ask, copy the
-      // child's words into a field — which is the schema-shaped work the docs point
-      // 'none' at. It was measured rather than assumed. Full 40-sequence contract
-      // audit, same prompt (sha d01f624b), 44 draw turns:
+      // MUST be stated, not defaulted — and not only for the store:false reason that
+      // a default can move. The default is not even the same across models: it is
+      // 'medium' on gpt-5.6-luna and 'none' on gpt-5.4-mini. Leaving it out means the
+      // setting silently changes when the model does, and 'none' is the setting that
+      // was measured losing children's spellings.
       //
-      //   effort    verbatim   interaction rules   84-turn wall clock
-      //   none        42/44          62/62               127s
-      //   low         44/44          62/62               129s
-      //   medium      44/44          62/62               (not timed)
+      // Measured, not assumed. Full 40-sequence contract audit, same prompt
+      // (sha d01f624b), 44 draw turns, effort 'low' unless noted:
       //
-      // 'none' loses the child's own spelling: "lighthous" came back "lighthouse",
-      // "dinasor" came back "dinosaur". Carrying those back unchanged is the entire
-      // point of the scribe rule. 'low' holds fidelity at full marks and costs about
-      // two seconds across eighty-four turns — the single-turn gap that looked like
-      // 0.3s in a one-shot probe did not survive a full run.
+      //   model                 verbatim  additions  rules   wall clock   cost
+      //   gpt-4o-mini              0/39      39/39   55/57       —        $0.02
+      //   gpt-5.6-luna (none)     42/44       6/44   62/62      127s      $0.16
+      //   gpt-5.6-luna            44/44       5/44   62/62      129s      $0.17
+      //   gpt-5.4-mini            44/44       0/44   62/62      132s      $0.13
       //
-      // So: 'low' is the floor that still keeps the child's words intact. Do not drop
-      // to 'none' for speed without re-running the audit — the speed is not there.
+      // On luna, 'none' returned "lighthouse" for a child's "lighthous" and "dinosaur"
+      // for "dinasor". Carrying those back unchanged is the entire point of the scribe
+      // rule, and the speed it was traded for did not exist: across 84 turns 'none'
+      // and 'low' differ by ~2 seconds, though a one-shot probe suggested 0.3s a turn.
+      //
+      // 'low' is therefore the floor that still keeps a child's words intact.
       reasoning_effort: 'low',
       response_format: { type: 'json_object' },
 
