@@ -235,20 +235,28 @@ async function handleChat(body, env) {
       // pair returns 400 on every turn — a model swap here is NOT a one-line change.
       //   was: temperature: 0.5   // lower = more consistent draw-vs-ask routing
       //   was: max_tokens: 400
-      // The 400 budget now has to cover reasoning as well as the reply, so a turn
-      // that thinks hard can be cut off mid-JSON; the parse below already treats
-      // that as "no answer" rather than throwing.
-      max_completion_tokens: 400,
+      // This budget covers reasoning tokens as well as the reply, so a turn that
+      // thinks hard can be cut off mid-JSON; the parse below already treats that as
+      // "no answer" rather than throwing. Raised from 400 to give that no chance of
+      // biting — Pip's replies are two sentences, so the headroom costs nothing
+      // except when it is actually needed.
+      max_completion_tokens: 1000,
 
       // Stated rather than left to the default, for the same reason store:false is:
-      // the default is 'medium' today and could move. 'medium' is what a plain model
-      // swap gives you, so it is the honest baseline to measure first.
-      // Measured on this prompt: none 1.1s / low 1.4s / medium 1.7-2.2s per turn, and
-      // the reasoning tokens come out of the 400 budget above. A child waiting for Pip
-      // feels every one of those milliseconds, so 'low' or 'none' is worth testing —
-      // but the draw-vs-ask routing is the fragile part, so re-run the audit before
-      // dropping it, rather than assuming a cheaper setting is free.
-      reasoning_effort: 'medium',
+      // the default is 'medium' today and could move.
+      // 'none' because a child is sitting there waiting: measured on this prompt,
+      // none 1.1s / low 1.4s / medium 1.7-2.2s per turn. Pip's job looks mechanical —
+      // route the message to draw-or-ask, copy the child's words into a field — which
+      // is the schema-shaped work the docs point 'none' at.
+      //
+      // The audit was re-run at this setting rather than assumed, and it is NOT free.
+      // Routing survived intact (interaction rules 62/62 either way), but verbatim
+      // fidelity slipped: 44/44 seeded typos survived at 'medium', 42/44 at 'none' —
+      // "lighthous" became "lighthouse", "dinasor" became "dinosaur", and one child's
+      // "pet" was dropped. Copying a child's words back unchanged is the whole point
+      // of the scribe rule, so that is the cost being paid for ~0.6s a turn. If the
+      // study cares more about fidelity than latency, put this back to 'medium'.
+      reasoning_effort: 'none',
       response_format: { type: 'json_object' },
 
       // Never let OpenAI keep these turns. This is already the default for
