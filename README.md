@@ -150,8 +150,7 @@ Class folder/
 | `cloudflare-worker/pip-worker.js` | **OpenAI proxy** for Pip **and** the sync relay |
 | `PIP_SCOPE.md` | Pip's behavior specification (source of truth) |
 | `RESEARCH_DATA.md` | Schema for the data captured for prompt-writing research |
-| `STYLE_CONSISTENCY.md` | Notes on keeping art style consistent across a story |
-| `scripts/images-to-json.py` | Convert a folder of images into a workshop story JSON |
+| `scripts/images-to-json.py` | Convert a folder of images into a story JSON |
 | `CLAUDE.md` | Guidance for AI coding assistants working in this repo |
 
 ## 🚀 Getting started
