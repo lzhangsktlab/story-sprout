@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Storybook Workshop — Teacher</title>
+  <title>Storybook Studio — Teacher</title>
   <!-- Self-hosted; see vendor/README.md. (This page is the teacher's, not a child's,
        but there is no reason to leak an IP to Google for a font here either.) -->
   <link href="vendor/fonts.css" rel="stylesheet">
@@ -701,7 +701,7 @@
       <path d="M9 18h6v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z" fill="#9779D2"/>
       <path d="M12 7v6M9.5 9.5l2.5 2M14.5 9.5L12 12" stroke="#7C5CBF" stroke-width="1.5" stroke-linecap="round"/>
     </svg>
-    <h1>Storybook Workshop</h1>
+    <h1>Storybook Studio</h1>
     <span class="tag">Teacher</span>
     <div class="spacer"></div>
     <span class="collect-status" id="collect-status"></span>
@@ -802,7 +802,7 @@
         <div class="nt-name" id="nt-name">—</div>
         <div class="nt-code" id="nt-code">—</div>
         <div class="nt-hint">
-          On that computer, open the workshop with <code>?class=1</code> and enter these.<br>
+          On that computer, open the Studio with <code>?class=1</code> and enter these.<br>
           The children only ever type this once.
         </div>
       </div>
@@ -843,7 +843,7 @@
 
   <script>
     /* ═══════════════════════════════════════════════════════════════════════════
-       Storybook Workshop — Teacher dashboard
+       Storybook Studio — Teacher dashboard
     
        The teacher's disk is the system of record. The relay is a dead-drop that
        holds encrypted bytes for a few minutes; this page is where the work actually
@@ -1025,7 +1025,7 @@
       const tDir = await dir(teamsDir, team.teamName);
 
       // latest.json is fat and self-contained on purpose: the teacher can open it
-      // straight in the workshop with no extra steps.
+      // straight in the Studio with no extra steps.
       await writeJson(tDir, 'latest.json', story);
 
       // Snapshots keep the REF form instead — a few KB each, sharing images/. Writing
