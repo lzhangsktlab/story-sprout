@@ -114,9 +114,7 @@ Class folder/
 | `teacher.html` | **Teacher Mode dashboard** — create teams, collect student work |
 | `sprout-sync.js` | Shared crypto + content-addressing + relay client (used by **both** pages) |
 | `sprout-sync-test.html` | Test harness for the above — open it and click *Run tests* |
-| `workshop.html` | Earlier version (direct Stability AI) — legacy |
 | `cloudflare-worker/pip-worker.js` | **OpenAI proxy** for Pip + the image drawer, **and** the sync relay |
-| `cloudflare-worker/worker.js` | Legacy Stability AI proxy |
 | `PIP_SCOPE.md` | Pip's behavior specification (source of truth) |
 | `RESEARCH_DATA.md` | Schema for the data captured for prompt-writing research |
 | `STYLE_CONSISTENCY.md` | Notes on keeping art style consistent across a story |
