@@ -1003,111 +1003,7 @@ html, body {
 }
 .pip-drawer-close:hover { background: var(--cream3); color: var(--ink); }
 
-/* History strip — scrolls horizontally in the topbar */
-#ai-history-strip {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  overflow-x: auto;
-  padding: 4px 0;
-  min-height: 56px;
-}
-#ai-history-strip::-webkit-scrollbar { height: 3px; }
-#ai-history-strip::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-.ai-hist-empty {
-  font-size: 11px; color: var(--ink3); font-weight: 600;
-  font-style: italic; white-space: nowrap;
-}
-.ai-hist-thumb {
-  width: 68px; height: 48px;
-  border-radius: 6px;
-  border: 2.5px solid transparent;
-  object-fit: cover;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: border-color .13s, transform .13s, box-shadow .13s;
-}
-.ai-hist-thumb:hover { transform: scale(1.08); border-color: var(--purple-light); }
-.ai-hist-thumb.selected { border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-bg); }
-
-.ai-hist-item {
-  position: relative;
-  flex-shrink: 0;
-}
-.ai-hist-del {
-  position: absolute;
-  top: -4px; right: -4px;
-  width: 16px; height: 16px;
-  border-radius: 50%;
-  background: var(--red);
-  color: #fff;
-  border: none;
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1;
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-.ai-hist-item:hover .ai-hist-del { display: flex; }
-.ai-hist-clear {
-  flex-shrink: 0;
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--ink3);
-  font-family: var(--font);
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.ai-hist-clear:hover { background: var(--purple-bg); color: var(--red); }
-
-/* ── Image area — takes ~75% of remaining height ── */
-#ai-preview-box {
-  flex: 3;                       /* 3 parts = ~75% */
-  position: relative;
-  background: var(--cream2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  min-height: 0;
-}
-#ai-preview-box img {
-  max-width: 100%; max-height: 100%;
-  object-fit: contain;
-  display: block;
-}
-#ai-preview-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  color: var(--ink3);
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  line-height: 1.6;
-}
-#ai-preview-placeholder svg { opacity: .3; }
-#ai-spinner {
-  display: none;
-  position: absolute;
-  inset: 0;
-  background: rgba(255,255,255,.9);
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 14px;
-}
-#ai-spinner.active { display: flex; }
-#ai-spinner-label { font-size: 13px; font-weight: 700; color: var(--purple-dark); }
+/* Spinner ring — Pip's "drawing…" indicator (#pip-preview-spinner) */
 @keyframes spin { to { transform: rotate(360deg); } }
 .spinner-ring {
   width: 44px; height: 44px;
@@ -1116,119 +1012,6 @@ html, body {
   border-radius: 50%;
   animation: spin .75s linear infinite;
 }
-
-/* ── Prompt strip — ~25% of remaining height ── */
-#ai-prompt-strip {
-  flex: 1;                       /* 1 part = ~25% */
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-  border-top: 1.5px solid var(--border);
-  min-height: 0;
-  flex-shrink: 0;
-}
-#ai-prompt-left {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  min-width: 0;
-}
-.ai-prompt-label {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--ink2);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-#ai-prompt-input {
-  flex: 1;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink);
-  background: var(--cream);
-  outline: none;
-  resize: none;
-  transition: border-color .15s, background .15s;
-  line-height: 1.5;
-  height: 100%;
-}
-#ai-prompt-input:focus { border-color: var(--purple-light); background: var(--white); }
-
-#ai-prompt-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 16px;
-  border-left: 1px solid var(--border);
-  justify-content: center;
-  flex-shrink: 0;
-  min-width: 160px;
-}
-#ai-generate-btn {
-  width: 100%;
-  padding: 11px 16px;
-  background: var(--purple);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: background .15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-}
-#ai-generate-btn:hover { background: var(--purple-dark); }
-#ai-generate-btn:disabled { opacity: .5; cursor: default; }
-
-#ai-improve-btn {
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--cream2);
-  color: var(--ink2);
-  border: 1.5px solid var(--border2);
-  border-radius: var(--radius-sm);
-  font-family: var(--font);
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: background .15s;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-#ai-improve-btn.visible { display: flex; }
-#ai-improve-btn:hover { background: var(--purple-bg); color: var(--purple-dark); }
-
-#ai-add-canvas-btn {
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--green);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-family: var(--font);
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: background .15s;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-#ai-add-canvas-btn.visible { display: flex; }
-#ai-add-canvas-btn:hover { background: #3a9a6e; }
 
 /* ═══════════════════════════════════════════════
    STATUS BAR
@@ -1578,10 +1361,6 @@ html, body {
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11l-1.5-3.5L3 6l3.5-1.5L8 1z" fill="#9779D2"/><path d="M13 10l.7 1.7L15.4 12l-1.7.7-.7 1.7-.7-1.7-1.7-.7 1.7-.7L13 10z" fill="#9779D2" opacity=".6"/></svg>
           Pip
         </div>
-        <!-- History thumbnails — part of the legacy manual generator, hidden -->
-        <div id="ai-history-strip" style="display:none">
-          <span class="ai-hist-empty" id="ai-hist-empty">Previous generations appear here</span>
-        </div>
         <button class="pip-drawer-close" id="pip-drawer-close" style="margin-left:auto">×</button>
       </div>
 
@@ -1630,74 +1409,6 @@ html, body {
         </div>
 
       </div>
-
-      <!-- LEGACY manual generator — UI hidden, code retained -->
-      <div id="ai-manual-ui" style="display:none">
-
-      <!-- Image (big, ~75% of height) -->
-      <div id="ai-preview-box">
-        <div id="ai-preview-placeholder">
-          <svg width="56" height="56" viewBox="0 0 52 52" fill="none"><rect x="4" y="8" width="44" height="36" rx="6" stroke="#9B93AB" stroke-width="2"/><circle cx="17" cy="22" r="5" stroke="#9B93AB" stroke-width="2"/><path d="M4 36l12-14 10 12 8-9 14 17" stroke="#9B93AB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-          Your image will appear here.<br>Write a prompt below and hit Generate.
-        </div>
-        <div id="ai-error-box" style="display:none;position:absolute;inset:0;background:rgba(255,240,240,.97);align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:24px;text-align:center;">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="#E05555" stroke-width="2"/><path d="M16 9v8M16 21v2" stroke="#E05555" stroke-width="2.2" stroke-linecap="round"/></svg>
-          <div id="ai-error-msg" style="font-size:13px;font-weight:700;color:#c0392b;line-height:1.6;max-width:400px;word-break:break-word;"></div>
-          <button onclick="document.getElementById('ai-error-box').style.display='none';document.getElementById('ai-preview-placeholder').style.display='flex';" style="padding:6px 16px;background:#E05555;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">Dismiss</button>
-        </div>
-        <img id="ai-preview-img" alt="Generated image" style="display:none;">
-        <div id="ai-spinner">
-          <div class="spinner-ring"></div>
-          <div id="ai-spinner-label">Generating your image…</div>
-        </div>
-      </div>
-
-      <!-- Prompt strip (~25% of height) -->
-      <div id="ai-prompt-strip">
-        <div id="ai-prompt-left">
-          <span class="ai-prompt-label">Prompt:</span>
-          <textarea id="ai-prompt-input" placeholder="e.g. A friendly dragon soaring over a rainbow forest, bright colors, children's book illustration — press Enter to generate"></textarea>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
-            <label for="ai-style-select" style="font-size:11px;font-weight:700;color:var(--ink3);white-space:nowrap;">Style:</label>
-            <select id="ai-style-select" style="font-family:var(--font);font-size:12px;font-weight:600;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--white);color:var(--ink);cursor:pointer;">
-              <option value="digital-art" selected>Digital Art</option>
-              <option value="comic-book">Comic Book</option>
-              <option value="fantasy-art">Fantasy Art</option>
-              <option value="photographic">Photographic</option>
-              <option value="cinematic">Cinematic</option>
-            </select>
-            <label for="ai-quality-select" style="font-size:11px;font-weight:700;color:var(--ink3);white-space:nowrap;margin-left:8px;">Quality:</label>
-            <select id="ai-quality-select" style="font-family:var(--font);font-size:12px;font-weight:600;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--white);color:var(--ink);cursor:pointer;">
-              <option value="draft" selected>Draft (fast)</option>
-              <option value="final">Final (HD)</option>
-            </select>
-            <!-- Modify-strength control: hidden for OpenAI (no strength param).
-                 Markup + JS kept intact; remove display:none to re-enable for a
-                 Stability-style model that supports control_strength. -->
-            <span id="ai-strength-control" style="display:none;align-items:center;gap:6px;">
-              <label for="ai-strength-range" style="font-size:11px;font-weight:700;color:var(--ink3);white-space:nowrap;margin-left:8px;">Modify strength:</label>
-              <input type="range" id="ai-strength-range" min="10" max="90" value="50" step="5" style="width:80px;vertical-align:middle;cursor:pointer;">
-              <span id="ai-strength-label" style="font-size:11px;font-weight:700;color:var(--ink2);min-width:28px;">50%</span>
-            </span>
-          </div>
-        </div>
-        <div id="ai-prompt-buttons">
-          <button id="ai-generate-btn">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11l-1.5-3.5L3 6l3.5-1.5L8 1z" fill="currentColor"/></svg>
-            Generate
-          </button>
-          <button id="ai-improve-btn">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0M14 8l-2-2M14 8l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-            Regenerate
-          </button>
-          <button id="ai-add-canvas-btn">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            Add to Canvas
-          </button>
-        </div>
-      </div>
-
-      </div><!-- /ai-manual-ui -->
 
     </div><!-- /pip-drawer -->
 
@@ -2762,14 +2473,6 @@ function clearPropsPanel() {
     </div>`;
 }
 
-/* ═══════════════════════════════════════════════
-   LEGACY AI IMAGE GENERATOR — OpenAI (gpt-image-1)
-   UI hidden (#ai-manual-ui); code retained for reuse.
-   Uses the same Cloudflare Worker proxy as Pip
-   (PIP_PROXY_URL, defined below) — /image and
-   /image-edit. API key stays server-side.
-═══════════════════════════════════════════════ */
-
 // Image generation history [{dataUrl, prompt}]
 // aiHistory is the IMAGE cache that feeds the history strip and the image bank.
 // Each entry carries a 2–3MB base64 image, which is why it is capped at 20.
@@ -2811,193 +2514,13 @@ function closePipDrawer() {
   fitCanvas();   // restore the page to the full canvas area
 }
 
-// OpenAI has no style_preset param, so fold the dropdown choice into the prompt.
-const AI_STYLE_TEXT = {
-  'digital-art':  'digital art',
-  'comic-book':   'comic book art',
-  'fantasy-art':  'fantasy art',
-  'photographic': 'realistic photographic',
-  'cinematic':    'cinematic',
-};
-function aiStyledPrompt(prompt) {
-  const sel = document.getElementById('ai-style-select').value;
-  const style = AI_STYLE_TEXT[sel] || sel.replace(/-/g, ' ');
-  return `${prompt}. Art style: ${style}. 16:9 landscape composition.`;
-}
-// Draft = fast/low, Final = best/high.
-function aiQuality() {
-  return document.getElementById('ai-quality-select').value === 'final' ? 'high' : 'low';
-}
-
-/* ── Generate via OpenAI (text-to-image) ── */
-async function generateAiImage() {
-  const prompt = document.getElementById('ai-prompt-input').value.trim();
-  if (!prompt) { setStatus('Please describe the image you want', 'err'); return; }
-
-  const genBtn     = document.getElementById('ai-generate-btn');
-  const improveBtn = document.getElementById('ai-improve-btn');
-  const addBtn     = document.getElementById('ai-add-canvas-btn');
-  const spinner    = document.getElementById('ai-spinner');
-  const prevImg    = document.getElementById('ai-preview-img');
-  const prevPH     = document.getElementById('ai-preview-placeholder');
-
-  // Loading state
-  genBtn.disabled = true;
-  genBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11l-1.5-3.5L3 6l3.5-1.5L8 1z" fill="currentColor"/></svg> Generating…`;
-  spinner.classList.add('active');
-  addBtn.classList.remove('visible');
-  improveBtn.classList.remove('visible');
-  prevImg.style.display = 'none';
-  prevPH.style.display  = 'flex';
-  S.aiImgSrc = null;
-  setStatus('Generating image with OpenAI…', 'info');
-
-  try {
-    const res = await fetch(PIP_PROXY_URL + '/image', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt: aiStyledPrompt(prompt),
-        quality: aiQuality(),
-        size: '1536x1024',
-      }),
-    });
-
-    const data = await res.json();
-
-    if (data.blocked) {
-      throw new Error("That request can't be drawn — try describing something else.");
-    }
-    if (!res.ok || data.error) {
-      throw new Error(data.error || `HTTP ${res.status}`);
-    }
-
-    const dataUrl = data.image;
-
-    // ── Display ──
-    prevImg.onload = () => {
-      spinner.classList.remove('active');
-      prevPH.style.display = 'none';
-      addBtn.classList.add('visible');
-      improveBtn.classList.add('visible');
-      genBtn.disabled = false;
-      genBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11l-1.5-3.5L3 6l3.5-1.5L8 1z" fill="currentColor"/></svg> Generate New`;
-      setStatus('Image ready — refine or add to canvas', 'ok');
-      setTimeout(() => setStatus('', ''), 3500);
-    };
-    prevImg.onerror = () => {
-      spinner.classList.remove('active');
-      prevPH.style.display = 'none';
-      genBtn.disabled = false;
-      genBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11l-1.5-3.5L3 6l3.5-1.5L8 1z" fill="currentColor"/></svg> Generate Image`;
-      showAiError('Image received but failed to render.');
-    };
-    prevImg.style.display = 'block';
-    prevImg.src = dataUrl;
-    S.aiImgSrc = dataUrl;
-    const parentId = (aiSelectedIdx >= 0 && aiHistory[aiSelectedIdx]) ? aiHistory[aiSelectedIdx].historyId : null;
-    addToHistory(dataUrl, prompt, {
-      style_preset: document.getElementById('ai-style-select').value,
-      quality: document.getElementById('ai-quality-select').value,
-    }, parentId);
-
-  } catch (err) {
-    spinner.classList.remove('active');
-    prevPH.style.display = 'none';
-    genBtn.disabled = false;
-    genBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.5 3.5L13 6l-3.5 1.5L8 11l-1.5-3.5L3 6l3.5-1.5L8 1z" fill="currentColor"/></svg> Generate Image`;
-    showAiError(err.message);
-    console.error('[OpenAI image] error:', err);
-  }
-}
-
-/* ── Modify existing image via OpenAI (image-to-image edit) ── */
-async function modifyAiImage() {
-  const prompt = document.getElementById('ai-prompt-input').value.trim();
-  if (!prompt) { setStatus('Describe how to modify the image', 'err'); return; }
-  if (!S.aiImgSrc) return generateAiImage(); // fallback if no image
-
-  const genBtn     = document.getElementById('ai-generate-btn');
-  const improveBtn = document.getElementById('ai-improve-btn');
-  const addBtn     = document.getElementById('ai-add-canvas-btn');
-  const spinner    = document.getElementById('ai-spinner');
-  const prevImg    = document.getElementById('ai-preview-img');
-  const prevPH     = document.getElementById('ai-preview-placeholder');
-
-  genBtn.disabled = true;
-  improveBtn.disabled = true;
-  improveBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0M14 8l-2-2M14 8l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> Modifying…`;
-  spinner.classList.add('active');
-  addBtn.classList.remove('visible');
-  setStatus('Modifying image with OpenAI…', 'info');
-
-  try {
-    const res = await fetch(PIP_PROXY_URL + '/image-edit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        image: S.aiImgSrc,
-        prompt: aiStyledPrompt(prompt),
-        quality: aiQuality(),
-        size: '1536x1024',
-      }),
-    });
-
-    const data = await res.json();
-    if (data.blocked) throw new Error("That change can't be drawn — try describing it differently.");
-    if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
-    const dataUrl = data.image;
-
-    prevImg.onload = () => {
-      spinner.classList.remove('active');
-      prevPH.style.display = 'none';
-      addBtn.classList.add('visible');
-      improveBtn.classList.add('visible');
-      genBtn.disabled = false;
-      improveBtn.disabled = false;
-      improveBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0M14 8l-2-2M14 8l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> Regenerate`;
-      setStatus('Image modified — refine or add to canvas', 'ok');
-      setTimeout(() => setStatus('', ''), 3500);
-    };
-    prevImg.onerror = () => {
-      spinner.classList.remove('active');
-      genBtn.disabled = false;
-      improveBtn.disabled = false;
-      improveBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0M14 8l-2-2M14 8l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> Regenerate`;
-      showAiError('Modified image failed to render.');
-    };
-    prevImg.style.display = 'block';
-    prevImg.src = dataUrl;
-    S.aiImgSrc = dataUrl;
-
-    const parentId = (aiSelectedIdx >= 0 && aiHistory[aiSelectedIdx]) ? aiHistory[aiSelectedIdx].historyId : null;
-    addToHistory(dataUrl, prompt, {
-      type: 'modify',
-      style_preset: document.getElementById('ai-style-select').value,
-    }, parentId);
-
-  } catch (err) {
-    spinner.classList.remove('active');
-    genBtn.disabled = false;
-    improveBtn.disabled = false;
-    improveBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0M14 8l-2-2M14 8l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg> Regenerate`;
-    showAiError(err.message);
-    console.error('[OpenAI image] modify error:', err);
-  }
-}
-
-function showAiError(msg) {
-  const box = document.getElementById('ai-error-box');
-  document.getElementById('ai-error-msg').textContent = msg;
-  box.style.display = 'flex';
-  setStatus('Generation failed', 'err');
-}
-
-/* ── History strip ── */
+/* ── Record a generated picture ── */
+// Pushes to the image cache (aiHistory, capped) and the research record (promptLog,
+// never capped), and refreshes Pip's Image Bank. Returns the historyId Pip links its
+// preview to.
 // `meta` carries what the research needs but the image cache doesn't:
-//   source     — 'pip' (conversational) or 'manual' (the legacy drawer)
-//   childWords — what the CHILD actually said, verbatim. Null on the manual path,
-//                where `prompt` already IS the child's own text.
+//   source     — 'pip' (conversational). ('manual' is retired — Pip is the only path.)
+//   childWords — what the CHILD actually said, verbatim.
 //   turnIndex  — index into pipConversation, so a whole exchange can be replayed
 function addToHistory(dataUrl, prompt, settings = {}, parentId = null, meta = {}) {
   const historyId = 'ai_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
@@ -3029,87 +2552,9 @@ function addToHistory(dataUrl, prompt, settings = {}, parentId = null, meta = {}
   });
 
   aiSelectedIdx = 0;
-  renderHistoryStrip();
   // Keep the image bank fresh if it's currently open.
   if (document.getElementById('pip-bank').classList.contains('open')) renderImageBank();
   return historyId;
-}
-
-function renderHistoryStrip() {
-  const strip = document.getElementById('ai-history-strip');
-  const empty = document.getElementById('ai-hist-empty');
-
-  // Remove old items (keep the empty span)
-  strip.querySelectorAll('.ai-hist-item, .ai-hist-clear').forEach(el => el.remove());
-
-  if (!aiHistory.length) {
-    if (empty) empty.style.display = 'inline';
-    return;
-  }
-  if (empty) empty.style.display = 'none';
-
-  aiHistory.forEach((item, i) => {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'ai-hist-item';
-    const img = document.createElement('img');
-    img.className = 'ai-hist-thumb' + (i === aiSelectedIdx ? ' selected' : '');
-    img.src = item.dataUrl;
-    img.title = item.prompt;
-    img.addEventListener('click', () => selectHistoryItem(i));
-    const del = document.createElement('button');
-    del.className = 'ai-hist-del';
-    del.textContent = '×';
-    del.title = 'Remove this image';
-    del.addEventListener('click', (e) => { e.stopPropagation(); deleteHistoryItem(i); });
-    wrapper.appendChild(img);
-    wrapper.appendChild(del);
-    strip.appendChild(wrapper);
-  });
-
-  // Clear All button
-  const clearBtn = document.createElement('button');
-  clearBtn.className = 'ai-hist-clear';
-  clearBtn.textContent = 'Clear All';
-  clearBtn.addEventListener('click', clearAiHistory);
-  strip.appendChild(clearBtn);
-}
-
-function deleteHistoryItem(idx) {
-  aiHistory.splice(idx, 1);
-  if (aiSelectedIdx >= aiHistory.length) aiSelectedIdx = aiHistory.length - 1;
-  renderHistoryStrip();
-  markDirty();
-}
-
-// Clears the IMAGE cache only. promptLog and pipConversation are deliberately left
-// alone: a child tidying up their picture strip must not silently erase the record
-// of how they got there.
-function clearAiHistory() {
-  if (aiHistory.length && !confirm('Clear all generated images?')) return;
-  aiHistory.length = 0;
-  aiSelectedIdx = -1;
-  S.aiImgSrc = null;
-  renderHistoryStrip();
-  markDirty();
-}
-
-function selectHistoryItem(idx) {
-  aiSelectedIdx = idx;
-  const item = aiHistory[idx];
-  S.aiImgSrc = item.dataUrl;
-
-  const prevImg = document.getElementById('ai-preview-img');
-  const prevPH  = document.getElementById('ai-preview-placeholder');
-  prevImg.src   = item.dataUrl;
-  prevImg.style.display = 'block';
-  prevPH.style.display  = 'none';
-  document.getElementById('ai-add-canvas-btn').classList.add('visible');
-  document.getElementById('ai-improve-btn').classList.add('visible');
-  document.getElementById('ai-prompt-input').value = item.prompt;
-
-  renderHistoryStrip();
-  setStatus('Image selected — refine prompt or add to canvas', 'info');
-  setTimeout(() => setStatus('', ''), 2500);
 }
 
 /* ═══════════════════════════════════════════════
@@ -3176,7 +2621,6 @@ function newStory() {
   renderStoryText();
   aiHistory.length = 0;
   aiSelectedIdx = -1;
-  renderHistoryStrip();
 
   // A genuinely new story starts a fresh record — this is the ONE place the
   // research data is reset, and only because the child chose to begin again.
@@ -3372,12 +2816,11 @@ async function loadStoryData(d) {
     renderStoryText();
   }
 
-  // Restore AI generation history
+  // Restore AI generation history (the image cache Pip's Image Bank reads)
   if (d.aiHistory && d.aiHistory.length > 0) {
     aiHistory.length = 0;
     d.aiHistory.forEach(item => aiHistory.push(item));
     aiSelectedIdx = -1;
-    renderHistoryStrip();
   }
 
   // Research data (v6+). Absent in v5 files, which simply resume with empty ones —
@@ -4129,25 +3572,8 @@ function wireButtons() {
   // Slides
   document.getElementById('add-slide-btn').onclick = addSlide;
 
-  // Pip drawer (+ legacy AI generator controls, UI hidden)
+  // Pip drawer
   document.getElementById('pip-drawer-close').onclick  = closePipDrawer;
-  document.getElementById('ai-generate-btn').onclick  = generateAiImage;
-  document.getElementById('ai-improve-btn').onclick   = modifyAiImage;
-  document.getElementById('ai-add-canvas-btn').onclick = () => {
-    if (S.aiImgSrc) {
-      const histItem = (aiSelectedIdx >= 0) ? aiHistory[aiSelectedIdx] : null;
-      addImageSrc(S.aiImgSrc, histItem?.historyId);
-      logAction(histItem?.historyId, 'added_to_canvas');
-      closePipDrawer();
-      markDirty();
-    }
-  };
-  document.getElementById('ai-strength-range').addEventListener('input', e => {
-    document.getElementById('ai-strength-label').textContent = e.target.value + '%';
-  });
-  document.getElementById('ai-prompt-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generateAiImage(); }
-  });
 }
 
 /* ═══════════════════════════════════════════════
