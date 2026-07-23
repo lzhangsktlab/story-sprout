@@ -21,7 +21,7 @@
 
 StorySprout Studio is a kid-friendly storybook maker that runs entirely in the browser — no install, no build step, no framework. Children describe the pictures they imagine, and **Pip**, a conversational AI illustrator, draws them right onto the canvas. They can arrange text and shapes, build a story across multiple slides, and save everything to a local folder.
 
-It doubles as a research tool for studying how children learn to write and refine prompts (see [`RESEARCH_DATA.md`](RESEARCH_DATA.md)).
+It doubles as a research tool for studying how children learn to **describe and refine their scenes** — they never write the prompt themselves; they describe a picture and Pip composes it (see [`RESEARCH_DATA.md`](RESEARCH_DATA.md)).
 
 ## 🎨 Features
 
@@ -40,7 +40,7 @@ The browser app never holds any API keys. All AI calls go through a small **Clou
 ```mermaid
 flowchart LR
     A["🧒 Browser app<br/>(workshop-plugin.html)<br/>no API key"] -->|"HTTPS (CORS-locked)"| B["☁️ Cloudflare Worker<br/>(pip-worker.js)<br/>holds OPENAI_API_KEY"]
-    B -->|"chat + images"| C["🤖 OpenAI<br/>gpt-4o-mini · gpt-image-2"]
+    B -->|"chat + images"| C["🤖 OpenAI<br/>gpt-5.4-mini · gpt-image-2"]
 ```
 
 - **Frontend:** one HTML file (inline CSS + JS), served as static files (GitHub Pages or opened locally).
@@ -207,7 +207,7 @@ The Worker exposes:
 ## 🧰 Tech stack
 
 - **[Fabric.js 5.3.1](http://fabricjs.com/)** — canvas objects, serialization
-- **[OpenAI](https://platform.openai.com/)** — `gpt-4o-mini` (chat) + `gpt-image-2` (images)
+- **[OpenAI](https://platform.openai.com/)** — `gpt-5.4-mini` (chat) + `gpt-image-2` (images)
 - **[Cloudflare Workers](https://workers.cloudflare.com/)** — key-safe API proxy + zero-knowledge sync relay
 - **[Cloudflare R2](https://developers.cloudflare.com/r2/)** — encrypted blob storage for Teacher Mode
 - **WebCrypto** — PBKDF2 → HKDF → AES-GCM, all in the browser
