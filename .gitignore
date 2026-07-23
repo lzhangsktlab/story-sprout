@@ -7,6 +7,8 @@ scribe_audit_v2_out_*/
 run_config.json
 transport_retries.json
 
+__pycache__/
+
 # Local noise
 .DS_Store
 .playwright-mcp/
