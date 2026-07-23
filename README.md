@@ -1,16 +1,17 @@
 <div align="center">
 
-# 🌱 Storybook Workshop
+# 🌱 StorySprout Studio
 
 **A single-file, client-side web app where kids create multi-slide illustrated stories — with Pip, a friendly AI illustrator.**
 
-[![Open the Workshop](https://img.shields.io/badge/🎨_Open_the_Workshop-for_kids-7C5CFF?style=for-the-badge)](https://lzhangsktlab.github.io/story-sprout/workshop-plugin.html)
+[![Open the Studio](https://img.shields.io/badge/🎨_Open_the_Studio-for_kids-7C5CFF?style=for-the-badge)](https://lzhangsktlab.github.io/story-sprout/workshop-plugin.html)
 [![Open Teacher Mode](https://img.shields.io/badge/🍎_Open_Teacher_Mode-for_teachers-38B48A?style=for-the-badge)](https://lzhangsktlab.github.io/story-sprout/teacher.html)
 
 ![No build step](https://img.shields.io/badge/build-none-success?style=flat-square)
 ![Client-side](https://img.shields.io/badge/runs-100%25_in_browser-blue?style=flat-square)
 ![Fabric.js](https://img.shields.io/badge/canvas-Fabric.js_5.3.1-orange?style=flat-square)
 ![AI](https://img.shields.io/badge/AI-OpenAI_gpt--image--2-10A37F?style=flat-square)
+![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
 </div>
 
@@ -18,14 +19,13 @@
 
 ## ✨ What is this?
 
-Storybook Workshop is a kid-friendly storybook maker that runs entirely in the browser — no install, no build step, no framework. Children describe the pictures they imagine, and **Pip**, a conversational AI illustrator, draws them right onto the canvas. They can arrange text and shapes, build a story across multiple slides, and save everything to a local folder.
+StorySprout Studio is a kid-friendly storybook maker that runs entirely in the browser — no install, no build step, no framework. Children describe the pictures they imagine, and **Pip**, a conversational AI illustrator, draws them right onto the canvas. They can arrange text and shapes, build a story across multiple slides, and save everything to a local folder.
 
 It doubles as a research tool for studying how children learn to write and refine prompts (see [`RESEARCH_DATA.md`](RESEARCH_DATA.md)).
 
 ## 🎨 Features
 
 - **🖌️ Pip, the conversational illustrator** — chat with Pip in plain language. It asks about your idea, draws it when it has enough detail, and asks *"Is this the picture you imagined?"* so kids reflect and refine. Place a revision **side-by-side** with the old one to compare, and tell Pip to remove the one you don't want.
-- **🤖 AI Image drawer** — a more direct generate/modify panel (style + quality controls) powered by OpenAI.
 - **🧩 Canvas editor** — text boxes, shapes, and images on a Fabric.js canvas with move/scale/rotate, layering, and alignment.
 - **📚 Multi-slide stories** — build a picture book one slide at a time, with thumbnails.
 - **↩️ Undo / redo** — per-slide history (up to 50 steps).
@@ -45,6 +45,39 @@ flowchart LR
 
 - **Frontend:** one HTML file (inline CSS + JS), served as static files (GitHub Pages or opened locally).
 - **Backend:** a Cloudflare Worker proxy — the only place the API key lives. Adds CORS lock-down, a gentle anti-spam rate limit, and child-safety guardrails.
+
+## 🔬 Research artifacts
+
+This repo is also the artifact for a study of **how agency is split between the child and the model** — in particular Pip's *scribe* behaviour: does the picture prompt carry the child's own words, typos and all, or does the model quietly rewrite them?
+
+**Paper:** _(link TBD — not yet public)_ · background: [`PAPER_REFERENCE.md`](PAPER_REFERENCE.md).
+
+Pip's chat **contract** (the `PIP_SYSTEM` prompt in `pip-worker.js`) and its **model** were chosen by a reproducible audit whose inputs and outputs are committed here, not summarized away:
+
+| Path | What it is |
+|---|---|
+| `scribe_audit.py`, `scribe_audit_ext.py` | v1 harness (2-turn sequences) and its 200-turn extension |
+| `scribe_audit_v2.py` | development suite — 50 four-turn sequences, used for **model selection** |
+| `scribe_audit_v3_heldout.py` | **held-out verification** harness — 60 all-new sequences, frozen config, `--rescore` mode |
+| `model_selection_tests/` | the eight archived selection runs (+ its own `README.md`) |
+| `scribe_audit_v3_heldout_out/` | the verification run — 3 reps × {original, re-scored, pass-1} + `run_config.json` + `PROTOCOL.md` |
+
+**Frozen final numbers** — held-out suite, `gpt-5.4-mini` at `reasoning_effort: low`, against the frozen contract (`PIP_SYSTEM` sha256 `d01f624b…`), 60 unseen four-turn sequences × 3 stochastic reps:
+
+| Measure | Result |
+|---|---|
+| Verbatim (every seeded typo survives) | **240 / 240** ×3 |
+| Unrequested additions flagged | **0 / 720** |
+| Supplied detail omitted flagged | **7 / 720** (all one disclosed sequence, H56) |
+| Interaction rules (draw/ask/removal/compliment) | **84 / 84** |
+
+The deterministic scorer flags *candidates*; flagged lines are adjudicated on the paper side. After the run, two ruler bugs were fixed and **everything re-scored deterministically from the stored transcripts** — no new model calls. Reproduce that pass offline:
+
+```bash
+python3 scribe_audit_v3_heldout.py --rescore
+```
+
+> The audit **selected** `gpt-5.4-mini`; the public demo currently still runs the previous chat model pending a redeploy of the Worker.
 
 ## 🍎 Teacher Mode
 
@@ -110,11 +143,11 @@ Class folder/
 | Path | What it is |
 |---|---|
 | `index.html` | Entry point — redirects to the current app |
-| `workshop-plugin.html` | **The app** (Pip + OpenAI drawer) — current version |
+| `workshop-plugin.html` | **The app** — Pip, the conversational illustrator |
 | `teacher.html` | **Teacher Mode dashboard** — create teams, collect student work |
 | `sprout-sync.js` | Shared crypto + content-addressing + relay client (used by **both** pages) |
 | `sprout-sync-test.html` | Test harness for the above — open it and click *Run tests* |
-| `cloudflare-worker/pip-worker.js` | **OpenAI proxy** for Pip + the image drawer, **and** the sync relay |
+| `cloudflare-worker/pip-worker.js` | **OpenAI proxy** for Pip **and** the sync relay |
 | `PIP_SCOPE.md` | Pip's behavior specification (source of truth) |
 | `RESEARCH_DATA.md` | Schema for the data captured for prompt-writing research |
 | `STYLE_CONSISTENCY.md` | Notes on keeping art style consistent across a story |
@@ -194,6 +227,10 @@ The Worker exposes:
 **Two things not to be coy about:**
 - `teacher.json` holds every team's secret code in plaintext on the teacher's disk. It has to — those codes *are* the decryption keys. **Losing that file means losing the class's work irrecoverably**, and no one can recover it for you; that is what zero-knowledge means. Keep it off shared drives.
 - A team's secret code protects that team's work. It is generated with real entropy and never chosen by a child, but it is still a short human-typeable string. It is proof against a curious classmate, not against a determined attacker who already holds the ciphertext.
+
+## 📄 License
+
+[MIT](LICENSE) — non-commercial research project, released as-is. The MIT terms include the standard warranty disclaimer and limitation of liability.
 
 ---
 
