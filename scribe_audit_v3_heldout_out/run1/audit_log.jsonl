@@ -1,0 +1,6 @@
+{"seq": "H15", "turn": 3, "kind": "omission", "tokens": ["shark"], "prompt": "a walrus dentist checking a shark's smile, a bright round lamp over the dental chair, a bib with tiny fish patterns, a poster about brushing teeth on the wall", "rep": 1}
+{"seq": "H56", "turn": 2, "kind": "omission", "tokens": ["oak", "rope", "swing"], "prompt": "a small and cozy treehouse with fairy lights along the railing", "rep": 1}
+{"seq": "H56", "turn": 3, "kind": "omission", "tokens": ["oak", "rope", "swing"], "prompt": "a small and cozy treehouse with fairy lights along the railing and an owl mail slot on the door", "rep": 1}
+{"seq": "H60", "turn": 1, "kind": "omission", "tokens": ["lit", "paper"], "prompt": "a morning market in soft sunlight", "rep": 1}
+{"seq": "H60", "turn": 2, "kind": "omission", "tokens": ["lit", "paper"], "prompt": "a morning market in soft sunlight, stalls of fruit stacked in pyramids", "rep": 1}
+{"seq": "H60", "turn": 3, "kind": "omission", "tokens": ["lit", "paper"], "prompt": "a morning market in soft sunlight, stalls of fruit stacked in pyramids, a cat weaving between shoppers' feet", "rep": 1}
