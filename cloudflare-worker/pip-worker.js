@@ -244,19 +244,25 @@ async function handleChat(body, env) {
 
       // Stated rather than left to the default, for the same reason store:false is:
       // the default is 'medium' today and could move.
-      // 'none' because a child is sitting there waiting: measured on this prompt,
-      // none 1.1s / low 1.4s / medium 1.7-2.2s per turn. Pip's job looks mechanical —
-      // route the message to draw-or-ask, copy the child's words into a field — which
-      // is the schema-shaped work the docs point 'none' at.
+      // Pip's job looks mechanical — route the message to draw-or-ask, copy the
+      // child's words into a field — which is the schema-shaped work the docs point
+      // 'none' at. It was measured rather than assumed. Full 40-sequence contract
+      // audit, same prompt (sha d01f624b), 44 draw turns:
       //
-      // The audit was re-run at this setting rather than assumed, and it is NOT free.
-      // Routing survived intact (interaction rules 62/62 either way), but verbatim
-      // fidelity slipped: 44/44 seeded typos survived at 'medium', 42/44 at 'none' —
-      // "lighthous" became "lighthouse", "dinasor" became "dinosaur", and one child's
-      // "pet" was dropped. Copying a child's words back unchanged is the whole point
-      // of the scribe rule, so that is the cost being paid for ~0.6s a turn. If the
-      // study cares more about fidelity than latency, put this back to 'medium'.
-      reasoning_effort: 'none',
+      //   effort    verbatim   interaction rules   84-turn wall clock
+      //   none        42/44          62/62               127s
+      //   low         44/44          62/62               129s
+      //   medium      44/44          62/62               (not timed)
+      //
+      // 'none' loses the child's own spelling: "lighthous" came back "lighthouse",
+      // "dinasor" came back "dinosaur". Carrying those back unchanged is the entire
+      // point of the scribe rule. 'low' holds fidelity at full marks and costs about
+      // two seconds across eighty-four turns — the single-turn gap that looked like
+      // 0.3s in a one-shot probe did not survive a full run.
+      //
+      // So: 'low' is the floor that still keeps the child's words intact. Do not drop
+      // to 'none' for speed without re-running the audit — the speed is not there.
+      reasoning_effort: 'low',
       response_format: { type: 'json_object' },
 
       // Never let OpenAI keep these turns. This is already the default for
