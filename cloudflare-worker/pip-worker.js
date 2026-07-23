@@ -48,7 +48,7 @@ const CHAT_URL       = 'https://api.openai.com/v1/chat/completions';
 const IMAGE_URL      = 'https://api.openai.com/v1/images/generations';
 const IMAGE_EDIT_URL = 'https://api.openai.com/v1/images/edits';
 
-const CHAT_MODEL  = 'gpt-4o-mini';   // conversation: fast + cheap
+const CHAT_MODEL  = 'gpt-5.6-luna';  // conversation: a reasoning model — see handleChat
 const IMAGE_MODEL = 'gpt-image-2';   // illustration generation
 
 // ── CORS: locked to this app's origins ───────────────────────────────────────
@@ -228,8 +228,27 @@ async function handleChat(body, env) {
     body: JSON.stringify({
       model: CHAT_MODEL,
       messages,
-      temperature: 0.5,      // lower = more consistent draw-vs-ask routing
-      max_tokens: 400,
+
+      // A reasoning model rejects both of the knobs this file used to set: it takes
+      // only the default temperature, and it counts reasoning tokens against the
+      // completion budget, so the parameter is named differently. Sending the old
+      // pair returns 400 on every turn — a model swap here is NOT a one-line change.
+      //   was: temperature: 0.5   // lower = more consistent draw-vs-ask routing
+      //   was: max_tokens: 400
+      // The 400 budget now has to cover reasoning as well as the reply, so a turn
+      // that thinks hard can be cut off mid-JSON; the parse below already treats
+      // that as "no answer" rather than throwing.
+      max_completion_tokens: 400,
+
+      // Stated rather than left to the default, for the same reason store:false is:
+      // the default is 'medium' today and could move. 'medium' is what a plain model
+      // swap gives you, so it is the honest baseline to measure first.
+      // Measured on this prompt: none 1.1s / low 1.4s / medium 1.7-2.2s per turn, and
+      // the reasoning tokens come out of the 400 budget above. A child waiting for Pip
+      // feels every one of those milliseconds, so 'low' or 'none' is worth testing —
+      // but the draw-vs-ask routing is the fragile part, so re-run the audit before
+      // dropping it, rather than assuming a cheaper setting is free.
+      reasoning_effort: 'medium',
       response_format: { type: 'json_object' },
 
       // Never let OpenAI keep these turns. This is already the default for
