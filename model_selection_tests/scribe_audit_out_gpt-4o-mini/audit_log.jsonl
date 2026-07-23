@@ -1,0 +1,124 @@
+{"seq": "S01", "turn": 0, "kind": "typo-lost", "typos": ["castel", "friendlly", "scarfe"], "prompt": "a friendly dragon with a blue scarf flying over a castle"}
+{"seq": "S01", "turn": 0, "kind": "omission", "tokens": ["castel", "friendlly", "scarfe"], "prompt": "a friendly dragon with a blue scarf flying over a castle"}
+{"seq": "S01", "turn": 0, "kind": "addition", "tokens": ["castle", "friendly", "scarf"], "prompt": "a friendly dragon with a blue scarf flying over a castle"}
+{"seq": "S01", "turn": 1, "kind": "typo-lost", "typos": ["castel", "friendlly", "scarfe"], "prompt": "a friendly dragon with a blue scarf flying over a purple castle with a small moon in the sky"}
+{"seq": "S01", "turn": 1, "kind": "omission", "tokens": ["castel", "friendlly", "scarfe"], "prompt": "a friendly dragon with a blue scarf flying over a purple castle with a small moon in the sky"}
+{"seq": "S01", "turn": 1, "kind": "addition", "tokens": ["castle", "friendly", "scarf", "sky"], "prompt": "a friendly dragon with a blue scarf flying over a purple castle with a small moon in the sky"}
+{"seq": "S02", "turn": 0, "kind": "typo-lost", "typos": ["aples", "octopuss"], "prompt": "a happy octopus juggling three red apples in a kitchen"}
+{"seq": "S02", "turn": 0, "kind": "omission", "tokens": ["aples", "octopuss"], "prompt": "a happy octopus juggling three red apples in a kitchen"}
+{"seq": "S02", "turn": 0, "kind": "addition", "tokens": ["apples", "octopus"], "prompt": "a happy octopus juggling three red apples in a kitchen"}
+{"seq": "S02", "turn": 1, "kind": "typo-lost", "typos": ["aples", "octopuss"], "prompt": "a happy octopus wearing a chef hat juggling three red apples in a kitchen"}
+{"seq": "S02", "turn": 1, "kind": "omission", "tokens": ["aples", "octopuss"], "prompt": "a happy octopus wearing a chef hat juggling three red apples in a kitchen"}
+{"seq": "S02", "turn": 1, "kind": "addition", "tokens": ["apples", "octopus", "wearing"], "prompt": "a happy octopus wearing a chef hat juggling three red apples in a kitchen"}
+{"seq": "S03", "turn": 0, "kind": "typo-lost", "typos": ["knite", "sheild"], "prompt": "a tiny mouse knight with a silver shield standing on a mushroom"}
+{"seq": "S03", "turn": 0, "kind": "omission", "tokens": ["knite", "sheild"], "prompt": "a tiny mouse knight with a silver shield standing on a mushroom"}
+{"seq": "S03", "turn": 0, "kind": "addition", "tokens": ["knight", "shield"], "prompt": "a tiny mouse knight with a silver shield standing on a mushroom"}
+{"seq": "S03", "turn": 1, "kind": "typo-lost", "typos": ["knite", "sheild"], "prompt": "a tiny mouse knight with a silver shield standing on a mushroom, wearing a red cape blowing in the wind"}
+{"seq": "S03", "turn": 1, "kind": "omission", "tokens": ["knite", "sheild"], "prompt": "a tiny mouse knight with a silver shield standing on a mushroom, wearing a red cape blowing in the wind"}
+{"seq": "S03", "turn": 1, "kind": "addition", "tokens": ["knight", "shield", "wearing"], "prompt": "a tiny mouse knight with a silver shield standing on a mushroom, wearing a red cape blowing in the wind"}
+{"seq": "S04", "turn": 0, "kind": "typo-lost", "typos": ["peguins", "sandcasle"], "prompt": "two penguins building a sandcastle on a snowy beach"}
+{"seq": "S04", "turn": 0, "kind": "omission", "tokens": ["peguins", "sandcasle"], "prompt": "two penguins building a sandcastle on a snowy beach"}
+{"seq": "S04", "turn": 0, "kind": "addition", "tokens": ["penguins", "sandcastle"], "prompt": "two penguins building a sandcastle on a snowy beach"}
+{"seq": "S04", "turn": 1, "kind": "typo-lost", "typos": ["peguins", "sandcasle"], "prompt": "two penguins building a sandcastle on a snowy beach with a yellow bucket next to the sandcastle"}
+{"seq": "S04", "turn": 1, "kind": "omission", "tokens": ["peguins", "sandcasle"], "prompt": "two penguins building a sandcastle on a snowy beach with a yellow bucket next to the sandcastle"}
+{"seq": "S04", "turn": 1, "kind": "addition", "tokens": ["penguins", "sandcastle"], "prompt": "two penguins building a sandcastle on a snowy beach with a yellow bucket next to the sandcastle"}
+{"seq": "S05", "turn": 0, "kind": "expected-draw", "got": {"reply": "That's a fun idea! What color is the giraffe, or what kind of roller skates does it have?", "ready": false, "image_prompt": "", "remove_old": false}}
+{"seq": "S05", "turn": 1, "kind": "typo-lost", "typos": ["girafe", "libary", "rollar"], "prompt": "a giraffe wearing roller skates in a library with very tall shelves and a ladder"}
+{"seq": "S05", "turn": 1, "kind": "omission", "tokens": ["girafe", "libary", "rollar"], "prompt": "a giraffe wearing roller skates in a library with very tall shelves and a ladder"}
+{"seq": "S05", "turn": 1, "kind": "addition", "tokens": ["giraffe", "library", "roller"], "prompt": "a giraffe wearing roller skates in a library with very tall shelves and a ladder"}
+{"seq": "S06", "turn": 0, "kind": "expected-draw", "got": {"reply": "Fun idea! What color is the cat, or does it have any special features?", "ready": false, "image_prompt": "", "remove_old": false}}
+{"seq": "S06", "turn": 1, "kind": "typo-lost", "typos": ["astronot"], "prompt": "a brave astronaut cat floating near a green planet with two small moons behind it"}
+{"seq": "S06", "turn": 1, "kind": "omission", "tokens": ["astronot"], "prompt": "a brave astronaut cat floating near a green planet with two small moons behind it"}
+{"seq": "S06", "turn": 1, "kind": "addition", "tokens": ["astronaut"], "prompt": "a brave astronaut cat floating near a green planet with two small moons behind it"}
+{"seq": "S07", "turn": 0, "kind": "typo-lost", "typos": ["purpel"], "prompt": "a purple elephant painting a picture of a sunflower"}
+{"seq": "S07", "turn": 0, "kind": "omission", "tokens": ["purpel"], "prompt": "a purple elephant painting a picture of a sunflower"}
+{"seq": "S07", "turn": 0, "kind": "addition", "tokens": ["purple"], "prompt": "a purple elephant painting a picture of a sunflower"}
+{"seq": "S07", "turn": 1, "kind": "typo-lost", "typos": ["purpel"], "prompt": "a purple elephant painting a picture of a giant sunflower, bigger than the elephant"}
+{"seq": "S07", "turn": 1, "kind": "omission", "tokens": ["purpel"], "prompt": "a purple elephant painting a picture of a giant sunflower, bigger than the elephant"}
+{"seq": "S07", "turn": 1, "kind": "addition", "tokens": ["purple"], "prompt": "a purple elephant painting a picture of a giant sunflower, bigger than the elephant"}
+{"seq": "S08", "turn": 0, "kind": "typo-lost", "typos": ["cardbord"], "prompt": "a robot made of cardboard boxes watering a garden"}
+{"seq": "S08", "turn": 0, "kind": "omission", "tokens": ["cardbord"], "prompt": "a robot made of cardboard boxes watering a garden"}
+{"seq": "S08", "turn": 0, "kind": "addition", "tokens": ["cardboard"], "prompt": "a robot made of cardboard boxes watering a garden"}
+{"seq": "S08", "turn": 1, "kind": "typo-lost", "typos": ["cardbord"], "prompt": "a robot made of cardboard boxes watering a garden with a rainbow over it"}
+{"seq": "S08", "turn": 1, "kind": "omission", "tokens": ["cardbord"], "prompt": "a robot made of cardboard boxes watering a garden with a rainbow over it"}
+{"seq": "S08", "turn": 1, "kind": "addition", "tokens": ["cardboard"], "prompt": "a robot made of cardboard boxes watering a garden with a rainbow over it"}
+{"seq": "S09", "turn": 0, "kind": "expected-draw", "got": {"reply": "Fun idea! What color is the mermaid's tail, or where is she reading the book underwater?", "ready": false, "image_prompt": "", "remove_old": false}}
+{"seq": "S09", "turn": 1, "kind": "typo-lost", "typos": ["mermade"], "prompt": "a mermaid with curly orange hair reading a book underwater, with a turtle looking over her shoulder"}
+{"seq": "S09", "turn": 1, "kind": "omission", "tokens": ["mermade"], "prompt": "a mermaid with curly orange hair reading a book underwater, with a turtle looking over her shoulder"}
+{"seq": "S09", "turn": 1, "kind": "addition", "tokens": ["mermaid"], "prompt": "a mermaid with curly orange hair reading a book underwater, with a turtle looking over her shoulder"}
+{"seq": "S10", "turn": 0, "kind": "typo-lost", "typos": ["vilage"], "prompt": "a night sky full of stars over a quiet village and one bright comet"}
+{"seq": "S10", "turn": 0, "kind": "omission", "tokens": ["vilage"], "prompt": "a night sky full of stars over a quiet village and one bright comet"}
+{"seq": "S10", "turn": 0, "kind": "addition", "tokens": ["village"], "prompt": "a night sky full of stars over a quiet village and one bright comet"}
+{"seq": "S10", "turn": 1, "kind": "typo-lost", "typos": ["vilage"], "prompt": "a night sky full of stars over a quiet village with one bright comet that has a long, golden tail"}
+{"seq": "S10", "turn": 1, "kind": "omission", "tokens": ["comet's", "vilage"], "prompt": "a night sky full of stars over a quiet village with one bright comet that has a long, golden tail"}
+{"seq": "S10", "turn": 1, "kind": "addition", "tokens": ["has", "village"], "prompt": "a night sky full of stars over a quiet village with one bright comet that has a long, golden tail"}
+{"seq": "S11", "turn": 0, "kind": "expected-draw", "got": {"reply": "That sounds delightful! What color is the fox and the rabbit?", "ready": false, "image_prompt": "", "remove_old": false}}
+{"seq": "S11", "turn": 1, "kind": "typo-lost", "typos": ["rabit"], "prompt": "a fox and a rabbit having a tea party on a tree stump with tiny cups and a teapot with steam"}
+{"seq": "S11", "turn": 1, "kind": "omission", "tokens": ["rabit"], "prompt": "a fox and a rabbit having a tea party on a tree stump with tiny cups and a teapot with steam"}
+{"seq": "S11", "turn": 1, "kind": "addition", "tokens": ["rabbit"], "prompt": "a fox and a rabbit having a tea party on a tree stump with tiny cups and a teapot with steam"}
+{"seq": "S12", "turn": 0, "kind": "typo-lost", "typos": ["fountin"], "prompt": "a whale wearing a top hat spouting water like a fountain"}
+{"seq": "S12", "turn": 0, "kind": "omission", "tokens": ["fountin"], "prompt": "a whale wearing a top hat spouting water like a fountain"}
+{"seq": "S12", "turn": 0, "kind": "addition", "tokens": ["fountain"], "prompt": "a whale wearing a top hat spouting water like a fountain"}
+{"seq": "S12", "turn": 1, "kind": "typo-lost", "typos": ["fountin"], "prompt": "a whale wearing a top hat spouting water like a fountain with a small boat riding the fountain water"}
+{"seq": "S12", "turn": 1, "kind": "omission", "tokens": ["fountin"], "prompt": "a whale wearing a top hat spouting water like a fountain with a small boat riding the fountain water"}
+{"seq": "S12", "turn": 1, "kind": "addition", "tokens": ["fountain"], "prompt": "a whale wearing a top hat spouting water like a fountain with a small boat riding the fountain water"}
+{"seq": "S13", "turn": 0, "kind": "typo-lost", "typos": ["squirel"], "prompt": "a squirrel pilot flying a paper airplane over a park"}
+{"seq": "S13", "turn": 0, "kind": "omission", "tokens": ["squirel"], "prompt": "a squirrel pilot flying a paper airplane over a park"}
+{"seq": "S13", "turn": 0, "kind": "addition", "tokens": ["squirrel"], "prompt": "a squirrel pilot flying a paper airplane over a park"}
+{"seq": "S13", "turn": 1, "kind": "typo-lost", "typos": ["squirel"], "prompt": "a squirrel pilot with goggles flying a paper airplane over a park"}
+{"seq": "S13", "turn": 1, "kind": "omission", "tokens": ["squirel"], "prompt": "a squirrel pilot with goggles flying a paper airplane over a park"}
+{"seq": "S13", "turn": 1, "kind": "addition", "tokens": ["squirrel"], "prompt": "a squirrel pilot with goggles flying a paper airplane over a park"}
+{"seq": "S14", "turn": 0, "kind": "typo-lost", "typos": ["monstor"], "prompt": "a friendly monster with three eyes baking cookies"}
+{"seq": "S14", "turn": 0, "kind": "omission", "tokens": ["monstor"], "prompt": "a friendly monster with three eyes baking cookies"}
+{"seq": "S14", "turn": 0, "kind": "addition", "tokens": ["monster"], "prompt": "a friendly monster with three eyes baking cookies"}
+{"seq": "S14", "turn": 1, "kind": "typo-lost", "typos": ["monstor"], "prompt": "a friendly monster with three eyes baking star-shaped cookies, wearing oven mitts"}
+{"seq": "S14", "turn": 1, "kind": "omission", "tokens": ["monstor"], "prompt": "a friendly monster with three eyes baking star-shaped cookies, wearing oven mitts"}
+{"seq": "S14", "turn": 1, "kind": "addition", "tokens": ["monster", "wearing"], "prompt": "a friendly monster with three eyes baking star-shaped cookies, wearing oven mitts"}
+{"seq": "S15", "turn": 0, "kind": "typo-lost", "typos": ["lighthous"], "prompt": "a lighthouse on a cliff with waves crashing below at sunset"}
+{"seq": "S15", "turn": 0, "kind": "omission", "tokens": ["lighthous"], "prompt": "a lighthouse on a cliff with waves crashing below at sunset"}
+{"seq": "S15", "turn": 0, "kind": "addition", "tokens": ["lighthouse"], "prompt": "a lighthouse on a cliff with waves crashing below at sunset"}
+{"seq": "S15", "turn": 1, "kind": "typo-lost", "typos": ["lighthous"], "prompt": "a lighthouse on a cliff with waves crashing below at sunset, with seagulls flying near the lighthouse"}
+{"seq": "S15", "turn": 1, "kind": "omission", "tokens": ["lighthous"], "prompt": "a lighthouse on a cliff with waves crashing below at sunset, with seagulls flying near the lighthouse"}
+{"seq": "S15", "turn": 1, "kind": "addition", "tokens": ["lighthouse"], "prompt": "a lighthouse on a cliff with waves crashing below at sunset, with seagulls flying near the lighthouse"}
+{"seq": "S16", "turn": 0, "kind": "expected-draw", "got": {"reply": "That sounds magical! What color is the princess, and what type of dinosaur is she walking with?", "ready": false, "image_prompt": "", "remove_old": false}}
+{"seq": "S16", "turn": 1, "kind": "typo-lost", "typos": ["dinasor"], "prompt": "a princess with a small green dinosaur with spots walking through a flower field"}
+{"seq": "S16", "turn": 1, "kind": "omission", "tokens": ["dinasor", "pet"], "prompt": "a princess with a small green dinosaur with spots walking through a flower field"}
+{"seq": "S16", "turn": 1, "kind": "addition", "tokens": ["dinosaur"], "prompt": "a princess with a small green dinosaur with spots walking through a flower field"}
+{"seq": "S17", "turn": 0, "kind": "typo-lost", "typos": ["chalkbord"], "prompt": "an owl teacher writing numbers on a chalkboard at night school"}
+{"seq": "S17", "turn": 0, "kind": "omission", "tokens": ["chalkbord"], "prompt": "an owl teacher writing numbers on a chalkboard at night school"}
+{"seq": "S17", "turn": 0, "kind": "addition", "tokens": ["chalkboard"], "prompt": "an owl teacher writing numbers on a chalkboard at night school"}
+{"seq": "S17", "turn": 1, "kind": "typo-lost", "typos": ["chalkbord"], "prompt": "an owl teacher writing numbers on a chalkboard at night school with three young owls at desks taking notes"}
+{"seq": "S17", "turn": 1, "kind": "omission", "tokens": ["chalkbord"], "prompt": "an owl teacher writing numbers on a chalkboard at night school with three young owls at desks taking notes"}
+{"seq": "S17", "turn": 1, "kind": "addition", "tokens": ["chalkboard"], "prompt": "an owl teacher writing numbers on a chalkboard at night school with three young owls at desks taking notes"}
+{"seq": "S18", "turn": 0, "kind": "typo-lost", "typos": ["orang"], "prompt": "a pirate ship sailing on a sea of orange juice"}
+{"seq": "S18", "turn": 0, "kind": "omission", "tokens": ["orang"], "prompt": "a pirate ship sailing on a sea of orange juice"}
+{"seq": "S18", "turn": 0, "kind": "addition", "tokens": ["orange"], "prompt": "a pirate ship sailing on a sea of orange juice"}
+{"seq": "S18", "turn": 1, "kind": "typo-lost", "typos": ["orang"], "prompt": "a pirate ship sailing on a sea of orange juice with an island made of pancakes in the distance"}
+{"seq": "S18", "turn": 1, "kind": "omission", "tokens": ["orang"], "prompt": "a pirate ship sailing on a sea of orange juice with an island made of pancakes in the distance"}
+{"seq": "S18", "turn": 1, "kind": "addition", "tokens": ["orange"], "prompt": "a pirate ship sailing on a sea of orange juice with an island made of pancakes in the distance"}
+{"seq": "S19", "turn": 0, "kind": "typo-lost", "typos": ["gitar"], "prompt": "a snowman playing a guitar by a campfire"}
+{"seq": "S19", "turn": 0, "kind": "omission", "tokens": ["gitar"], "prompt": "a snowman playing a guitar by a campfire"}
+{"seq": "S19", "turn": 0, "kind": "addition", "tokens": ["guitar"], "prompt": "a snowman playing a guitar by a campfire"}
+{"seq": "S19", "turn": 1, "kind": "typo-lost", "typos": ["gitar"], "prompt": "a snowman wearing a wooly scarf and earmuffs playing a guitar by a campfire"}
+{"seq": "S19", "turn": 1, "kind": "omission", "tokens": ["gitar"], "prompt": "a snowman wearing a wooly scarf and earmuffs playing a guitar by a campfire"}
+{"seq": "S19", "turn": 1, "kind": "addition", "tokens": ["guitar", "wearing"], "prompt": "a snowman wearing a wooly scarf and earmuffs playing a guitar by a campfire"}
+{"seq": "S20", "turn": 0, "kind": "typo-lost", "typos": ["curtins"], "prompt": "a ballerina hippo dancing on a stage with red curtains"}
+{"seq": "S20", "turn": 0, "kind": "omission", "tokens": ["curtins"], "prompt": "a ballerina hippo dancing on a stage with red curtains"}
+{"seq": "S20", "turn": 0, "kind": "addition", "tokens": ["curtains"], "prompt": "a ballerina hippo dancing on a stage with red curtains"}
+{"seq": "S20", "turn": 1, "kind": "typo-lost", "typos": ["curtins"], "prompt": "a ballerina hippo dancing on a stage with red curtains, with a spotlight shining on the hippo"}
+{"seq": "S20", "turn": 1, "kind": "omission", "tokens": ["curtins"], "prompt": "a ballerina hippo dancing on a stage with red curtains, with a spotlight shining on the hippo"}
+{"seq": "S20", "turn": 1, "kind": "addition", "tokens": ["curtains"], "prompt": "a ballerina hippo dancing on a stage with red curtains, with a spotlight shining on the hippo"}
+{"seq": "S21", "turn": 0, "kind": "typo-lost", "typos": ["wizzard"], "prompt": "a wizard frog stirring a glowing potion in a swamp"}
+{"seq": "S21", "turn": 0, "kind": "omission", "tokens": ["wizzard"], "prompt": "a wizard frog stirring a glowing potion in a swamp"}
+{"seq": "S21", "turn": 0, "kind": "addition", "tokens": ["wizard"], "prompt": "a wizard frog stirring a glowing potion in a swamp"}
+{"seq": "S21", "turn": 1, "kind": "typo-lost", "typos": ["wizzard"], "prompt": "a wizard frog stirring a glowing potion in a swamp with bubbles floating up like little lanterns"}
+{"seq": "S21", "turn": 1, "kind": "omission", "tokens": ["float", "wizzard"], "prompt": "a wizard frog stirring a glowing potion in a swamp with bubbles floating up like little lanterns"}
+{"seq": "S21", "turn": 1, "kind": "addition", "tokens": ["floating", "wizard"], "prompt": "a wizard frog stirring a glowing potion in a swamp with bubbles floating up like little lanterns"}
+{"seq": "S22", "turn": 0, "kind": "typo-lost", "typos": ["camal"], "prompt": "a camel wearing sunglasses drinking lemonade in the desert"}
+{"seq": "S22", "turn": 0, "kind": "omission", "tokens": ["camal"], "prompt": "a camel wearing sunglasses drinking lemonade in the desert"}
+{"seq": "S22", "turn": 0, "kind": "addition", "tokens": ["camel"], "prompt": "a camel wearing sunglasses drinking lemonade in the desert"}
+{"seq": "S22", "turn": 1, "kind": "typo-lost", "typos": ["camal"], "prompt": "a camel wearing sunglasses drinking lemonade in the desert, with a striped umbrella and a beach chair"}
+{"seq": "S22", "turn": 1, "kind": "omission", "tokens": ["camal"], "prompt": "a camel wearing sunglasses drinking lemonade in the desert, with a striped umbrella and a beach chair"}
+{"seq": "S22", "turn": 1, "kind": "addition", "tokens": ["camel"], "prompt": "a camel wearing sunglasses drinking lemonade in the desert, with a striped umbrella and a beach chair"}
+{"seq": "J03", "kind": "judgment-word-not-asked", "got": {"reply": "Let's keep our words kind \u2014 tell me one thing to change and I'll fix the picture.", "ready": false, "image_prompt": "", "remove_old": false}}
+{"seq": "R04", "kind": "removal", "want": false, "got": {"reply": "Okay \u2014 I'll keep the new one and remove the old one!", "ready": true, "image_prompt": "a train in the mountains with snow on the mountain tops", "remove_old": true}}

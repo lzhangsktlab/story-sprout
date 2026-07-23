@@ -1,0 +1,6 @@
+{"seq": "V18", "turn": 3, "kind": "addition", "tokens": ["has"], "prompt": "a pirate ship sailing on a sea of orang juice with an island made of pancakes in the distance, the ship has sails with red and white stripes, and a parrot holding a tiny treasure map"}
+{"seq": "V48", "turn": 1, "kind": "omission", "tokens": ["pumpkins"], "prompt": "a cat wearing a orange hat in a pumpkin patch"}
+{"seq": "V49", "turn": 2, "kind": "omission", "tokens": ["blue", "sunny"], "prompt": "a rainy day picnic under a gray sky, add a checkered blanket with sandwiches"}
+{"seq": "J04", "kind": "judgment-word-not-asked", "got": {"reply": "Tell me one thing to change, like the bird, the branch, or the background.", "ready": false, "image_prompt": "", "remove_old": false}}
+{"seq": "J06", "kind": "judgment-word-not-asked", "got": {"reply": "Tell me one thing to change, and I\u2019ll fix it.", "ready": false, "image_prompt": "", "remove_old": false}}
+{"seq": "J10", "kind": "judgment-word-not-asked", "got": {"reply": "Tell me one thing to change, and I\u2019ll fix the picture.", "ready": false, "image_prompt": "", "remove_old": false}}

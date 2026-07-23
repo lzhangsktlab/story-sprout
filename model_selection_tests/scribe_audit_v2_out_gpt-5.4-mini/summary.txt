@@ -1,0 +1,7 @@
+MODEL: gpt-5.4-mini  params={'reasoning_effort': 'low'}
+SCRIBE over 200 scored composition turns (0 turns did not draw where expected):
+  verbatim (all seeded typos so far survive): 200/200
+  unrequested addition flagged:               1/200
+  supplied detail omitted flagged:            2/200
+INTERACTION RULES: judgment 9/12 | bare-subject 6/6 | removal 6/6 | compliment 4/4  => combined 25/28
+(draw-when-detailed additionally held on 200/200 scribe turns)

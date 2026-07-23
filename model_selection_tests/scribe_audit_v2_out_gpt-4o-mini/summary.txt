@@ -1,0 +1,7 @@
+MODEL: gpt-4o-mini  params={}
+SCRIBE over 183 scored composition turns (17 turns did not draw where expected):
+  verbatim (all seeded typos so far survive): 65/183
+  unrequested addition flagged:               139/183
+  supplied detail omitted flagged:            132/183
+INTERACTION RULES: judgment 10/12 | bare-subject 6/6 | removal 6/6 | compliment 4/4  => combined 26/28
+(draw-when-detailed additionally held on 183/200 scribe turns)

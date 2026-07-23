@@ -1,0 +1,586 @@
+{
+ "S01": [
+  {
+   "reply": "Okay \u2014 I'll draw a friendly dragon with a blue scarf flying over a castle.",
+   "ready": true,
+   "image_prompt": "a friendly dragon with a blue scarf flying over a castle",
+   "remove_old": false
+  },
+  {
+   "reply": "Sure! I'll make the castle purple and add a small moon in the sky.",
+   "ready": true,
+   "image_prompt": "a friendly dragon with a blue scarf flying over a purple castle with a small moon in the sky",
+   "remove_old": false
+  }
+ ],
+ "S02": [
+  {
+   "reply": "Okay \u2014 I'll draw a happy octopus juggling three red apples in a kitchen!",
+   "ready": true,
+   "image_prompt": "a happy octopus juggling three red apples in a kitchen",
+   "remove_old": false
+  },
+  {
+   "reply": "Sure! I'll add a chef hat on the happy octopus juggling three red apples in a kitchen.",
+   "ready": true,
+   "image_prompt": "a happy octopus wearing a chef hat juggling three red apples in a kitchen",
+   "remove_old": false
+  }
+ ],
+ "S03": [
+  {
+   "reply": "That sounds adorable! I'll draw a tiny mouse knight with a silver shield standing on a mushroom.",
+   "ready": true,
+   "image_prompt": "a tiny mouse knight with a silver shield standing on a mushroom",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll add a red cape blowing in the wind for the mouse knight.",
+   "ready": true,
+   "image_prompt": "a tiny mouse knight with a silver shield standing on a mushroom, wearing a red cape blowing in the wind",
+   "remove_old": false
+  }
+ ],
+ "S04": [
+  {
+   "reply": "That sounds like a fun scene! I'll draw two penguins building a sandcastle on a snowy beach.",
+   "ready": true,
+   "image_prompt": "two penguins building a sandcastle on a snowy beach",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll add a yellow bucket next to the sandcastle.",
+   "ready": true,
+   "image_prompt": "two penguins building a sandcastle on a snowy beach with a yellow bucket next to the sandcastle",
+   "remove_old": false
+  }
+ ],
+ "S05": [
+  {
+   "reply": "That's a fun idea! What color is the giraffe, or what kind of roller skates does it have?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a giraffe wearing roller skates in a library with very tall shelves and a ladder.",
+   "ready": true,
+   "image_prompt": "a giraffe wearing roller skates in a library with very tall shelves and a ladder",
+   "remove_old": false
+  }
+ ],
+ "S06": [
+  {
+   "reply": "Fun idea! What color is the cat, or does it have any special features?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a brave astronaut cat floating near a green planet with two small moons behind it.",
+   "ready": true,
+   "image_prompt": "a brave astronaut cat floating near a green planet with two small moons behind it",
+   "remove_old": false
+  }
+ ],
+ "S07": [
+  {
+   "reply": "What a fun idea! I'll draw a purple elephant painting a picture of a sunflower.",
+   "ready": true,
+   "image_prompt": "a purple elephant painting a picture of a sunflower",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll make the sunflower giant, bigger than the elephant.",
+   "ready": true,
+   "image_prompt": "a purple elephant painting a picture of a giant sunflower, bigger than the elephant",
+   "remove_old": false
+  }
+ ],
+ "S08": [
+  {
+   "reply": "Okay \u2014 I'll draw a robot made of cardboard boxes watering a garden.",
+   "ready": true,
+   "image_prompt": "a robot made of cardboard boxes watering a garden",
+   "remove_old": false
+  },
+  {
+   "reply": "Sure! I'll add a rainbow over the garden.",
+   "ready": true,
+   "image_prompt": "a robot made of cardboard boxes watering a garden with a rainbow over it",
+   "remove_old": false
+  }
+ ],
+ "S09": [
+  {
+   "reply": "Fun idea! What color is the mermaid's tail, or where is she reading the book underwater?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a mermaid with curly orange hair reading a book underwater, and a turtle looking over her shoulder.",
+   "ready": true,
+   "image_prompt": "a mermaid with curly orange hair reading a book underwater, with a turtle looking over her shoulder",
+   "remove_old": false
+  }
+ ],
+ "S10": [
+  {
+   "reply": "Okay \u2014 I'll draw a night sky full of stars over a quiet village with one bright comet.",
+   "ready": true,
+   "image_prompt": "a night sky full of stars over a quiet village and one bright comet",
+   "remove_old": false
+  },
+  {
+   "reply": "Got it! I'll make the comet's tail long and golden.",
+   "ready": true,
+   "image_prompt": "a night sky full of stars over a quiet village with one bright comet that has a long, golden tail",
+   "remove_old": false
+  }
+ ],
+ "S11": [
+  {
+   "reply": "That sounds delightful! What color is the fox and the rabbit?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a fox and a rabbit having a tea party on a tree stump with tiny cups and a teapot with steam coming out.",
+   "ready": true,
+   "image_prompt": "a fox and a rabbit having a tea party on a tree stump with tiny cups and a teapot with steam",
+   "remove_old": false
+  }
+ ],
+ "S12": [
+  {
+   "reply": "That sounds fun! I'll draw a whale wearing a top hat and spouting water like a fountain.",
+   "ready": true,
+   "image_prompt": "a whale wearing a top hat spouting water like a fountain",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll add a small boat riding the fountain water from the whale!",
+   "ready": true,
+   "image_prompt": "a whale wearing a top hat spouting water like a fountain with a small boat riding the fountain water",
+   "remove_old": false
+  }
+ ],
+ "S13": [
+  {
+   "reply": "Okay \u2014 I'll draw a squirrel pilot flying a paper airplane over a park.",
+   "ready": true,
+   "image_prompt": "a squirrel pilot flying a paper airplane over a park",
+   "remove_old": false
+  },
+  {
+   "reply": "Got it! I'll add goggles on the squirrel pilot.",
+   "ready": true,
+   "image_prompt": "a squirrel pilot with goggles flying a paper airplane over a park",
+   "remove_old": false
+  }
+ ],
+ "S14": [
+  {
+   "reply": "Okay \u2014 I'll draw a friendly monster with three eyes baking cookies.",
+   "ready": true,
+   "image_prompt": "a friendly monster with three eyes baking cookies",
+   "remove_old": false
+  },
+  {
+   "reply": "Great! I'll make the cookies star-shaped and add oven mitts to the monster.",
+   "ready": true,
+   "image_prompt": "a friendly monster with three eyes baking star-shaped cookies, wearing oven mitts",
+   "remove_old": false
+  }
+ ],
+ "S15": [
+  {
+   "reply": "That sounds beautiful! I'll draw a lighthouse on a cliff with waves crashing below at sunset.",
+   "ready": true,
+   "image_prompt": "a lighthouse on a cliff with waves crashing below at sunset",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll add seagulls flying near the lighthouse.",
+   "ready": true,
+   "image_prompt": "a lighthouse on a cliff with waves crashing below at sunset, with seagulls flying near the lighthouse",
+   "remove_old": false
+  }
+ ],
+ "S16": [
+  {
+   "reply": "That sounds magical! What color is the princess, and what type of dinosaur is she walking with?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a princess with a small green dinosaur with spots walking through a flower field.",
+   "ready": true,
+   "image_prompt": "a princess with a small green dinosaur with spots walking through a flower field",
+   "remove_old": false
+  }
+ ],
+ "S17": [
+  {
+   "reply": "That's a fun scene! I'll draw an owl teacher writing numbers on a chalkboard at night school.",
+   "ready": true,
+   "image_prompt": "an owl teacher writing numbers on a chalkboard at night school",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll add three young owls at desks taking notes in the scene.",
+   "ready": true,
+   "image_prompt": "an owl teacher writing numbers on a chalkboard at night school with three young owls at desks taking notes",
+   "remove_old": false
+  }
+ ],
+ "S18": [
+  {
+   "reply": "That's a fun idea! I'll draw a pirate ship sailing on a sea of orange juice.",
+   "ready": true,
+   "image_prompt": "a pirate ship sailing on a sea of orange juice",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll add an island made of pancakes in the distance behind the pirate ship sailing on a sea of orange juice.",
+   "ready": true,
+   "image_prompt": "a pirate ship sailing on a sea of orange juice with an island made of pancakes in the distance",
+   "remove_old": false
+  }
+ ],
+ "S19": [
+  {
+   "reply": "That sounds fun! I'll draw a snowman playing a guitar by a campfire.",
+   "ready": true,
+   "image_prompt": "a snowman playing a guitar by a campfire",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll add a wooly scarf and earmuffs to the snowman playing a guitar by a campfire.",
+   "ready": true,
+   "image_prompt": "a snowman wearing a wooly scarf and earmuffs playing a guitar by a campfire",
+   "remove_old": false
+  }
+ ],
+ "S20": [
+  {
+   "reply": "That's a fun idea! I'll draw a ballerina hippo dancing on a stage with red curtains.",
+   "ready": true,
+   "image_prompt": "a ballerina hippo dancing on a stage with red curtains",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll add a spotlight shining on the ballerina hippo dancing on a stage with red curtains.",
+   "ready": true,
+   "image_prompt": "a ballerina hippo dancing on a stage with red curtains, with a spotlight shining on the hippo",
+   "remove_old": false
+  }
+ ],
+ "S21": [
+  {
+   "reply": "Great idea! I'll draw a wizard frog stirring a glowing potion in a swamp.",
+   "ready": true,
+   "image_prompt": "a wizard frog stirring a glowing potion in a swamp",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll add bubbles floating up from the potion like little lanterns.",
+   "ready": true,
+   "image_prompt": "a wizard frog stirring a glowing potion in a swamp with bubbles floating up like little lanterns",
+   "remove_old": false
+  }
+ ],
+ "S22": [
+  {
+   "reply": "That sounds fun! I'll draw a camel wearing sunglasses and drinking lemonade in the desert.",
+   "ready": true,
+   "image_prompt": "a camel wearing sunglasses drinking lemonade in the desert",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll add a striped umbrella and a beach chair for the camel.",
+   "ready": true,
+   "image_prompt": "a camel wearing sunglasses drinking lemonade in the desert, with a striped umbrella and a beach chair",
+   "remove_old": false
+  }
+ ],
+ "J01": [
+  {
+   "reply": "What kind of branch is the bird sitting on? Is it a tree branch or something else?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I add or change to make it closer to what you imagine?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J02": [
+  {
+   "reply": "Fun! What kind of branch is it on? Is it a tree branch or something else?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I add or change?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J03": [
+  {
+   "reply": "Fun! What kind of branch is it on? Is it thick or thin, and is it leafy?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Let's keep our words kind \u2014 tell me one thing to change and I'll fix the picture.",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J04": [
+  {
+   "reply": "Fun! What kind of branch is it on, or where is the bird located?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I add or change to make it better?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J05": [
+  {
+   "reply": "Fun! What kind of branch is it on \u2014 is it thick or thin, and what does the background look like?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I add or change to make it cooler?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J06": [
+  {
+   "reply": "Fun! What kind of branch is it on? Is it a tree branch or something else?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Let's keep our words kind. Can you tell me one thing to change about the picture?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J07": [
+  {
+   "reply": "Fun! What kind of branch is it on? Is it a tree branch or something else?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I add or change to make it nicer?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J08": [
+  {
+   "reply": "Fun! What kind of branch is the bird on, or where is it located?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I change about the picture? Please tell me one detail to make it closer to what you have in mind.",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "B01": [
+  {
+   "reply": "Fun! What color is the dog, or where is it?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a fluffy white dog in a snowy park.",
+   "ready": true,
+   "image_prompt": "a fluffy white dog in a snowy park",
+   "remove_old": false
+  }
+ ],
+ "B02": [
+  {
+   "reply": "Fun! What color is the cat, or where is it?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a black cat on a red roof.",
+   "ready": true,
+   "image_prompt": "a black cat on a red roof",
+   "remove_old": false
+  }
+ ],
+ "B03": [
+  {
+   "reply": "Fun! What color is the robot, or where is it?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a shiny blue robot in a city.",
+   "ready": true,
+   "image_prompt": "a shiny blue robot in a city",
+   "remove_old": false
+  }
+ ],
+ "B04": [
+  {
+   "reply": "Fun! What color is the fish, or where is it?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a golden fish in a round bowl.",
+   "ready": true,
+   "image_prompt": "a golden fish in a round bowl",
+   "remove_old": false
+  }
+ ],
+ "R01": [
+  {
+   "reply": "Great choice! I'll draw a green dragon by a cave.",
+   "ready": true,
+   "image_prompt": "a green dragon by a cave",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll make the green dragon breathe tiny sparks by the cave.",
+   "ready": true,
+   "image_prompt": "a green dragon by a cave breathing tiny sparks",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll keep the new one and remove the old one!",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": true
+  }
+ ],
+ "R02": [
+  {
+   "reply": "Great! What color is the castle, or what kind of hill is it on?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a castle on a hill with a flag on the tallest tower.",
+   "ready": true,
+   "image_prompt": "a castle on a hill with a flag on the tallest tower",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll keep the new one and remove the old one!",
+   "ready": true,
+   "image_prompt": "a castle on a hill with a flag on the tallest tower",
+   "remove_old": true
+  }
+ ],
+ "R03": [
+  {
+   "reply": "Fun! What color is the bear or where is the canoe?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a bear in a bright red canoe.",
+   "ready": true,
+   "image_prompt": "a bear in a bright red canoe",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll keep the new one and remove the old one!",
+   "ready": true,
+   "image_prompt": "a bear in a bright red canoe",
+   "remove_old": true
+  }
+ ],
+ "R04": [
+  {
+   "reply": "Fun! What color is the train, or what kind of mountains are they?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a train in the mountains with snow on the mountain tops.",
+   "ready": true,
+   "image_prompt": "a train in the mountains with snow on the mountain tops",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll keep the new one and remove the old one!",
+   "ready": true,
+   "image_prompt": "a train in the mountains with snow on the mountain tops",
+   "remove_old": true
+  }
+ ],
+ "C01": [
+  {
+   "reply": "Great choice! I'll draw a sunny meadow with a big oak tree.",
+   "ready": true,
+   "image_prompt": "a sunny meadow with a big oak tree",
+   "remove_old": false
+  },
+  {
+   "reply": "I'm glad you like it! Want to keep it or change anything?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "C02": [
+  {
+   "reply": "Fun idea! What color is the lion or the crown?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "I'm glad you think so! Want to keep it or change anything?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ]
+}

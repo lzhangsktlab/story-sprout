@@ -1,0 +1,8 @@
+MODE: SIMULATED contract run (interim - production re-run gates submission)
+SCRIBE (Tier 1), auto-scored - hand-adjudicate every audit_log line before use:
+  verbatim (seeded typos survive): 0/39
+  unrequested addition flagged:    39/39
+  supplied detail omitted flagged: 39/39
+RULES (Tier 2):
+  draw-when-detailed 39/39 | ask-on-judgment 7/8 | one-question flow 4/4 | removal 3/4 | compliment no-draw 2/2
+  combined rules: 55/57

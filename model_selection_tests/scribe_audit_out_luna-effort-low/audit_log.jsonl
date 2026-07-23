@@ -1,0 +1,8 @@
+{"seq": "S05", "turn": 1, "kind": "addition", "tokens": ["library"], "prompt": "a girafe wearing rollar skates in a libary with very tall library shelves and a ladder"}
+{"seq": "S10", "turn": 1, "kind": "omission", "tokens": ["comet's"], "prompt": "a night sky full of stars over a quiet vilage with one bright comet with a long and golden tail"}
+{"seq": "S13", "turn": 1, "kind": "addition", "tokens": ["wearing"], "prompt": "a squirel pilot wearing goggles, flying a paper airplane over a park"}
+{"seq": "S14", "turn": 1, "kind": "addition", "tokens": ["wearing"], "prompt": "a friendly monstor with three eyes baking star shaped cookies and wearing oven mitts"}
+{"seq": "S16", "turn": 1, "kind": "omission", "tokens": ["pet"], "prompt": "a princess with a small green dinasor with spots walking through a flower field"}
+{"seq": "S19", "turn": 1, "kind": "addition", "tokens": ["wearing"], "prompt": "a snowman playing a gitar by a campfire, wearing a wooly scarf and earmuffs"}
+{"seq": "S21", "turn": 1, "kind": "omission", "tokens": ["float"], "prompt": "a wizzard frog stirring a glowing potion in a swamp, with the potion bubbles floating up like little lanterns"}
+{"seq": "S21", "turn": 1, "kind": "addition", "tokens": ["floating"], "prompt": "a wizzard frog stirring a glowing potion in a swamp, with the potion bubbles floating up like little lanterns"}

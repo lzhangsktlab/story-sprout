@@ -1,0 +1,1678 @@
+{
+ "S01": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a friendlly dragon with a blue scarfe flying over a castel.",
+   "ready": true,
+   "image_prompt": "a friendlly dragon with a blue scarfe flying over a castel",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the castel purple and add a small moon.",
+   "ready": true,
+   "image_prompt": "a friendlly dragon with a blue scarfe flying over a castel purple and a small moon",
+   "remove_old": false
+  }
+ ],
+ "S02": [
+  {
+   "reply": "Okay \u2014 I'll draw that happy octopuss juggling three red aples in a kitchen.",
+   "ready": true,
+   "image_prompt": "a happy octopuss juggling three red aples in a kitchen",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a chef hat to the happy octopuss juggling three red aples in a kitchen.",
+   "ready": true,
+   "image_prompt": "a happy octopuss juggling three red aples in a kitchen with a chef hat on the octopuss",
+   "remove_old": false
+  }
+ ],
+ "S03": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that tiny mouse knite with a silver sheild standing on a mushroom.",
+   "ready": true,
+   "image_prompt": "a tiny mouse knite with a silver sheild standing on a mushroom",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a red cape blowing in the wind.",
+   "ready": true,
+   "image_prompt": "a tiny mouse knite with a silver sheild standing on a mushroom with a red cape blowing in the wind",
+   "remove_old": false
+  }
+ ],
+ "S04": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw two peguins building a sandcasle on a snowy beach.",
+   "ready": true,
+   "image_prompt": "two peguins building a sandcasle on a snowy beach",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a yellow bucket next to the sandcasle.",
+   "ready": true,
+   "image_prompt": "two peguins building a sandcasle on a snowy beach, add a yellow bucket next to the sandcasle",
+   "remove_old": false
+  }
+ ],
+ "S05": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that!",
+   "ready": true,
+   "image_prompt": "a girafe wearing rollar skates in a libary",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the libary shelves very tall and add a ladder.",
+   "ready": true,
+   "image_prompt": "a girafe wearing rollar skates in a libary with very tall shelves and a ladder",
+   "remove_old": false
+  }
+ ],
+ "S06": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a brave astronot cat floating near a green planet.",
+   "ready": true,
+   "image_prompt": "a brave astronot cat floating near a green planet",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add two small moons behind the planet.",
+   "ready": true,
+   "image_prompt": "a brave astronot cat floating near a green planet with two small moons behind the planet",
+   "remove_old": false
+  }
+ ],
+ "S07": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a purpel elephant painting a picture of a sunflower.",
+   "ready": true,
+   "image_prompt": "a purpel elephant painting a picture of a sunflower",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the sunflower giant, bigger than the elephant.",
+   "ready": true,
+   "image_prompt": "a purpel elephant painting a picture of a sunflower, the sunflower giant, bigger than the elephant",
+   "remove_old": false
+  }
+ ],
+ "S08": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a robot made of cardbord boxes watering a garden",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a rainbow over the garden.",
+   "ready": true,
+   "image_prompt": "a robot made of cardbord boxes watering a garden, add a rainbow over the garden",
+   "remove_old": false
+  }
+ ],
+ "S09": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that!",
+   "ready": true,
+   "image_prompt": "a mermade with curly orange hair reading a book underwater",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a turtle looking over her shoulder.",
+   "ready": true,
+   "image_prompt": "a mermade with curly orange hair reading a book underwater, add a turtle looking over her shoulder",
+   "remove_old": false
+  }
+ ],
+ "S10": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a night sky full of stars over a quiet vilage and one bright comet.",
+   "ready": true,
+   "image_prompt": "a night sky full of stars over a quiet vilage and one bright comet",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the comet\u2019s tail long and golden.",
+   "ready": true,
+   "image_prompt": "a night sky full of stars over a quiet vilage and one bright comet with the comet's tail long and golden",
+   "remove_old": false
+  }
+ ],
+ "S11": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that tea party on a tree stump.",
+   "ready": true,
+   "image_prompt": "a fox and a rabit having a tea party on a tree stump",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add tiny cups and a teapot with steam.",
+   "ready": true,
+   "image_prompt": "a fox and a rabit having a tea party on a tree stump, add tiny cups and a teapot with steam",
+   "remove_old": false
+  }
+ ],
+ "S12": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a whale wearing a top hat spouting water like a fountin.",
+   "ready": true,
+   "image_prompt": "a whale wearing a top hat spouting water like a fountin",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a small boat riding the fountin water.",
+   "ready": true,
+   "image_prompt": "a whale wearing a top hat spouting water like a fountin, put a small boat riding the fountin water",
+   "remove_old": false
+  }
+ ],
+ "S13": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a squirel pilot flying a paper airplane over a park.",
+   "ready": true,
+   "image_prompt": "a squirel pilot flying a paper airplane over a park",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add goggles on the squirel.",
+   "ready": true,
+   "image_prompt": "a squirel pilot flying a paper airplane over a park, goggles on the squirel",
+   "remove_old": false
+  }
+ ],
+ "S14": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a friendly monstor with three eyes baking cookies.",
+   "ready": true,
+   "image_prompt": "a friendly monstor with three eyes baking cookies",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the cookies star shaped and add oven mitts.",
+   "ready": true,
+   "image_prompt": "a friendly monstor with three eyes baking cookies, the cookies star shaped, add oven mitts",
+   "remove_old": false
+  }
+ ],
+ "S15": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that scene.",
+   "ready": true,
+   "image_prompt": "a lighthous on a cliff with waves crashing below at sunset",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add seagulls flying near the lighthous.",
+   "ready": true,
+   "image_prompt": "a lighthous on a cliff with waves crashing below at sunset, seagulls flying near the lighthous",
+   "remove_old": false
+  }
+ ],
+ "S16": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that!",
+   "ready": true,
+   "image_prompt": "a princess with a pet dinasor walking through a flower field",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the dinasor small and green with spots.",
+   "ready": true,
+   "image_prompt": "a princess with a pet dinasor walking through a flower field, the dinasor small and green with spots",
+   "remove_old": false
+  }
+ ],
+ "S17": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that owl teacher writing numbers on a chalkbord at night school.",
+   "ready": true,
+   "image_prompt": "an owl teacher writing numbers on a chalkbord at night school",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add three young owls at desks taking notes.",
+   "ready": true,
+   "image_prompt": "an owl teacher writing numbers on a chalkbord at night school, three young owls at desks taking notes",
+   "remove_old": false
+  }
+ ],
+ "S18": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a pirate ship sailing on a sea of orang juice.",
+   "ready": true,
+   "image_prompt": "a pirate ship sailing on a sea of orang juice",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add an island made of pancakes in the distance.",
+   "ready": true,
+   "image_prompt": "a pirate ship sailing on a sea of orang juice, add an island made of pancakes in the distance",
+   "remove_old": false
+  }
+ ],
+ "S19": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that scene.",
+   "ready": true,
+   "image_prompt": "a snowman playing a gitar by a campfire",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a wooly scarf and earmuffs to the snowman.",
+   "ready": true,
+   "image_prompt": "a snowman playing a gitar by a campfire with a wooly scarf and earmuffs",
+   "remove_old": false
+  }
+ ],
+ "S20": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a ballerina hippo dancing on a stage with red curtins.",
+   "ready": true,
+   "image_prompt": "a ballerina hippo dancing on a stage with red curtins",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a spotlight shining on the hippo.",
+   "ready": true,
+   "image_prompt": "a ballerina hippo dancing on a stage with red curtins and a spotlight shining on the hippo",
+   "remove_old": false
+  }
+ ],
+ "S21": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a wizzard frog stirring a glowing potion in a swamp.",
+   "ready": true,
+   "image_prompt": "a wizzard frog stirring a glowing potion in a swamp",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the potion bubbles float up like little lanterns.",
+   "ready": true,
+   "image_prompt": "a wizzard frog stirring a glowing potion in a swamp, make the potion bubbles float up like little lanterns",
+   "remove_old": false
+  }
+ ],
+ "S22": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a camal wearing sunglasses drinking lemonade in the desert.",
+   "ready": true,
+   "image_prompt": "a camal wearing sunglasses drinking lemonade in the desert",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a striped umbrella and a beach chair.",
+   "ready": true,
+   "image_prompt": "a camal wearing sunglasses drinking lemonade in the desert, add a striped umbrella and a beach chair",
+   "remove_old": false
+  }
+ ],
+ "S23": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a fluffy bunny with a pink ribon hopping in a medow.",
+   "ready": true,
+   "image_prompt": "a fluffy bunny with a pink ribon hopping in a medow",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a basket of carrots next to the bunny.",
+   "ready": true,
+   "image_prompt": "a fluffy bunny with a pink ribon hopping in a medow, add a basket of carrots next to the bunny",
+   "remove_old": false
+  }
+ ],
+ "S24": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a happy hipo swimming in a blue river with lilipads.",
+   "ready": true,
+   "image_prompt": "a happy hipo swimming in a blue river with lilipads",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a bird sitting on the back of the hipo.",
+   "ready": true,
+   "image_prompt": "a happy hipo swimming in a blue river with lilipads, add a bird sitting on the back of the hipo",
+   "remove_old": false
+  }
+ ],
+ "S25": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that now.",
+   "ready": true,
+   "image_prompt": "a penguin wearing a stripey hat sliding down a snowy hil",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a fish jumping out of the water.",
+   "ready": true,
+   "image_prompt": "a penguin wearing a stripey hat sliding down a snowy hil add a fish jumping out of the water",
+   "remove_old": false
+  }
+ ],
+ "S26": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a dragon with rainbow wings sitting on a mountian top.",
+   "ready": true,
+   "image_prompt": "a dragon with rainbow wings sitting on a mountian top",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add clouds all around the mountian.",
+   "ready": true,
+   "image_prompt": "a dragon with rainbow wings sitting on a mountian top, clouds all around the mountian",
+   "remove_old": false
+  }
+ ],
+ "S27": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that cat sleeping on the windowsil with a bell colar.",
+   "ready": true,
+   "image_prompt": "a cat with a bell colar sleeping on a windowsil",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a green plant on the windowsil.",
+   "ready": true,
+   "image_prompt": "a cat with a bell colar sleeping on a windowsil add a green plant on the windowsil",
+   "remove_old": false
+  }
+ ],
+ "S28": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that bear cub climbing a tall pine tre in the forest.",
+   "ready": true,
+   "image_prompt": "a bear cub climbing a tall pine tre in the forest",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a bee hive hanging from a branch.",
+   "ready": true,
+   "image_prompt": "a bear cub climbing a tall pine tre in the forest, add a bee hive hanging from a branch",
+   "remove_old": false
+  }
+ ],
+ "S29": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a puppy chasing butterflys in a garden full of tulips.",
+   "ready": true,
+   "image_prompt": "a puppy chasing butterflys in a garden full of tulips",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the puppy brown and white.",
+   "ready": true,
+   "image_prompt": "a puppy brown and white chasing butterflys in a garden full of tulips",
+   "remove_old": false
+  }
+ ],
+ "S30": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that unicorn drinking from a strem.",
+   "ready": true,
+   "image_prompt": "a unicorn with a golden horn drinking from a strem",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add sparkles floating above the water.",
+   "ready": true,
+   "image_prompt": "a unicorn with a golden horn drinking from a strem, add sparkles floating above the water",
+   "remove_old": false
+  }
+ ],
+ "S31": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that firefly glowing over a pond at midnite.",
+   "ready": true,
+   "image_prompt": "a firefly glowing over a pond at midnite",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add frogs sitting on the rocks.",
+   "ready": true,
+   "image_prompt": "a firefly glowing over a pond at midnite, frogs sitting on the rocks",
+   "remove_old": false
+  }
+ ],
+ "S32": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a boy flying a kite shaped like a fish on a windy beech",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the kite red and yellow.",
+   "ready": true,
+   "image_prompt": "a boy flying a kite shaped like a fish on a windy beech, the kite is red and yellow",
+   "remove_old": false
+  }
+ ],
+ "S33": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that scene for you.",
+   "ready": true,
+   "image_prompt": "a girl reading a book inside a cozy tent with fairy lites",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a sleeping puppy beside her.",
+   "ready": true,
+   "image_prompt": "a girl reading a book inside a cozy tent with fairy lites, add a sleeping puppy beside her",
+   "remove_old": false
+  }
+ ],
+ "S34": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that turtle walking across the sand.",
+   "ready": true,
+   "image_prompt": "a turtle with a painted shel walking across the sand",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add crabs following behind the turtle.",
+   "ready": true,
+   "image_prompt": "a turtle with a painted shel walking across the sand, crabs following behind the turtle",
+   "remove_old": false
+  }
+ ],
+ "S35": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that koala hugging a branch and eating leafs.",
+   "ready": true,
+   "image_prompt": "a koala hugging a branch and eating leafs",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the sky pink like sunset.",
+   "ready": true,
+   "image_prompt": "a koala hugging a branch and eating leafs, the sky pink like sunset",
+   "remove_old": false
+  }
+ ],
+ "S36": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a panda eating bambu in a misty forest.",
+   "ready": true,
+   "image_prompt": "a panda eating bambu in a misty forest",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a waterfall behind the panda.",
+   "ready": true,
+   "image_prompt": "a panda eating bambu in a misty forest with a waterfall behind the panda",
+   "remove_old": false
+  }
+ ],
+ "S37": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that hedgehog in boots walking in the rain with an umbrela.",
+   "ready": true,
+   "image_prompt": "a hedgehog wearing boots walking in the rain with an umbrela",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add puddles along the path.",
+   "ready": true,
+   "image_prompt": "a hedgehog wearing boots walking in the rain with an umbrela, puddles along the path",
+   "remove_old": false
+  }
+ ],
+ "S38": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a donkey pulling a cart full of pumkins down a country road",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a scarecrow standing in the field.",
+   "ready": true,
+   "image_prompt": "a donkey pulling a cart full of pumkins down a country road add a scarecrow standing in the field",
+   "remove_old": false
+  }
+ ],
+ "S39": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a chicken wearing sunglases sitting on a fence.",
+   "ready": true,
+   "image_prompt": "a chicken wearing sunglases sitting on a fence",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a red barn behind the fence.",
+   "ready": true,
+   "image_prompt": "a chicken wearing sunglases sitting on a fence, add a red barn behind the fence",
+   "remove_old": false
+  }
+ ],
+ "S40": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a horse with a braided mane runing through tall grass.",
+   "ready": true,
+   "image_prompt": "a horse with a braided mane runing through tall grass",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a rainbow in the sky.",
+   "ready": true,
+   "image_prompt": "a horse with a braided mane runing through tall grass, a rainbow in the sky",
+   "remove_old": false
+  }
+ ],
+ "S41": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that sheep standing next to the stone wal.",
+   "ready": true,
+   "image_prompt": "a sheep with curly wool standing next to a stone wal",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a lamb beside the sheep.",
+   "ready": true,
+   "image_prompt": "a sheep with curly wool standing next to a stone wal, add a lamb beside the sheep",
+   "remove_old": false
+  }
+ ],
+ "S42": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that goat standing on the roof of a wooden cabbin in the hills.",
+   "ready": true,
+   "image_prompt": "a goat standing on the roof of a wooden cabbin in the hills",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add smoke coming from the chimney.",
+   "ready": true,
+   "image_prompt": "a goat standing on the roof of a wooden cabbin in the hills add smoke coming from the chimney",
+   "remove_old": false
+  }
+ ],
+ "S43": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a whale swimming under a boat with a yelow sail",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add seagulls circling above the boat.",
+   "ready": true,
+   "image_prompt": "a whale swimming under a boat with a yelow sail, add seagulls circling above the boat",
+   "remove_old": false
+  }
+ ],
+ "S44": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a dolphin jumping over a wave near a rocky iland",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a lighthouse standing on the rocks.",
+   "ready": true,
+   "image_prompt": "a dolphin jumping over a wave near a rocky iland, add a lighthouse standing on the rocks",
+   "remove_old": false
+  }
+ ],
+ "S45": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that starfish resting in a tide pool with colorfull shells.",
+   "ready": true,
+   "image_prompt": "a starfish resting in a tide pool with colorfull shells",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add an octopus hiding nearby.",
+   "ready": true,
+   "image_prompt": "a starfish resting in a tide pool with colorfull shells and an octopus hiding nearby",
+   "remove_old": false
+  }
+ ],
+ "S46": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a jellyfish glowing purple in the deep osean.",
+   "ready": true,
+   "image_prompt": "a jellyfish glowing purple in the deep osean",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add fish swimming all around it.",
+   "ready": true,
+   "image_prompt": "a jellyfish glowing purple in the deep osean, add fish swimming all around it",
+   "remove_old": false
+  }
+ ],
+ "S47": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a seahorse holding onto seaweed in a coral reaf.",
+   "ready": true,
+   "image_prompt": "a seahorse holding onto seaweed in a coral reaf",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the coral bright orange.",
+   "ready": true,
+   "image_prompt": "a seahorse holding onto seaweed in a coral reaf, the coral bright orange",
+   "remove_old": false
+  }
+ ],
+ "S48": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a crab wearing a bow tie walking sideways on wet sannd.",
+   "ready": true,
+   "image_prompt": "a crab wearing a bow tie walking sideways on wet sannd",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add footprints behind the crab.",
+   "ready": true,
+   "image_prompt": "a crab wearing a bow tie walking sideways on wet sannd with footprints behind the crab",
+   "remove_old": false
+  }
+ ],
+ "S49": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a sloth hanging upside down from a jungel vine.",
+   "ready": true,
+   "image_prompt": "a sloth hanging upside down from a jungel vine",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a parrot sitting nearby.",
+   "ready": true,
+   "image_prompt": "a sloth hanging upside down from a jungel vine, add a parrot sitting nearby",
+   "remove_old": false
+  }
+ ],
+ "S50": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that monkey swinging between trees.",
+   "ready": true,
+   "image_prompt": "a monkey holding a bananna swinging between trees",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a river flowing below the trees.",
+   "ready": true,
+   "image_prompt": "a monkey holding a bananna swinging between trees, a river flowing below the trees",
+   "remove_old": false
+  }
+ ],
+ "S51": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that tiger cub playing with a leaf in a bambo grove.",
+   "ready": true,
+   "image_prompt": "a tiger cub playing with a leaf in a bambo grove",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the cub look sleepy.",
+   "ready": true,
+   "image_prompt": "a tiger cub playing with a leaf in a bambo grove, look sleepy",
+   "remove_old": false
+  }
+ ],
+ "S52": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw an elefant spraying water from its trunk at a waterhole.",
+   "ready": true,
+   "image_prompt": "an elefant spraying water from its trunk at a waterhole",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add zebras drinking nearby.",
+   "ready": true,
+   "image_prompt": "an elefant spraying water from its trunk at a waterhole, add zebras drinking nearby",
+   "remove_old": false
+  }
+ ],
+ "S53": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a lion cub sleeping under an acacia tree at sunet",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a butterfly resting on its nose.",
+   "ready": true,
+   "image_prompt": "a lion cub sleeping under an acacia tree at sunet, add a butterfly resting on its nose",
+   "remove_old": false
+  }
+ ],
+ "S54": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a zebra with black stripes running acros the savanna.",
+   "ready": true,
+   "image_prompt": "a zebra with black stripes running acros the savanna",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a dust cloud behind the zebra.",
+   "ready": true,
+   "image_prompt": "a zebra with black stripes running acros the savanna, a dust cloud behind the zebra",
+   "remove_old": false
+  }
+ ],
+ "S55": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a giraffe eating leaves from the tallest branchs.",
+   "ready": true,
+   "image_prompt": "a giraffe eating leaves from the tallest branchs",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add birds resting on its back.",
+   "ready": true,
+   "image_prompt": "a giraffe eating leaves from the tallest branchs, add birds resting on its back",
+   "remove_old": false
+  }
+ ],
+ "S56": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a rhino standing in a mud puddel under a hot sun.",
+   "ready": true,
+   "image_prompt": "a rhino standing in a mud puddel under a hot sun",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a bird sitting on its back.",
+   "ready": true,
+   "image_prompt": "a rhino standing in a mud puddel under a hot sun, add a bird sitting on its back",
+   "remove_old": false
+  }
+ ],
+ "S57": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a meerkat standing up straight watching the desert horizen",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add three baby meerkats beside it.",
+   "ready": true,
+   "image_prompt": "a meerkat standing up straight watching the desert horizen add three baby meerkats beside it",
+   "remove_old": false
+  }
+ ],
+ "S58": [
+  {
+   "reply": "Okay \u2014 I'll draw a camel resting beside a palm tree in an oasus.",
+   "ready": true,
+   "image_prompt": "a camel resting beside a palm tree in an oasus",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll add a tent with a striped roof.",
+   "ready": true,
+   "image_prompt": "a camel resting beside a palm tree in an oasus add a tent with a striped roof",
+   "remove_old": false
+  }
+ ],
+ "S59": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that fox curled up in the snow with frosty whiskrs.",
+   "ready": true,
+   "image_prompt": "a fox curled up in the snow with frosty whiskrs",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add northern lights in the sky.",
+   "ready": true,
+   "image_prompt": "a fox curled up in the snow with frosty whiskrs, northern lights in the sky",
+   "remove_old": false
+  }
+ ],
+ "S60": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that scene.",
+   "ready": true,
+   "image_prompt": "a wolf howling on a cliff under a full moon in winnter",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add snow falling gently.",
+   "ready": true,
+   "image_prompt": "a wolf howling on a cliff under a full moon in winnter, add snow falling gently",
+   "remove_old": false
+  }
+ ],
+ "S61": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that now.",
+   "ready": true,
+   "image_prompt": "a reindeer with a jingle bell walking through a pine forrest",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a wooden sled behind the reindeer.",
+   "ready": true,
+   "image_prompt": "a reindeer with a jingle bell walking through a pine forrest, add a wooden sled behind the reindeer",
+   "remove_old": false
+  }
+ ],
+ "S62": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a polar bear cub sliding on a sheat of ice.",
+   "ready": true,
+   "image_prompt": "a polar bear cub sliding on a sheat of ice",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a seal watching from the water.",
+   "ready": true,
+   "image_prompt": "a polar bear cub sliding on a sheat of ice, a seal watching from the water",
+   "remove_old": false
+  }
+ ],
+ "S63": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that owl sitting in a holow tree.",
+   "ready": true,
+   "image_prompt": "an owl with big round eyes sitting in a holow tree",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add stars twinkling behind the tree.",
+   "ready": true,
+   "image_prompt": "an owl with big round eyes sitting in a holow tree, stars twinkling behind the tree",
+   "remove_old": false
+  }
+ ],
+ "S64": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a robin building a nest with twigs and stringg.",
+   "ready": true,
+   "image_prompt": "a robin building a nest with twigs and stringg",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add three blue eggs in the nest.",
+   "ready": true,
+   "image_prompt": "a robin building a nest with twigs and stringg, add three blue eggs in the nest",
+   "remove_old": false
+  }
+ ],
+ "S65": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a peacock spreading its feathers in a palace gardin.",
+   "ready": true,
+   "image_prompt": "a peacock spreading its feathers in a palace gardin",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a fountain behind the peacock.",
+   "ready": true,
+   "image_prompt": "a peacock spreading its feathers in a palace gardin, add a fountain behind the peacock",
+   "remove_old": false
+  }
+ ],
+ "S66": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a swan gliding across a still lake at dawnn",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add mist rising off the water.",
+   "ready": true,
+   "image_prompt": "a swan gliding across a still lake at dawnn, add mist rising off the water",
+   "remove_old": false
+  }
+ ],
+ "S67": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that duckling following its mother through tall reedss.",
+   "ready": true,
+   "image_prompt": "a duckling following its mother through tall reedss",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add lily pads floating on the pond.",
+   "ready": true,
+   "image_prompt": "a duckling following its mother through tall reedss, add lily pads floating on the pond",
+   "remove_old": false
+  }
+ ],
+ "S68": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a rooster crowing on a fence post at sunrize.",
+   "ready": true,
+   "image_prompt": "a rooster crowing on a fence post at sunrize",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a farmhouse in the background.",
+   "ready": true,
+   "image_prompt": "a rooster crowing on a fence post at sunrize, add a farmhouse in the background",
+   "remove_old": false
+  }
+ ],
+ "S69": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that cow with black spots chewing grass in a felid.",
+   "ready": true,
+   "image_prompt": "a cow with black spots chewing grass in a felid",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a windmill in the distance.",
+   "ready": true,
+   "image_prompt": "a cow with black spots chewing grass in a felid add a windmill in the distance",
+   "remove_old": false
+  }
+ ],
+ "S70": [
+  {
+   "reply": "Okay \u2014 I'll draw that pig rolling in mud beside a wooden trof.",
+   "ready": true,
+   "image_prompt": "a pig rolling in mud beside a wooden trof",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a puddle with a reflection.",
+   "ready": true,
+   "image_prompt": "a pig rolling in mud beside a wooden trof, add a puddle with a reflection",
+   "remove_old": false
+  }
+ ],
+ "S71": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that mouse carrying a piece of cheeze into a doorway.",
+   "ready": true,
+   "image_prompt": "a mouse carrying a piece of cheeze into a doorway",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a candle lighting the room.",
+   "ready": true,
+   "image_prompt": "a mouse carrying a piece of cheeze into a doorway, add a candle lighting the room",
+   "remove_old": false
+  }
+ ],
+ "S72": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a squirrel burying an acorn under a maple tree in autum",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add orange leaves falling.",
+   "ready": true,
+   "image_prompt": "a squirrel burying an acorn under a maple tree in autum, orange leaves falling",
+   "remove_old": false
+  }
+ ],
+ "S73": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a rabbit peeking out of a burow in a grassy field.",
+   "ready": true,
+   "image_prompt": "a rabbit peeking out of a burow in a grassy field",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a carrot patch nearby.",
+   "ready": true,
+   "image_prompt": "a rabbit peeking out of a burow in a grassy field, add a carrot patch nearby",
+   "remove_old": false
+  }
+ ],
+ "S74": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a deer with velvet antlers standing in a foggy medow.",
+   "ready": true,
+   "image_prompt": "a deer with velvet antlers standing in a foggy medow",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add sunlight breaking through the fog.",
+   "ready": true,
+   "image_prompt": "a deer with velvet antlers standing in a foggy medow, add sunlight breaking through the fog",
+   "remove_old": false
+  }
+ ],
+ "S75": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a bat hanging in a cave with glowing crystls",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add the underground pool below.",
+   "ready": true,
+   "image_prompt": "a bat hanging in a cave with glowing crystls, underground pool below",
+   "remove_old": false
+  }
+ ],
+ "S76": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a snail with a swirly shell crossing a garden path slowly.",
+   "ready": true,
+   "image_prompt": "a snail with a swirly shell crossing a garden path slowley",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add raindrops on the leaves.",
+   "ready": true,
+   "image_prompt": "a snail with a swirly shell crossing a garden path slowley add raindrops on the leaves",
+   "remove_old": false
+  }
+ ],
+ "S77": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that ladybug resting on a sunflower petle.",
+   "ready": true,
+   "image_prompt": "a ladybug resting on a sunflower petle",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a bee flying nearby.",
+   "ready": true,
+   "image_prompt": "a ladybug resting on a sunflower petle, add a bee flying nearby",
+   "remove_old": false
+  }
+ ],
+ "S78": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that caterpillar munching a leaf on a green branchh.",
+   "ready": true,
+   "image_prompt": "a caterpillar munching a leaf on a green branchh",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a cocoon hanging beside it.",
+   "ready": true,
+   "image_prompt": "a caterpillar munching a leaf on a green branchh, add a cocoon hanging beside it",
+   "remove_old": false
+  }
+ ],
+ "S79": [
+  {
+   "reply": "Okay \u2014 I'll draw that.",
+   "ready": true,
+   "image_prompt": "a butterfly with orange wings landing on a lavendar bush",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a garden gate behind the bush.",
+   "ready": true,
+   "image_prompt": "a butterfly with orange wings landing on a lavendar bush, add a garden gate behind the bush",
+   "remove_old": false
+  }
+ ],
+ "S80": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a dragonfly hovering over a pond covered in algea",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add cattails at the edge.",
+   "ready": true,
+   "image_prompt": "a dragonfly hovering over a pond covered in algea, cattails at the edge",
+   "remove_old": false
+  }
+ ],
+ "S81": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a beetle rolling a ball of dirt across dry erth.",
+   "ready": true,
+   "image_prompt": "a beetle rolling a ball of dirt across dry erth",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add cracks running along the ground.",
+   "ready": true,
+   "image_prompt": "a beetle rolling a ball of dirt across dry erth, add cracks running along the ground",
+   "remove_old": false
+  }
+ ],
+ "S82": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that spider spinning a web between two fence posst.",
+   "ready": true,
+   "image_prompt": "a spider spinning a web between two fence posst",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add dew drops on the web.",
+   "ready": true,
+   "image_prompt": "a spider spinning a web between two fence posst, add dew drops on the web",
+   "remove_old": false
+  }
+ ],
+ "S83": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that chameleon changing colors on a branch in a rainforrest.",
+   "ready": true,
+   "image_prompt": "a chameleon changing colors on a branch in a rainforrest",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the chameleon turn bright blue on the branch in a rainforrest.",
+   "ready": true,
+   "image_prompt": "a chameleon changing colors on a branch in a rainforrest, bright blue",
+   "remove_old": false
+  }
+ ],
+ "S84": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a frog with bumpy skin sitting on a lily pad in a swampp.",
+   "ready": true,
+   "image_prompt": "a frog with bumpy skin sitting on a lily pad in a swampp",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add fireflies above the water.",
+   "ready": true,
+   "image_prompt": "a frog with bumpy skin sitting on a lily pad in a swampp, add fireflies above the water",
+   "remove_old": false
+  }
+ ],
+ "S85": [
+  {
+   "reply": "Okay \u2014 I'll draw that gecko climbing the warm stone wall in the sunshinne.",
+   "ready": true,
+   "image_prompt": "a gecko climbing a warm stone wall in the sunshinne",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add moss growing in a crack.",
+   "ready": true,
+   "image_prompt": "a gecko climbing a warm stone wall in the sunshinne, add moss growing in a crack",
+   "remove_old": false
+  }
+ ],
+ "S86": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that snake curled around a tree branch with diamand patterns.",
+   "ready": true,
+   "image_prompt": "a snake curled around a tree branch with diamand patterns",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add thick green leaves.",
+   "ready": true,
+   "image_prompt": "a snake curled around a tree branch with diamand patterns, thick green leaves",
+   "remove_old": false
+  }
+ ],
+ "S87": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that crocodile floating in a muddy river with its eyes showin.",
+   "ready": true,
+   "image_prompt": "a crocodile floating in a muddy river with its eyes showin",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add tall reeds along the bank.",
+   "ready": true,
+   "image_prompt": "a crocodile floating in a muddy river with its eyes showin, add tall reeds along the bank",
+   "remove_old": false
+  }
+ ],
+ "S88": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that dancing bird of paradise on the jungle floar.",
+   "ready": true,
+   "image_prompt": "a bird of paradise dancing on a jungle floar",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add bright red flowers nearby.",
+   "ready": true,
+   "image_prompt": "a bird of paradise dancing on a jungle floar with bright red flowers nearby",
+   "remove_old": false
+  }
+ ],
+ "S89": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a toucan with a huge colorful beek sitting in a tree.",
+   "ready": true,
+   "image_prompt": "a toucan with a huge colorful beek sitting in a tree",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add ripe fruit on the branches.",
+   "ready": true,
+   "image_prompt": "a toucan with a huge colorful beek sitting in a tree, ripe fruit on the branches",
+   "remove_old": false
+  }
+ ],
+ "S90": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a flamingo standing on one leg in a shallow lagon.",
+   "ready": true,
+   "image_prompt": "a flamingo standing on one leg in a shallow lagon",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add pink clouds at sunset.",
+   "ready": true,
+   "image_prompt": "a flamingo standing on one leg in a shallow lagon, pink clouds at sunset",
+   "remove_old": false
+  }
+ ],
+ "S91": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a pelican scooping fish into its pouchh by the dock",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add wooden posts in the water.",
+   "ready": true,
+   "image_prompt": "a pelican scooping fish into its pouchh by the dock, add wooden posts in the water",
+   "remove_old": false
+  }
+ ],
+ "S92": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that now.",
+   "ready": true,
+   "image_prompt": "an ostrich running fast across dusty plaines",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a cloud of dust behind it.",
+   "ready": true,
+   "image_prompt": "an ostrich running fast across dusty plaines, add a cloud of dust behind it",
+   "remove_old": false
+  }
+ ],
+ "S93": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that!",
+   "ready": true,
+   "image_prompt": "a kangaroo hopping with a joey in its pouch across the outbak",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a red rock formation.",
+   "ready": true,
+   "image_prompt": "a kangaroo hopping with a joey in its pouch across the outbak, add a red rock formation",
+   "remove_old": false
+  }
+ ],
+ "S94": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a platypus swimming in a creek with smooth peebles",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add ferns along the bank.",
+   "ready": true,
+   "image_prompt": "a platypus swimming in a creek with smooth peebles, add ferns along the bank",
+   "remove_old": false
+  }
+ ],
+ "S95": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a wombat digging a burrow near a eucaliptus tree.",
+   "ready": true,
+   "image_prompt": "a wombat digging a burrow near a eucaliptus tree",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add stars coming out at dusk.",
+   "ready": true,
+   "image_prompt": "a wombat digging a burrow near a eucaliptus tree, add stars coming out at dusk",
+   "remove_old": false
+  }
+ ],
+ "S96": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that lemur balancing on a branchy tre.",
+   "ready": true,
+   "image_prompt": "a lemur with a striped tail balancing on a branchy tre",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add other lemurs sitting behind it.",
+   "ready": true,
+   "image_prompt": "a lemur with a striped tail balancing on a branchy tre, other lemurs sitting behind it",
+   "remove_old": false
+  }
+ ],
+ "S97": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a walrus resting on an ice floe with long tuskes.",
+   "ready": true,
+   "image_prompt": "a walrus resting on an ice floe with long tuskes",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add snow drifting past.",
+   "ready": true,
+   "image_prompt": "a walrus resting on an ice floe with long tuskes, add snow drifting past",
+   "remove_old": false
+  }
+ ],
+ "S98": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a puffin standing on a cliff edge with a beak full of fisch.",
+   "ready": true,
+   "image_prompt": "a puffin standing on a cliff edge with a beak full of fisch",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add crashing waves below.",
+   "ready": true,
+   "image_prompt": "a puffin standing on a cliff edge with a beak full of fisch, crashing waves below",
+   "remove_old": false
+  }
+ ],
+ "S99": [
+  {
+   "reply": "Okay \u2014 I'll draw that.",
+   "ready": true,
+   "image_prompt": "a narwhal swimming under thick artic ice",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll add sunbeams coming through a crack.",
+   "ready": true,
+   "image_prompt": "a narwhal swimming under thick artic ice, add sunbeams coming through a crack",
+   "remove_old": false
+  }
+ ],
+ "S100": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw an octopus hiding in a sunken treasure chesst.",
+   "ready": true,
+   "image_prompt": "an octopus hiding in a sunken treasure chesst",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add bubbles rising to the surface.",
+   "ready": true,
+   "image_prompt": "an octopus hiding in a sunken treasure chesst, bubbles rising to the surface",
+   "remove_old": false
+  }
+ ],
+ "J01": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a red bird on a branch.",
+   "ready": true,
+   "image_prompt": "a red bird on a branch",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I change first to make it closer to your idea?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J02": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a red bird on a branch.",
+   "ready": true,
+   "image_prompt": "a red bird on a branch",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I change first?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J03": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a red bird on a branch.",
+   "ready": true,
+   "image_prompt": "a red bird on a branch",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I fix first?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J04": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a red bird on a branch.",
+   "ready": true,
+   "image_prompt": "a red bird on a branch",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I change first on the picture?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J05": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a red bird on a branch.",
+   "ready": true,
+   "image_prompt": "a red bird on a branch",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I change to make it cooler?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J06": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a red bird on a branch.",
+   "ready": true,
+   "image_prompt": "a red bird on a branch",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I fix first?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J07": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a red bird on a branch.",
+   "ready": true,
+   "image_prompt": "a red bird on a branch",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I change to make it nicer?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "J08": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a red bird on a branch",
+   "remove_old": false
+  },
+  {
+   "reply": "What should I change first?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "B01": [
+  {
+   "reply": "Fun! What color is the dog, or where is it?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a fluffy white dog in a snowy park.",
+   "ready": true,
+   "image_prompt": "a fluffy white dog in a snowy park",
+   "remove_old": false
+  }
+ ],
+ "B02": [
+  {
+   "reply": "Fun! What color is the cat, or where is it?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I'll draw a black cat on a red roof.",
+   "ready": true,
+   "image_prompt": "a black cat on a red roof",
+   "remove_old": false
+  }
+ ],
+ "B03": [
+  {
+   "reply": "Fun! What color is the robot, or what is it doing?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a shiny blue robot in a city.",
+   "ready": true,
+   "image_prompt": "a shiny blue robot in a city",
+   "remove_old": false
+  }
+ ],
+ "B04": [
+  {
+   "reply": "Fun! What color is the fish, or where is it swimming?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a golden fish in a round bowl.",
+   "ready": true,
+   "image_prompt": "a golden fish in a round bowl",
+   "remove_old": false
+  }
+ ],
+ "R01": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a green dragon by a cave.",
+   "ready": true,
+   "image_prompt": "a green dragon by a cave",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the dragon breathe tiny sparks.",
+   "ready": true,
+   "image_prompt": "a green dragon by a cave breathe tiny sparks",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll keep the new one and remove the old one!",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": true
+  }
+ ],
+ "R02": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a castle on a hill.",
+   "ready": true,
+   "image_prompt": "a castle on a hill",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add a flag on the tallest tower.",
+   "ready": true,
+   "image_prompt": "a castle on a hill, add a flag on the tallest tower",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll keep the new one and remove the old one!",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": true
+  }
+ ],
+ "R03": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a bear in a canoe.",
+   "ready": true,
+   "image_prompt": "a bear in a canoe",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll make the canoe bright red.",
+   "ready": true,
+   "image_prompt": "a bear in a canoe, the canoe bright red",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll keep the new one and remove the old one!",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": true
+  }
+ ],
+ "R04": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a train in the mountains.",
+   "ready": true,
+   "image_prompt": "a train in the mountains",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll add snow on the mountain tops.",
+   "ready": true,
+   "image_prompt": "a train in the mountains with snow on the mountain tops",
+   "remove_old": false
+  },
+  {
+   "reply": "Okay \u2014 I\u2019ll keep both pictures.",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "C01": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw a sunny meadow with a big oak tree.",
+   "ready": true,
+   "image_prompt": "a sunny meadow with a big oak tree",
+   "remove_old": false
+  },
+  {
+   "reply": "I'm glad you like it! Want to keep it or change anything?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ],
+ "C02": [
+  {
+   "reply": "Okay \u2014 I\u2019ll draw that.",
+   "ready": true,
+   "image_prompt": "a lion wearing a crown",
+   "remove_old": false
+  },
+  {
+   "reply": "I'm glad you like it! Want to keep it or change anything?",
+   "ready": false,
+   "image_prompt": "",
+   "remove_old": false
+  }
+ ]
+}
