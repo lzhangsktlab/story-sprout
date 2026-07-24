@@ -464,10 +464,16 @@ function makeStore(env) {
   const bucket = env.SPROUT_BUCKET;
   if (!bucket) throw new Error('SPROUT_BUCKET binding is missing — add the R2 bucket in the Worker settings.');
   return {
-    async put(key, body, contentType) {
-      await bucket.put(key, body, {
-        httpMetadata: { contentType: contentType || 'application/octet-stream' },
-      });
+    // onlyIfEtag: when set, this is a CONDITIONAL put (R2's real semantics —
+    // confirmed against the bindings API): it writes only if the key's current
+    // etag still matches, and returns null instead of writing otherwise. Two
+    // concurrent callers racing the same key can never both succeed. See the
+    // revision compare-and-set in PUT /sync/manifest, the reason this exists.
+    async put(key, body, contentType, onlyIfEtag) {
+      const opts = { httpMetadata: { contentType: contentType || 'application/octet-stream' } };
+      if (onlyIfEtag !== undefined) opts.onlyIf = { etagMatches: onlyIfEtag };
+      const res = await bucket.put(key, body, opts);
+      return onlyIfEtag !== undefined ? res !== null : true;   // false = lost the race, wrote nothing
     },
     async get(key) {
       const o = await bucket.get(key);
@@ -476,6 +482,12 @@ function makeStore(env) {
     async getJson(key) {
       const o = await bucket.get(key);
       return o ? await o.json() : null;
+    },
+    // Same as getJson, but also returns the object's etag — needed to condition
+    // a later put() on nothing having changed since this read.
+    async getJsonWithEtag(key) {
+      const o = await bucket.get(key);
+      return o ? { value: await o.json(), etag: o.httpEtag } : null;
     },
     async head(key) {
       const o = await bucket.head(key);
@@ -755,9 +767,11 @@ async function handleSync(path, request, env) {
     if (path === '/sync/manifest' && request.method === 'PUT') {
       const baseRev = parseInt(request.headers.get('X-Base-Rev') || '-1', 10);
 
-      // Compare-and-set on a SERVER-owned counter. Client clocks are worthless
-      // here — a Chromebook with the date set to 2030 would poison the ordering
-      // forever if we sorted by timestamp.
+      // Server-owned revision counter, not a timestamp — a Chromebook with the
+      // date set to 2030 would poison the ordering forever if we sorted by
+      // client clock. This first check is a cheap fast-path rejection using the
+      // meta already read above, so an obviously-stale push doesn't cost a
+      // request body read; the real compare-and-set is below.
       if (baseRev !== meta.rev) {
         return jsonResponse({
           error: 'conflict', rev: meta.rev, updatedAt: meta.updatedAt,
@@ -767,16 +781,44 @@ async function handleSync(path, request, env) {
       const body = await request.arrayBuffer();
       if (body.byteLength > MAX_MANIFEST_BYTES) throw httpError(413, 'That story is too large to sync.');
 
-      const rev = meta.rev + 1;
-      const now = Date.now();
+      // ── The actual compare-and-set, made atomic ──────────────────────────
+      // The check above reads `meta` once and is a cheap rejection, but proves
+      // nothing by itself: two requests can both read rev=N before either
+      // writes, both pass that check, and both proceed — R2 has no built-in
+      // request serialization, so nothing stopped them colliding. Whichever
+      // plain put() landed last used to win silently, discarding the other's
+      // manifest even though BOTH callers got a 200. (Confirmed with a forced
+      // concurrent-request harness against this exact code before this fix.)
+      //
+      // The fix: reserve the NEXT revision with a conditional put on meta.json
+      // — conditioned on the etag of the read we're acting on — BEFORE writing
+      // any manifest content. R2 guarantees only one conditional put against a
+      // given etag can ever succeed, so at most one of two racing requests
+      // claims a given rev. The loser gets a clean 409 here and writes
+      // NOTHING — no half-applied state, no clobbered content — and retries
+      // exactly as it already does today for an ordinary conflict.
+      const freshMeta = await store.getJsonWithEtag(metaKey);
+      if (!freshMeta) throw httpError(403, 'That team does not exist. Check the team name and secret code.');
+      if (baseRev !== freshMeta.value.rev) {
+        return jsonResponse({
+          error: 'conflict', rev: freshMeta.value.rev, updatedAt: freshMeta.value.updatedAt,
+        }, 409);
+      }
 
+      const rev = freshMeta.value.rev + 1;
+      const now = Date.now();
+      const updatedMeta = { ...freshMeta.value, rev, updatedAt: now, bytes: body.byteLength };
+
+      const claimed = await store.put(metaKey, JSON.stringify(updatedMeta), 'application/json', freshMeta.etag);
+      if (!claimed) {
+        // Someone else's write won the race between our read and this write.
+        const cur = await store.getJson(metaKey);
+        return jsonResponse({ error: 'conflict', rev: cur.rev, updatedAt: cur.updatedAt }, 409);
+      }
+
+      // We exclusively hold rev — safe to write content unconditionally now.
       await store.put(`t/${objectKey}/manifest`, body);
       await store.put(`t/${objectKey}/rev/${rev}.manifest`, body);   // cheap; recovers a clobbered team
-
-      meta.rev = rev;
-      meta.updatedAt = now;
-      meta.bytes = body.byteLength;
-      await store.put(metaKey, JSON.stringify(meta), 'application/json');
 
       // Trim ancient revisions. Never touch blobs — old snapshots still need them.
       if (rev > KEEP_REVISIONS) {
