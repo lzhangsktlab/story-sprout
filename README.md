@@ -150,7 +150,7 @@ Class folder/
 | `sprout-sync-test.html` | Test harness for the above — open it and click *Run tests* |
 | `cloudflare-worker/pip-worker.js` | **OpenAI proxy** for Pip **and** the sync relay |
 | `PIP_SCOPE.md` | Pip's behavior specification (source of truth) |
-| `RESEARCH_DATA.md` | Schema for the data captured for prompt-writing research |
+| `RESEARCH_DATA.md` | Codebook for the local story-file schema (`childWords` vs. the composed prompt; v6) |
 | `scripts/images-to-json.py` | Convert a folder of images into a story JSON |
 | `CLAUDE.md` | Guidance for AI coding assistants working in this repo |
 
@@ -222,7 +222,7 @@ The Worker exposes:
 - **With Teacher Mode, only ciphertext leaves the device.** Work is encrypted in the child's browser before it is sent; the relay stores bytes it holds no key to open, and they expire. The only readable copy lives on the teacher's own computer.
 - API keys never reach the browser; they live only in the Cloudflare Worker.
 - Pip is constrained to age-appropriate illustration with content and prompt-injection guardrails.
-- Research data (if used) is anonymized and stored only in the local story file — see [`RESEARCH_DATA.md`](RESEARCH_DATA.md).
+- **No child data is collected by the platform.** The story file is a **local** file — on the child's device, or synced encrypted to the supervising teacher's computer in class mode. Nothing is transmitted to or retained by a research server. Any analysis happens only on files consenting families **voluntarily contribute** under an ethics protocol — [`RESEARCH_DATA.md`](RESEARCH_DATA.md) is the codebook for reading such a file.
 
 **Two things not to be coy about:**
 - `teacher.json` holds every team's secret code in plaintext on the teacher's disk. It has to — those codes *are* the decryption keys. **Losing that file means losing the class's work irrecoverably**, and no one can recover it for you; that is what zero-knowledge means. Keep it off shared drives.
