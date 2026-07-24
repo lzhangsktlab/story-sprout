@@ -1601,6 +1601,27 @@ function updateZoomLabel() {
 /* ═══════════════════════════════════════════════
    SLIDE MANAGEMENT
 ═══════════════════════════════════════════════ */
+// Fabric's toCanvasElement (used by canvas.toDataURL) mutates the LIVE canvas —
+// interactive, contextTop, viewportTransform, width/height — and restores them only
+// if its internal render succeeds. There is no try/finally in it. A throw (which
+// happens for some content, unpredictably) left the canvas permanently
+// uninteractive: this was the root cause of the "frozen text box" bug — objects
+// stayed visible but became unselectable and un-draggable, silently, with no error
+// a child would ever see. Route every toDataURL call through here so a failed
+// render can't leave the canvas broken.
+function safeToDataURL(opts) {
+  try {
+    return S.canvas.toDataURL(opts);
+  } catch (e) {
+    console.error('[thumbnail] render failed, restoring canvas interactivity:', e);
+    S.canvas.interactive = true;
+    S.canvas.contextTop = S.canvas.upperCanvasEl.getContext('2d');
+    fitCanvas(S.zoom);      // recomputes width/height/viewportTransform from CANVAS_W/H —
+    S.canvas.renderAll();   // independent of whatever the failed render left behind
+    return null;
+  }
+}
+
 async function saveCurrentSlide(withThumb = true) {
   const s = S.slides[S.cur];
   const parsed = S.canvas.toJSON(['id', 'selectable', 'historyId']);
@@ -1610,7 +1631,9 @@ async function saveCurrentSlide(withThumb = true) {
   s.imgMap = { ...S.imgMap };
 
   if (withThumb) {
-    s.thumb = S.canvas.toDataURL({ format: 'jpeg', quality: 0.25, multiplier: 0.18 });
+    // Keep the last good thumbnail rather than overwrite it with nothing on failure.
+    const thumb = safeToDataURL({ format: 'jpeg', quality: 0.25, multiplier: 0.18 });
+    if (thumb) s.thumb = thumb;
   }
 }
 
@@ -1626,7 +1649,8 @@ async function loadSlide(idx, { skipSave = false } = {}) {
         S.canvas.renderAll();
         S.supressHist = false;
         // Generate fresh thumbnail after canvas is fully rendered
-        s.thumb = S.canvas.toDataURL({ format: 'jpeg', quality: 0.25, multiplier: 0.18 });
+        const thumb = safeToDataURL({ format: 'jpeg', quality: 0.25, multiplier: 0.18 });
+        if (thumb) s.thumb = thumb;
         resolve();
       });
     });
@@ -2866,10 +2890,16 @@ async function loadStoryData(d) {
 
 async function exportCurrentSlide() {
   await saveCurrentSlide(false);
+  const dataUrl = safeToDataURL({ format: 'png', multiplier: 2 });
+  if (!dataUrl) {
+    setStatus('Export failed — try again', 'err');
+    setTimeout(() => setStatus('', ''), 2500);
+    return;
+  }
   const title = document.getElementById('story-title-input').value || 'slide';
   const link = document.createElement('a');
   link.download = `${title}-page${S.cur+1}.png`;
-  link.href = S.canvas.toDataURL({ format: 'png', multiplier: 2 });
+  link.href = dataUrl;
   link.click();
   setStatus('Page exported as PNG', 'ok');
   setTimeout(() => setStatus('', ''), 2500);
