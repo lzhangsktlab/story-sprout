@@ -59,6 +59,7 @@ Pip's chat **contract** (the `PIP_SYSTEM` prompt in `pip-worker.js`) and its **m
 | `scribe_audit.py`, `scribe_audit_ext.py` | v1 harness (2-turn sequences) and its 200-turn extension |
 | `scribe_audit_v2.py` | development suite — 50 four-turn sequences, used for **model selection** |
 | `scribe_audit_v3_heldout.py` | **held-out verification** harness — 60 all-new sequences, frozen config, `--rescore` mode |
+| `CLAUDE_CODE_AUDIT_V3_HELDOUT_INSTRUCTIONS.md` | the researcher-authored spec that drove the held-out run (freeze gate, one-function rule, packaging) |
 | `model_selection_tests/` | the eight archived selection runs (+ its own `README.md`) |
 | `scribe_audit_v3_heldout_out/` | the verification run — 3 reps × {original, re-scored, pass-1} + `run_config.json` + `PROTOCOL.md` |
 
