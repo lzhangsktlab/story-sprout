@@ -2931,6 +2931,20 @@ function setStatus(msg, cls) {
    generates an illustration when the user asks for it.
 ═══════════════════════════════════════════════ */
 const PIP_PROXY_URL = 'https://storysprout-pip.jackwangxyw.workers.dev';
+
+/* Headers for every Pip call. Carries the team token when this computer has
+   joined a class, which is how the Worker looks up the CONTENT LEVEL the
+   teacher chose — the level itself is never sent from here, because anything
+   this file could send, a student could edit. Off a class computer there is no
+   token, and the Worker applies its strictest level. Sending the token here is
+   safe: it is the same token the sync routes already carry, it proves team
+   membership only, and it cannot decrypt anything. */
+function pipHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  if (SYNC.keys && SYNC.keys.authToken) h['X-Team-Auth'] = SYNC.keys.authToken;
+  return h;
+}
+
 let pipSeeded = false;
 let pipBusy = false;
 const pipMessages = [];   // OpenAI-format history: {role:'user'|'assistant', content}
@@ -3207,7 +3221,7 @@ async function pipSubmit() {
   try {
     const res = await fetch(PIP_PROXY_URL + '/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: pipHeaders(),
       body: JSON.stringify({ messages: pipMessages }),
     });
     const data = await res.json();
@@ -3250,7 +3264,7 @@ async function pipGenerate(imagePrompt) {
     if (baseImage) {
       const editRes = await fetch(PIP_PROXY_URL + '/image-edit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: pipHeaders(),
         body: JSON.stringify({ image: baseImage, prompt: imagePrompt }),
       });
       data = await editRes.json();
@@ -3259,7 +3273,7 @@ async function pipGenerate(imagePrompt) {
     if (!data) {
       const res = await fetch(PIP_PROXY_URL + '/image', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: pipHeaders(),
         body: JSON.stringify({ prompt: imagePrompt }),
       });
       data = await res.json();

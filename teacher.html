@@ -679,6 +679,39 @@
       background: var(--white);
     }
 
+    /* Content level — class-wide, teacher-only. */
+    .level-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      padding: 13px 15px;
+      background: var(--purple-bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .level-bar label {
+      display: block;
+      font-weight: 800;
+      font-size: 13.5px;
+      color: var(--ink);
+    }
+    .level-bar .level-blurb {
+      margin: 3px 0 0;
+      font-size: 12px;
+      color: var(--ink2);
+      max-width: 52ch;
+    }
+    .level-bar select:disabled { opacity: .55; }
+    .level-status {
+      font-size: 12px;
+      color: var(--ink3);
+      min-width: 8ch;
+    }
+    .level-status.ok  { color: var(--green); font-weight: 700; }
+    .level-status.err { color: var(--red);   font-weight: 700; }
+
     #log {
       font-size: 11.5px;
       color: var(--ink3);
@@ -795,6 +828,20 @@
           <span class="dot fresh"></span> Updating automatically
         </span>
         <button id="new-team">+ New team</button>
+      </div>
+
+      <!-- Content level. Applies to the WHOLE class, every team at once, and
+           only a signed-in teacher can change it: the Worker reads the level
+           from the team's own record, so nothing a child does in the Studio
+           can loosen it. -->
+      <div class="level-bar">
+        <div>
+          <label for="content-tier">Picture content level</label>
+          <p class="level-blurb" id="level-blurb">—</p>
+        </div>
+        <div class="spacer"></div>
+        <select id="content-tier" disabled></select>
+        <span class="level-status" id="level-status"></span>
       </div>
 
       <div class="new-team hide" id="new-team-card">
@@ -988,6 +1035,10 @@
       // checking perfectly and the student simply hasn't drawn anything new.
       rec.lastCheckedAt = new Date().toISOString();
       rec.error = null;
+      // What the relay says this team is ACTUALLY set to — the authority, not the
+      // local setting. Recorded on every check so tierDrift() can tell the teacher
+      // when a team has fallen out of step with the rest of the class.
+      rec.contentTier = state.contentTier || DEFAULT_TIER;
 
       if (state.rev === 0) { rec.status = 'empty'; return false; }
       if (state.rev === rec.lastRev) { rec.status = 'ok'; return false; }   // nothing new
@@ -1121,6 +1172,7 @@
       T.klass.updatedAt = new Date().toISOString();
       await writeJson(T.root, 'class.json', T.klass);
       renderTeams();
+      renderTierBar();   // every team just reported its real level — surface any drift
 
       // Be precise about what "nothing new" means. The teacher can only ever
       // collect what a student has SENT — and students send a few seconds after
@@ -1276,17 +1328,137 @@
 
       T.teacher = await readJson(T.root, 'teacher.json') || {
         fmt: 1, teacherEmail: T.email,
-        settings: { checkEverySec: DEFAULT_CHECK_SEC },
+        settings: { checkEverySec: DEFAULT_CHECK_SEC, contentTier: DEFAULT_TIER },
         teams: [],
       };
       T.klass = await readJson(T.root, 'class.json') || { fmt: 1, teams: {} };
 
       $('class-panel').classList.remove('hide');
       $('sync-now').disabled = false;
+      renderTierBar();
       renderTeams();
       restartTimer();
       log('class folder ready — ' + T.teacher.teams.length + ' team(s)');
       await collectAll();
+    }
+
+    /* ── content level ───────────────────────────────────────────────────────
+       One setting for the whole class. It is stored per TEAM on the relay (that
+       is the only record the Worker can reach when a child asks Pip to draw),
+       so changing it here writes to every team the class has.
+
+       This list must stay in step with CONTENT_TIERS in pip-worker.js. Only the
+       ids are load-bearing — the Worker validates against its own copy and
+       rejects anything it doesn't recognise, so a drifted label here is a
+       cosmetic bug, never a safety one.
+       ─────────────────────────────────────────────────────────────────────── */
+    const TIER_UI = [
+      { id: 'gentle',    label: 'Gentle',    grades: 'Kindergarten – Grade 2',
+        blurb: 'Warm and calm. No weapons at all — not even a storybook sword — nothing spooky, nobody in danger.' },
+      { id: 'storybook', label: 'Storybook', grades: 'Grades 3 – 5',
+        blurb: 'Classic storybook adventure. A sword or bow may be carried but never used on anyone; mild peril; gentle monsters.' },
+      { id: 'adventure', label: 'Adventure', grades: 'Grade 6',
+        blurb: 'The most relaxed level. Menacing villains and an implied confrontation — never contact, never injury.' },
+    ];
+    const DEFAULT_TIER = 'gentle';
+
+    const currentTier = () => {
+      const t = T.teacher?.settings?.contentTier;
+      return TIER_UI.some(x => x.id === t) ? t : DEFAULT_TIER;
+    };
+
+    function setLevelStatus(msg, kind) {
+      const el = $('level-status');
+      el.textContent = msg || '';
+      el.className = 'level-status' + (kind ? ' ' + kind : '');
+    }
+
+    // Teams whose relay record disagrees with the class setting — a team created
+    // while the relay was unreachable, or an apply that half-failed. Surfaced
+    // rather than hidden, because a teacher who thinks the class is on Gentle
+    // when one machine is on Adventure has no way to notice otherwise.
+    function tierDrift() {
+      const want = currentTier();
+      return (T.teacher?.teams || []).filter(t => {
+        const seen = T.klass?.teams?.[t.teamName]?.contentTier;
+        return seen && seen !== want;
+      });
+    }
+
+    function renderTierBar() {
+      const sel = $('content-tier');
+      if (!sel.options.length) {
+        for (const t of TIER_UI) {
+          const o = document.createElement('option');
+          o.value = t.id;
+          o.textContent = t.label + ' — ' + t.grades;
+          sel.appendChild(o);
+        }
+      }
+      const cur = currentTier();
+      sel.value = cur;
+      sel.disabled = !T.teacher;
+      $('level-blurb').textContent = TIER_UI.find(t => t.id === cur).blurb;
+
+      const drift = tierDrift();
+      if (drift.length) {
+        setLevelStatus(drift.length + ' team(s) not on this level — re-pick to apply', 'err');
+      }
+    }
+
+    async function applyTier(tier) {
+      const sel = $('content-tier');
+      const teams = T.teacher?.teams || [];
+
+      T.teacher.settings = T.teacher.settings || {};
+      T.teacher.settings.contentTier = tier;
+      await writeJson(T.root, 'teacher.json', T.teacher);
+      $('level-blurb').textContent = TIER_UI.find(t => t.id === tier).blurb;
+
+      if (!teams.length) { setLevelStatus('saved', 'ok'); return; }
+
+      sel.disabled = true;
+      setLevelStatus('applying…');
+      let ok = 0;
+      const failed = [];
+      for (const team of teams) {
+        try {
+          const keys = await SproutSync.deriveKeys(team.teamName, team.secretCode);
+          const res = await fetch(WORKER + '/sync/policy', {
+            method: 'POST',
+            headers: { ...teacherAuthHeader(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ authToken: keys.authToken, tier }),
+          });
+          if (!res.ok) throw new Error((await res.json()).error || 'relay refused');
+          ok++;
+          const rec = T.klass.teams[team.teamName] || (T.klass.teams[team.teamName] = { teamName: team.teamName, lastRev: 0 });
+          rec.contentTier = tier;
+        } catch (e) {
+          failed.push(team.teamName + ' (' + e.message + ')');
+        }
+      }
+      sel.disabled = false;
+      await writeJson(T.root, 'class.json', T.klass);
+
+      if (failed.length) {
+        setLevelStatus(ok + ' of ' + teams.length + ' applied', 'err');
+        showErr('class-err', 'Could not set the level on: ' + failed.join(', ') + '. Pick the level again to retry.');
+      } else {
+        // Students already drawing keep the old level for up to a minute — the
+        // Worker caches the lookup so it isn't re-reading the team record on
+        // every single picture. Say so rather than let a teacher wonder.
+        setLevelStatus('applied to ' + ok + ' team(s)', 'ok');
+        log('content level set to ' + tier + ' for ' + ok + ' team(s) — takes up to a minute to reach students already drawing');
+        setTimeout(() => setLevelStatus(''), 6000);
+      }
+    }
+
+    async function onTierChange() {
+      hideErr('class-err');
+      const tier = $('content-tier').value;
+      if (!TIER_UI.some(t => t.id === tier)) return;
+      try { await applyTier(tier); }
+      catch (e) { setLevelStatus('failed', 'err'); showErr('class-err', e.message); }
     }
 
     async function newTeam() {
@@ -1302,12 +1474,19 @@
         const res = await fetch(WORKER + '/sync/register', {
           method: 'POST',
           headers: { ...teacherAuthHeader(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({ authToken: keys.authToken }),
+          // A new team starts at the class's current level, not at the default —
+          // otherwise adding a machine mid-term would silently put that one child
+          // on different rules from everyone else.
+          body: JSON.stringify({ authToken: keys.authToken, tier: currentTier() }),
         });
         if (!res.ok) throw new Error((await res.json()).error || 'could not create the team');
 
         T.teacher.teams.push({ teamName, secretCode, createdAt: new Date().toISOString() });
         await writeJson(T.root, 'teacher.json', T.teacher);
+
+        const rec = T.klass.teams[teamName] || (T.klass.teams[teamName] = { teamName, lastRev: 0 });
+        rec.contentTier = currentTier();
+        await writeJson(T.root, 'class.json', T.klass);
 
         $('nt-name').textContent = teamName;
         $('nt-code').textContent = secretCode;
@@ -1517,6 +1696,7 @@
     $('pick-folder').onclick = pickFolder;
     $('switch-signin').onclick = switchSignIn;
     $('new-team').onclick = newTeam;
+    $('content-tier').onchange = onTierChange;
     $('del-cancel').onclick = closeDelete;
     $('del-go').onclick = doDelete;
     $('lightbox').onclick = () => $('lightbox').classList.remove('open');
