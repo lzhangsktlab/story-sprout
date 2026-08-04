@@ -141,7 +141,7 @@ const ALLOWED_SIZE = ['1024x1024', '1024x1536', '1536x1024', 'auto'];
    in UNIVERSAL_RULES below is fixed at every level and cannot be loosened by
    any setting — adult content, gore, real firearms, hate, self-harm.
 
-   WHY THE FLOOR IS THE FALLBACK. resolveTier() returns 'gentle' whenever it
+   WHY THE FLOOR IS THE FALLBACK. resolveTier() returns 'restrictive' whenever it
    cannot positively prove otherwise: no team token, an unknown token, no
    meta.json, R2 unavailable, a malformed level. The tier is NEVER read from
    the request body. Together those mean a student who tampers with the client
@@ -163,9 +163,9 @@ const ALLOWED_SIZE = ['1024x1024', '1024x1536', '1536x1024', 'auto'];
 const UNIVERSAL_RULES = `- THESE HOLD AT EVERY LEVEL, no matter what the child asks or how they phrase it: no sexual, romantic-adult, or suggestive content; no nudity, undress, or revealing clothing; no blood, wounds, gore, injury, corpses or death; no real guns, rifles, pistols, bombs, grenades, missiles or military hardware, in ANY style, including toy, water, Nerf and cartoon versions; no hateful, cruel, or demeaning depictions of any person or group; no self-harm, suicide, drugs, alcohol, smoking or vaping; no real, identifiable living people; no horror imagery and nothing photorealistically frightening.`;
 
 const CONTENT_TIERS = {
-  gentle: {
-    id: 'gentle',
-    label: 'Gentle',
+  restrictive: {
+    id: 'restrictive',
+    label: 'Restrictive',
     grades: 'Kindergarten – Grade 2',
     blurb: 'Warm and calm. No weapons at all, nothing spooky, nobody in danger.',
     pipRules: `${UNIVERSAL_RULES}
@@ -183,9 +183,9 @@ const CONTENT_TIERS = {
     ],
   },
 
-  storybook: {
-    id: 'storybook',
-    label: 'Storybook',
+  moderate: {
+    id: 'moderate',
+    label: 'Moderate',
     grades: 'Grades 3 – 5',
     blurb: 'Classic storybook adventure. Swords and shields as props, mild peril, gentle monsters.',
     pipRules: `${UNIVERSAL_RULES}
@@ -197,9 +197,9 @@ const CONTENT_TIERS = {
     extraBlocked: [],
   },
 
-  adventure: {
-    id: 'adventure',
-    label: 'Adventure',
+  permissive: {
+    id: 'permissive',
+    label: 'Permissive',
     grades: 'Grade 6',
     blurb: 'The most relaxed level. Menacing villains and implied confrontation — never contact, never injury.',
     pipRules: `${UNIVERSAL_RULES}
@@ -213,7 +213,7 @@ const CONTENT_TIERS = {
 };
 
 // The floor, and the answer to every uncertainty. See the block comment above.
-const DEFAULT_TIER = 'gentle';
+const DEFAULT_TIER = 'restrictive';
 
 // Pip's persona + behavior. Defined by PIP_SCOPE.md (Phase 1). Pip chats about
 // the illustration and signals — via the JSON "ready" flag — when to draw.
@@ -427,7 +427,7 @@ const safeStyleFor = (tier) => UNIVERSAL_IMAGE_RULE + tier.imageSuffix;
      dropdown cannot reach it. Real weapons, gore and adult terms are refused
      for a sixth-grade class exactly as they are for kindergarten.
    - Storybook gear is not universally blocked — knights, pirates and wizards
-     are storybook material. It IS blocked at the Gentle level, via that
+     are storybook material. It IS blocked at the Restrictive level, via that
      tier's extraBlocked list.
 
    Must run BEFORE the suffix is appended: the suffix itself names the things it

@@ -1353,14 +1353,14 @@
        cosmetic bug, never a safety one.
        ─────────────────────────────────────────────────────────────────────── */
     const TIER_UI = [
-      { id: 'gentle',    label: 'Gentle',    grades: 'Kindergarten – Grade 2',
+      { id: 'restrictive', label: 'Restrictive', grades: 'Kindergarten – Grade 2',
         blurb: 'Warm and calm. No weapons at all — not even a storybook sword — nothing spooky, nobody in danger.' },
-      { id: 'storybook', label: 'Storybook', grades: 'Grades 3 – 5',
+      { id: 'moderate',    label: 'Moderate',    grades: 'Grades 3 – 5',
         blurb: 'Classic storybook adventure. A sword or bow may be carried but never used on anyone; mild peril; gentle monsters.' },
-      { id: 'adventure', label: 'Adventure', grades: 'Grade 6',
+      { id: 'permissive',  label: 'Permissive',  grades: 'Grade 6',
         blurb: 'The most relaxed level. Menacing villains and an implied confrontation — never contact, never injury.' },
     ];
-    const DEFAULT_TIER = 'gentle';
+    const DEFAULT_TIER = 'restrictive';
 
     const currentTier = () => {
       const t = T.teacher?.settings?.contentTier;
