@@ -150,7 +150,8 @@ Class folder/
 | `sprout-sync.js` | Shared crypto + content-addressing + relay client (used by **both** pages) |
 | `sprout-sync-test.html` | Test harness for the above — open it and click *Run tests* |
 | `cloudflare-worker/pip-worker.js` | **OpenAI proxy** for Pip **and** the sync relay |
-| `PIP_SCOPE.md` | Pip's behavior specification (source of truth) |
+| `cloudflare-worker/pip-worker.js` | **Pip's behavior spec is the `PIP_SYSTEM` prompt in here** — the source of truth |
+| `PIP_SCOPE.md` | Phase 1 design record. Historical; superseded by `PIP_SYSTEM` |
 | `RESEARCH_DATA.md` | Codebook for the local story-file schema (`childWords` vs. the composed prompt; v6) |
 | `scripts/images-to-json.py` | Convert a folder of images into a story JSON |
 | `tests/` | Over-delivery audit: `TEST_PLAN.md`, `PROTOCOL.md`, `CODEBOOK.md`, stimuli, pilot results and images |

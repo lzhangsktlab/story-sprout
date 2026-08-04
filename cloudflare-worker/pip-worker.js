@@ -215,8 +215,10 @@ const CONTENT_TIERS = {
 // The floor, and the answer to every uncertainty. See the block comment above.
 const DEFAULT_TIER = 'restrictive';
 
-// Pip's persona + behavior. Defined by PIP_SCOPE.md (Phase 1). Pip chats about
-// the illustration and signals — via the JSON "ready" flag — when to draw.
+// Pip's persona + behavior. THIS IS THE SOURCE OF TRUTH — it is what actually
+// reaches the model. PIP_SCOPE.md originated the Phase 1 routing rules below but
+// has not tracked this prompt since June 2026; change behaviour here, not there.
+// Pip chats about the illustration and signals — via the JSON "ready" flag — when to draw.
 // Built per-request because the SAFETY & SCOPE block varies with the class's
 // content level; everything else is identical at every level.
 const pipSystemFor = (tier) => `You are Pip, a virtual illustrator helping a child create pictures for their story. The child describes a picture; you draw it; then they tell you what to keep or change.

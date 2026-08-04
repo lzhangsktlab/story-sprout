@@ -1,9 +1,35 @@
 # Pip — Illustrator Agent Scope (Phase 1)
 
-Behavioral specification for **Pip**, the conversational illustrator. The live
-behavior is implemented as the `PIP_SYSTEM` prompt in
-`cloudflare-worker/pip-worker.js`; the opening line and post-image check live in
-`workshop-plugin.html`. Keep this document and that code in sync.
+> ## ⚠️ HISTORICAL DESIGN RECORD — NOT THE CURRENT SPEC
+>
+> **`PIP_SYSTEM` in `cloudflare-worker/pip-worker.js` is the source of truth for
+> Pip's behaviour.** That prompt is what actually reaches the model, and each
+> rule carries the reasoning that produced it in a comment beside it.
+>
+> This document last tracked the Worker in **June 2026**. Pip's behaviour has
+> changed at least twice since, and none of it is reflected below:
+>
+> - **The scribe rule** — the `image_prompt` carries the child's own words,
+>   typos and all, and adds nothing they did not say. This is the central claim
+>   of the research the repo exists to support (`PAPER_REFERENCE.md`), and it is
+>   absent here.
+> - **Weapons and safety rules** — three layers, added after one failed.
+> - **Teacher-set content levels** — Restrictive / Moderate / Permissive, which
+>   change Pip's safety block per class. See `CLAUDE.md`.
+>
+> It used to say "keep this document and that code in sync." They were not in
+> sync, and the instruction is what made that dangerous: it sent readers to a
+> stale file believing it was authoritative. The claim is withdrawn rather than
+> repaired, because a mirror nobody updates is a trap in either direction.
+>
+> Kept because the Phase 1 reasoning — the draw-vs-ask routing, the specificity
+> threshold, the post-image reflection check — is still the origin of those
+> behaviours and is worth reading as history. **Do not implement from it, and do
+> not cite it as the current behaviour.** Change behaviour in the Worker.
+
+Behavioral specification for **Pip**, the conversational illustrator, as
+designed in Phase 1. The opening line and post-image check live in
+`workshop-plugin.html`.
 
 ---
 

@@ -60,7 +60,9 @@ The front end acts on those four fields and nothing else. Parameters: `reasoning
 
 The server can **overrule the model**: `ready` is only true if the model said `true` *and* produced a non-empty `image_prompt`. A malformed reply degrades to a friendly fallback rather than an error.
 
-**`PIP_SCOPE.md` is accurate.** It is the one document in this repo still in sync with the code — the greeting and the four rotating reflection questions are used verbatim. §4.2 of the paper is correct as written.
+**`PIP_SCOPE.md` is accurate for §4.2, and only for §4.2.** The greeting and all four rotating reflection questions are still used verbatim — verified by exact string match against `PIP_GREETING` and `PIP_IMAGE_CHECKS` in `workshop-plugin.html`. §4.2 of the paper is correct as written and needs no change.
+
+⚠️ It is **not** a current description of Pip's behaviour, and this file used to claim it was "the one document still in sync with the code." That was true when written and is now false: `PIP_SCOPE.md` has not tracked the Worker since June 2026, and is missing the scribe rule, the weapons rules, and the teacher-set content levels. For anything beyond the greeting and the reflection questions, cite `PIP_SYSTEM` in `cloudflare-worker/pip-worker.js`.
 
 ### The three rules that do the pedagogical work
 
@@ -200,7 +202,7 @@ That is a strong story. But these sentences, which appear in the **Abstract, §3
 | §4.1, §6, Acks | Voice input, framed around fidelity | Until 14 July 2026 the microphone **streamed children's voice audio to Google**. Now on-device, failing closed. Voice is explicitly personal information under the amended COPPA Rule. **Your Ethics statement needs this.** |
 | §7 | *"no telemetry"* | Was **false** — every page load fetched Google Fonts and cdnjs, leaking the child's IP to two third parties. Both now self-hosted. **Now true.** |
 | §5 | *"gpt-image-2 at the time of writing"* | ✅ Correct. |
-| §4.2 | The JSON schema and the three rules | ✅ Correct. `PIP_SCOPE.md` is in sync. |
+| §4.2 | The JSON schema and the three rules | ✅ Correct. The greeting and four reflection questions in `PIP_SCOPE.md` are still verbatim — but nothing else in that file is current; cite `PIP_SYSTEM` for the rest. |
 
 ### Documents to disregard
 

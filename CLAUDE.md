@@ -17,9 +17,13 @@ It also has a **Teacher Mode**: a teacher collects every child's work onto their
 | `sprout-sync.js` | Shared crypto + content-addressing + relay client. Loaded by **both** pages. |
 | `sprout-sync-test.html` | Test harness for the above. Open it, click *Run tests*. |
 | `cloudflare-worker/pip-worker.js` | The OpenAI proxy **and** the sync relay. |
-| `workshop.html` | **Legacy.** An earlier standalone version (Stability AI). Not maintained — don't edit it unless asked. |
+| `pii-filter-test.html` | Test harness for the personal-info filter. Open it, click *Run tests*. |
+| `tests/` | Over-delivery audit — design, protocol, codebook, stimuli, pilot results. |
 
-⚠️ **`workshop.html` is not the app.** Earlier versions of this file said it was. If a task mentions "the workshop", it means `workshop-plugin.html`.
+⚠️ If a task mentions "the workshop", it means `workshop-plugin.html`. An older
+`workshop.html` (a standalone Stability AI version) used to sit alongside it and
+was **deleted** — along with `cloudflare-worker/worker.js`, its Stability proxy.
+Neither exists any more; don't go looking for them.
 
 ## Running
 
@@ -37,7 +41,12 @@ The Worker's CORS allowlist already covers `localhost` and `file://`.
 
 Browser app → **Cloudflare Worker** (`https://storysprout-pip.jackwangxyw.workers.dev`) → OpenAI. The API key lives only in the Worker.
 
-- **Chat:** `gpt-4o-mini` · **Images:** `gpt-image-2`
+- **Chat:** `gpt-5.4-mini` · **Images:** `gpt-image-2`
+- ⚠️ The chat model is a **reasoning** model. It rejects `temperature` and
+  `max_tokens`, taking `max_completion_tokens` instead, and its `reasoning_effort`
+  default differs per model — so `handleChat` states `'low'` explicitly. Swapping
+  the chat model is **not** a one-line change; read `handleChat` first. The
+  measured comparison that picked it is in a comment right there.
 - Worker routes: `/chat`, `/image`, `/image-edit`, and `/sync/*` for Teacher Mode.
 - The Worker is deployed by **pasting it into the Cloudflare dashboard** — no wrangler, no bundler, so it must stay a single dependency-free file. The repo copy and the deployed copy drift easily; the repo is the source of truth.
 
@@ -70,7 +79,8 @@ All app state is in the `S` object:
 
 ### Story format
 
-`buildStoryJson()` produces `{v: 5, title, saved, session, imgMap, storyText, aiHistory, slides[]}`.
+`buildStoryJson()` produces `{v: 6, title, saved, session, imgMap, storyText, aiHistory, slides[]}`.
+v6 adds `pipConversation` + `promptLog`; v5 files still load. See `RESEARCH_DATA.md`.
 
 Images are **base64 data URLs inlined into every page's Fabric JSON, and duplicated again in `aiHistory[].dataUrl`**. A six-page story is therefore ~50MB. This matters enormously for sync — see below.
 
@@ -91,6 +101,50 @@ Because stories are ~50MB, images are **content-addressed**: hashed, uploaded on
 
 ⚠️ **The `storysketch_*` IndexedDB keys keep their old name on purpose.** Renaming them would orphan every existing user's autosave and file handle.
 
+### Content levels (teacher-set)
+
+A class runs at one of three levels, chosen by the teacher from a dropdown on
+`teacher.html`. Defined in `CONTENT_TIERS` in the Worker:
+
+| id | Label | Grades |
+|---|---|---|
+| `restrictive` | Restrictive | Kindergarten – Grade 2 |
+| `moderate` | Moderate | Grades 3 – 5 |
+| `permissive` | Permissive | Grade 6 |
+
+The level moves **two** things only: how much peril/menace a picture may carry,
+and whether storybook gear (a sword, a bow) may appear and how. Everything in
+`UNIVERSAL_RULES` / `UNIVERSAL_BLOCKED` is fixed at every level and the dropdown
+cannot reach it — adult content, gore, real firearms, hate, self-harm.
+
+⚠️ **Students must never be able to change this, and the design is what
+guarantees it — not a UI check.** Three things hold it up, and all three must
+survive any edit here:
+
+1. The level lives in the team's `meta.json` and is resolved **server-side** by
+   `resolveTier()` from the team token. It is **never** read from a request body,
+   so there is nothing in the request for a student to edit.
+2. Writing it requires `POST /sync/policy`, which demands a **verified teacher
+   identity** (`verifyTeacher`), exactly like `/sync/delete`. The team token
+   alone is not enough — every child in the class knows that token.
+3. `resolveTier()` returns the **strictest** level on every failure path: no
+   token, unknown token, no `meta.json`, R2 unreachable, unrecognised level.
+   So tampering can only ever tighten, never loosen.
+
+Off a class computer there is no team, so the strictest level applies.
+
+Lookups are cached ~60s per isolate to keep an R2 read off every picture, so a
+teacher's change takes up to a minute to reach a student already drawing. The
+teacher UI says so.
+
+⚠️ `/sync/policy` writes `meta.json` with a **conditional put** on the etag. It
+must stay that way: a plain put would clobber a concurrent manifest push bumping
+`rev`, which is the exact data-loss bug the compare-and-set below fixes.
+
+Changing the tier **ids** is not free once deployed — they are persisted in every
+team's `meta.json`. An unrecognised id falls back to the floor, which is safe but
+would silently reset a class the teacher had deliberately loosened.
+
 ### CSS theming
 All colours/spacing are CSS custom properties on `:root` (`--purple`, `--cream`, `--radius`, …).
 
@@ -100,5 +154,13 @@ All colours/spacing are CSS custom properties on `:root` (`--purple`, `--cream`,
 - Delete/Backspace — Delete selected
 
 ## Related docs
-- `PIP_SCOPE.md` — Pip's behavioural spec. Mirrored into `PIP_SYSTEM` in the Worker; keep them in sync.
+- ⚠️ `PIP_SCOPE.md` — **the Phase 1 design record, NOT the current spec.** It
+  described Pip before the scribe rule and before content levels, and it has not
+  tracked the Worker since June 2026. **`PIP_SYSTEM` in `pip-worker.js` is the
+  source of truth for Pip's behaviour** — it is what actually reaches the model,
+  and it carries the reasoning for each rule in comments beside it. This file
+  used to claim the two were mirrored; they were not, and pretending otherwise
+  sent readers to a stale document. Change behaviour in the Worker.
+- `tests/` — the over-delivery audit: whether the content levels hold, and
+  whether the renderer draws things nobody asked for. `tests/TEST_PLAN.md` first.
 - `RESEARCH_DATA.md` — schema for the prompt-writing research data captured in the story file.
