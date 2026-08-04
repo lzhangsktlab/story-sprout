@@ -1,0 +1,22 @@
+# ── Secrets ──────────────────────────────────────────────────────────────────
+# These hold team names AND their six-digit secret codes in plaintext. The code
+# is the ONLY thing protecting a team's encrypted work (19.9 bits — see the
+# entropy note in teacher.html), and this repository is public. Committing them
+# would let anyone overwrite those teams.
+#
+# The audit teams are throwaway and hold no student work, so this is hygiene
+# rather than an incident — but the same files exist for real classes, and a
+# rule that only sometimes applies is not a rule.
+teams.json
+audit-*/
+
+# ── Run outputs ──────────────────────────────────────────────────────────────
+# The PILOT's images are committed on purpose: they are the evidence for the
+# findings, and a reviewer cannot check the calibration argument without seeing
+# them. 18 images is ~46 MB.
+#
+# A FULL run is 3,060 images ≈ 7.9 GB and must never enter git history. Point
+# `--images-dir` outside the repo for real runs, or use external storage. If
+# that ever lands here by accident it is not removable by a later commit.
+out/*/images/
+*.large/

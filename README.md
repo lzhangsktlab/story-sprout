@@ -62,6 +62,7 @@ Pip's chat **contract** (the `PIP_SYSTEM` prompt in `pip-worker.js`) and its **m
 | `CLAUDE_CODE_AUDIT_V3_HELDOUT_INSTRUCTIONS.md` | the researcher-authored spec that drove the held-out run (freeze gate, one-function rule, packaging) |
 | `model_selection_tests/` | the eight archived selection runs (+ its own `README.md`) |
 | `scribe_audit_v3_heldout_out/` | the verification run — 3 reps × {original, re-scored, pass-1} + `run_config.json` + `PROTOCOL.md` |
+| `tests/` | **over-delivery audit** — does the renderer draw things nobody asked for, and do the three content levels hold? Design + a 20-image pilot. Full run not yet authorised. |
 
 **Frozen final numbers** — held-out suite, `gpt-5.4-mini` at `reasoning_effort: low`, against the frozen contract (`PIP_SYSTEM` sha256 `d01f624b…`), 60 unseen four-turn sequences × 3 stochastic reps:
 
@@ -152,6 +153,7 @@ Class folder/
 | `PIP_SCOPE.md` | Pip's behavior specification (source of truth) |
 | `RESEARCH_DATA.md` | Codebook for the local story-file schema (`childWords` vs. the composed prompt; v6) |
 | `scripts/images-to-json.py` | Convert a folder of images into a story JSON |
+| `tests/` | Over-delivery audit: `TEST_PLAN.md`, `PROTOCOL.md`, `CODEBOOK.md`, stimuli, pilot results and images |
 | `CLAUDE.md` | Guidance for AI coding assistants working in this repo |
 
 ## 🚀 Getting started

@@ -1,0 +1,19 @@
+{
+  "runid": "pilot-20260804-002403",
+  "worker": "https://storysprout-pip.jackwangxyw.workers.dev",
+  "model": "gpt-image-2",
+  "tier": "restrictive (no team token)",
+  "pip_in_loop": false,
+  "quality": "medium",
+  "size": "1536x1024",
+  "unit_cost_usd": 0.041,
+  "items": 20,
+  "generated": 18,
+  "blocked": 2,
+  "errored": 0,
+  "cost_usd": 0.738,
+  "wall_sec": 980.9,
+  "latency_ms_median": 53417,
+  "latency_ms_min": 41322,
+  "latency_ms_max": 60303
+}
