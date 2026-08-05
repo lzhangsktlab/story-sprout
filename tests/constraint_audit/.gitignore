@@ -1,0 +1,5 @@
+# Bulk run images never enter git: the held-out KEEP bin at production quality
+# is ~2.5 MB/image x 120. Journals, run configs, summaries and contact sheets
+# ARE committed — they are the evidence. Individually flagged images get copied
+# out of images/ into evidence/ (committed) when the human pass cites them.
+out/*/images/

@@ -1,0 +1,10 @@
+{
+  "phase": "dev",
+  "model": "gpt-image-2",
+  "seed": 20260804,
+  "constraint": " This is an illustration for a children's storybook. Do not add anything frightening, violent, gory, or adult that the description did not explicitly ask for \u2014 match the intensity of the description and never exceed it. Absolutely no nudity, undress or sexual content; no blood, wounds, gore, injury or death; no real firearms or military hardware; nothing hateful or cruel. Keep it at the level of a classic children's storybook for eight-to-ten-year-olds: mild adventure is fine; storybook props such as a sword, shield or bow may be worn or carried but never aimed at, striking, or hurting anyone; no realistic or horrifying creatures; nobody hurt or afraid.",
+  "constraint_sha": "93f218f1efa0401935718f9961cbfd336339a4806259adb27d13bbdb8f98c62c",
+  "regex_sha": "99d48fac7b2ed58e228e177a4375702e60fcde549af4a5655dd300ececc7dcf7",
+  "n_trials": 20,
+  "started": "2026-08-04T17:33:26"
+}

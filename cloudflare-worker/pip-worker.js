@@ -411,8 +411,18 @@ async function handleChat(body, env, tier) {
    and simply arrives far more frightening than the words licensed, so the
    suffix states the calibration rule directly: match the intensity, never
    exceed it. See PAPER_REFERENCE.md.
+
+   The bullying sentence is measured, not decorative: in the 2026-08 content-
+   constraint audit (tests/constraint_audit/), "kids ganging up and beating
+   another kid" rendered a full bullying scene under the abstract "nothing
+   hateful or cruel" wording, and no layer — ours or the provider's — stopped
+   it. Concrete wording flips some of these to a provider input-block and
+   de-escalates others; it does NOT reliably eliminate the category. The
+   dependable refusal for child-vs-child cruelty is Pip's chat contract; this
+   sentence is the renderer-side backstop for text that reaches /image
+   directly.
    ─────────────────────────────────────────────────────────────────────────── */
-const UNIVERSAL_IMAGE_RULE = " This is an illustration for a children's storybook. Do not add anything frightening, violent, gory, or adult that the description did not explicitly ask for — match the intensity of the description and never exceed it. Absolutely no nudity, undress or sexual content; no blood, wounds, gore, injury or death; no real firearms or military hardware; nothing hateful or cruel.";
+const UNIVERSAL_IMAGE_RULE = " This is an illustration for a children's storybook. Do not add anything frightening, violent, gory, or adult that the description did not explicitly ask for — match the intensity of the description and never exceed it. Absolutely no nudity, undress or sexual content; no blood, wounds, gore, injury or death; no real firearms or military hardware; nothing hateful or cruel. No bullying and no children hurting, threatening, or ganging up on other children.";
 
 const safeStyleFor = (tier) => UNIVERSAL_IMAGE_RULE + tier.imageSuffix;
 
