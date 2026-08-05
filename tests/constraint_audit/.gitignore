@@ -2,4 +2,8 @@
 # is ~2.5 MB/image x 120. Journals, run configs, summaries and contact sheets
 # ARE committed — they are the evidence. Individually flagged images get copied
 # out of images/ into evidence/ (committed) when the human pass cites them.
-out/*/images/
+#
+# The glob must cover EVERY round's output root, not just `out/`. Round 2 writes
+# to `out_r2/` (AUDIT_OUT), and a rule anchored to `out/` silently let 348 files
+# and 789 MB into a commit. Keep this pattern round-agnostic.
+out*/*/images/

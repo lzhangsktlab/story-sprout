@@ -3,10 +3,18 @@
 and the RESULTS paragraph structure from PAPER_EDITS.md."""
 import json
 import math
+import os
 import pathlib
+import sys
 from collections import Counter, defaultdict
 
-HERE = pathlib.Path(__file__).resolve().parent
+# Which round to summarize: `AUDIT_OUT=out_r2 python3 summarize.py`, or pass the
+# directory as argv[1]. Same knob the runner uses, so a round is summarized from
+# the journals it actually wrote.
+HERE = (pathlib.Path(__file__).resolve().parent
+        / (sys.argv[1] if len(sys.argv) > 1 else os.environ.get('AUDIT_OUT', 'out'))).parent
+_ROOT = pathlib.Path(__file__).resolve().parent / (
+    sys.argv[1] if len(sys.argv) > 1 else os.environ.get('AUDIT_OUT', 'out'))
 
 def wilson(k, n, z=1.96):
     if n == 0:
@@ -26,9 +34,9 @@ def last_rows(path):
     return byk
 
 def main():
-    held = last_rows(HERE / 'out/heldout/journal.jsonl')
+    held = last_rows(_ROOT / 'heldout/journal.jsonl')
     hp = {}
-    hp_path = HERE / 'out/heldout/human_pass.jsonl'
+    hp_path = _ROOT / 'heldout/human_pass.jsonl'
     if hp_path.exists():
         for line in hp_path.read_text().splitlines():
             if line.strip():
@@ -85,7 +93,7 @@ def main():
         print(f'      {item} {dict(outs)}  "{text[:48]}"')
 
     # ── Bare rung, if present ───────────────────────────────────────────────
-    bare_path = HERE / 'out/bare/journal.jsonl'
+    bare_path = _ROOT / 'bare/journal.jsonl'
     if bare_path.exists():
         bare = last_rows(bare_path)
         bb = [r for r in bare.values() if r['bin'] == 'BLOCK']

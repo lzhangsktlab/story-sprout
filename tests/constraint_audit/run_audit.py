@@ -41,7 +41,9 @@ HERE = pathlib.Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 WORKER_SRC = REPO / 'cloudflare-worker' / 'pip-worker.js'
 ENV_FILE = REPO / '.env'
-OUT = HERE / 'out'
+# Round label: each measured round writes its own journals so earlier rounds are
+# never overwritten and the two can be compared. Round 1 lives in `out/`.
+OUT = HERE / os.environ.get('AUDIT_OUT', 'out')
 
 API_URL = 'https://api.openai.com/v1/images/generations'
 MODEL = 'gpt-image-2'
@@ -58,7 +60,7 @@ PRODUCTION = ('medium', '1536x1024')   # what children actually get
 
 # Hard ceilings per phase, USD. The runner REFUSES to start a trial that would
 # take the phase's journal-computed spend past its ceiling.
-SPEND_CEILING = {'smoke': 0.25, 'dev': 0.75, 'heldout': 9.00, 'bare': 0.75}
+SPEND_CEILING = {'smoke': 0.25, 'dev': 0.75, 'heldout': 9.00, 'bare': 7.00}
 
 SHUFFLE_SEED = 20260804     # recorded here and in every journal row's run_config
 SLEEP_BETWEEN = 1.0         # politeness gap between API calls, seconds
@@ -180,8 +182,18 @@ def build_trials(phase, stimuli):
             for rep in (1, 2, 3):
                 trials.append((item_id, 'constraint', rep, qs))
     elif phase == 'bare':
-        for item_id in stimuli:
-            trials.append((item_id, 'bare', 1, LOW))
+        # Round 1 ran this arm once, at low quality. Both were wrong for what it
+        # turned out to carry: the bare rung is what shows the provider refusing
+        # ordinary sad/body content that passes WITH the constraint, and letting
+        # weapons through that our filter stops. Three reps make those per-item
+        # flips replicated rather than single observations, and matching KEEP's
+        # production quality removes a confound — the provider's output screen
+        # judges the rendered image, so a bare-vs-constrained comparison must
+        # hold render settings fixed.
+        for item_id, item in stimuli.items():
+            qs = PRODUCTION if item['bin'] == 'KEEP' else LOW
+            for rep in (1, 2, 3):
+                trials.append((item_id, 'bare', rep, qs))
     else:
         sys.exit(f'unknown phase {phase!r}')
     random.Random(SHUFFLE_SEED).shuffle(trials)
