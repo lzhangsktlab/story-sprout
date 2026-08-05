@@ -107,15 +107,29 @@ def extract_worker_constants():
     }
 
 
-def read_api_key():
+def read_keys():
+    """Two keys, deliberately.
+
+    The BLOCK bin exists to fire violating prompts at the safety stack, and the
+    provider's abuse monitoring judges the ACCOUNT that sends them. That
+    traffic must not ride the production key that serves children. So:
+      OPENAI_API_KEY        -> KEEP and EDGE bins (ordinary storybook content)
+      OPENAI_API_KEY_AUDIT  -> BLOCK bin, and any bare-condition BLOCK trial
+    If the audit key is missing, BLOCK trials are SKIPPED (left pending in the
+    journal), never silently sent on the production key.
+    """
     if not ENV_FILE.exists():
         sys.exit(f'FATAL: {ENV_FILE} not found')
+    keys = {}
     for line in ENV_FILE.read_text().splitlines():
-        if line.startswith('OPENAI_API_KEY='):
-            key = line.split('=', 1)[1].strip().strip('"').strip("'")
-            if key:
-                return key
-    sys.exit('FATAL: OPENAI_API_KEY not set in .env')
+        for name, slot in (('OPENAI_API_KEY_AUDIT=', 'audit'), ('OPENAI_API_KEY=', 'main')):
+            if line.startswith(name):
+                v = line.split('=', 1)[1].strip().strip('"').strip("'")
+                if v:
+                    keys[slot] = v
+    if 'main' not in keys:
+        sys.exit('FATAL: OPENAI_API_KEY not set in .env')
+    return keys
 
 
 # ── Stimuli ──────────────────────────────────────────────────────────────────
@@ -303,7 +317,7 @@ TERMINAL = ('refused_ours', 'refused_provider_prompt', 'refused_provider_output'
 
 def run_phase(phase):
     consts = extract_worker_constants()
-    api_key = read_api_key()
+    keys = read_keys()
     stimuli = load_stimuli()
     trials = build_trials(phase, stimuli)
 
@@ -347,6 +361,7 @@ def run_phase(phase):
         print('Nothing to do — phase complete.')
         return
 
+    skipped_no_audit_key = 0
     counts = {}
     for n, (item_id, condition, rep, (quality, size)) in enumerate(todo, 1):
         next_cost = UNIT_COST[(quality, size)]
@@ -354,6 +369,14 @@ def run_phase(phase):
             print(f'\nSPEND CEILING: ${spent:.3f} + ${next_cost:.3f} would pass '
                   f'${ceiling:.2f}. Stopping; journal is safe, rerun resumes here.')
             break
+        bin_name = stimuli[item_id]['bin']
+        if bin_name == 'BLOCK':
+            api_key = keys.get('audit')
+            if not api_key:
+                skipped_no_audit_key += 1
+                continue    # never send violating prompts on the production key
+        else:
+            api_key = keys['main']
         key = trial_key(phase, condition, item_id, rep)
         row = run_trial(api_key, consts, stimuli[item_id], condition,
                         quality, size, images_dir, key)
@@ -372,6 +395,10 @@ def run_phase(phase):
     errs = sum(v for k, v in counts.items() if k == 'error')
     if errs:
         print(f'NOTE: {errs} error trial(s) — rerun `run_audit.py {phase}` to retry them.')
+    if skipped_no_audit_key:
+        print(f'NOTE: {skipped_no_audit_key} BLOCK-bin trial(s) SKIPPED — no '
+              f'OPENAI_API_KEY_AUDIT in .env. Add it and rerun `run_audit.py {phase}`; '
+              f'they are still pending in the journal.')
 
 
 def show_status():
