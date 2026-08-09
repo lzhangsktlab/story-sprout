@@ -7,3 +7,7 @@
 # to `out_r2/` (AUDIT_OUT), and a rule anchored to `out/` silently let 348 files
 # and 789 MB into a commit. Keep this pattern round-agnostic.
 out*/*/images/
+
+# Pip arm writes no images, only journals — nothing to exclude, but keep the
+# rule round-agnostic if that ever changes.
+out_pip*/*/images/
