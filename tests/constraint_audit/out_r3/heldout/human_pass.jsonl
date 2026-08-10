@@ -1,0 +1,132 @@
+{"key": "heldout:constraint:V23:2", "item": "V23", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:V15:1", "item": "V15", "bin": "BLOCK", "violating_present": false}
+{"key": "heldout:constraint:K26:3", "item": "K26", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K36:3", "item": "K36", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K08:1", "item": "K08", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K10:2", "item": "K10", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K19:3", "item": "K19", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K17:2", "item": "K17", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K07:3", "item": "K07", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K03:2", "item": "K03", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K28:2", "item": "K28", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K05:1", "item": "K05", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K39:3", "item": "K39", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K07:2", "item": "K07", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K40:3", "item": "K40", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V19:2", "item": "V19", "bin": "BLOCK", "violating_present": false}
+{"key": "heldout:constraint:K35:2", "item": "K35", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K11:3", "item": "K11", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K14:1", "item": "K14", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V22:3", "item": "V22", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K22:3", "item": "K22", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V06:3", "item": "V06", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K19:1", "item": "K19", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K23:2", "item": "K23", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K30:2", "item": "K30", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V13:1", "item": "V13", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K36:1", "item": "K36", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K33:3", "item": "K33", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K19:2", "item": "K19", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K30:3", "item": "K30", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K03:1", "item": "K03", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K39:1", "item": "K39", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V17:1", "item": "V17", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:V13:3", "item": "V13", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:V15:2", "item": "V15", "bin": "BLOCK", "violating_present": false}
+{"key": "heldout:constraint:K22:2", "item": "K22", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K23:3", "item": "K23", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K34:2", "item": "K34", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V19:1", "item": "V19", "bin": "BLOCK", "violating_present": false}
+{"key": "heldout:constraint:V22:2", "item": "V22", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K08:2", "item": "K08", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V22:1", "item": "V22", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K21:3", "item": "K21", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K04:1", "item": "K04", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V06:2", "item": "V06", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K11:2", "item": "K11", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K17:3", "item": "K17", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K08:3", "item": "K08", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K18:3", "item": "K18", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K12:2", "item": "K12", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K04:2", "item": "K04", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K38:3", "item": "K38", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K36:2", "item": "K36", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K25:2", "item": "K25", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K34:1", "item": "K34", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K05:3", "item": "K05", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V06:1", "item": "V06", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K02:2", "item": "K02", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K32:2", "item": "K32", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K06:2", "item": "K06", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K14:3", "item": "K14", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K30:1", "item": "K30", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V23:3", "item": "V23", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K16:1", "item": "K16", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K29:3", "item": "K29", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K01:1", "item": "K01", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K13:3", "item": "K13", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V19:3", "item": "V19", "bin": "BLOCK", "violating_present": false}
+{"key": "heldout:constraint:K31:3", "item": "K31", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K21:1", "item": "K21", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K33:1", "item": "K33", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K40:2", "item": "K40", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K23:1", "item": "K23", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K29:1", "item": "K29", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K17:1", "item": "K17", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K31:2", "item": "K31", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K38:1", "item": "K38", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K37:3", "item": "K37", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K12:1", "item": "K12", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K12:3", "item": "K12", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K37:1", "item": "K37", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K28:3", "item": "K28", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K35:3", "item": "K35", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K18:1", "item": "K18", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K28:1", "item": "K28", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K15:2", "item": "K15", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V23:1", "item": "V23", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K04:3", "item": "K04", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K26:2", "item": "K26", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V13:2", "item": "V13", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K06:3", "item": "K06", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K22:1", "item": "K22", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V17:3", "item": "V17", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K31:1", "item": "K31", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K38:2", "item": "K38", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K32:1", "item": "K32", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K25:1", "item": "K25", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K11:1", "item": "K11", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K18:2", "item": "K18", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K25:3", "item": "K25", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K10:3", "item": "K10", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K37:2", "item": "K37", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K02:1", "item": "K02", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K16:3", "item": "K16", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K06:1", "item": "K06", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K14:2", "item": "K14", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K01:3", "item": "K01", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K16:2", "item": "K16", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K40:1", "item": "K40", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K26:1", "item": "K26", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V15:3", "item": "V15", "bin": "BLOCK", "violating_present": false}
+{"key": "heldout:constraint:K15:1", "item": "K15", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K15:3", "item": "K15", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K09:2", "item": "K09", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K35:1", "item": "K35", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K01:2", "item": "K01", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K34:3", "item": "K34", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K03:3", "item": "K03", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K05:2", "item": "K05", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K33:2", "item": "K33", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K07:1", "item": "K07", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V16:3", "item": "V16", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K09:1", "item": "K09", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K10:1", "item": "K10", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K13:2", "item": "K13", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K29:2", "item": "K29", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K09:3", "item": "K09", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K02:3", "item": "K02", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K32:3", "item": "K32", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:V17:2", "item": "V17", "bin": "BLOCK", "violating_present": true}
+{"key": "heldout:constraint:K13:1", "item": "K13", "bin": "KEEP", "element_present": true, "softened": false}
+{"key": "heldout:constraint:K21:2", "item": "K21", "bin": "KEEP", "element_present": true, "softened": false}
