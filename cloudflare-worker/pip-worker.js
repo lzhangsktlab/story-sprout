@@ -193,7 +193,10 @@ const CONTENT_TIERS = {
 - STORYBOOK GEAR may appear as a prop: a knight's sword, a shield, a bow, a wizard's staff or wand may be worn or carried. It must NEVER be aimed at a person or creature, never shown striking anyone, and never shown hurting anyone. Real weapons stay forbidden — offer a friendly swap for those (set "ready": false).
 - Monsters, dragons and villains may look a little spooky or mischievous, but never horrifying: no gore, no grotesque or realistic faces, nothing built to startle. Keep them clearly illustrated and story-like.
 - Mildly moody settings are fine — a night forest, a cave, a rainy castle — as long as the picture still feels like an adventure a child would enjoy.`,
-    imageSuffix: " Keep it at the level of a classic children's storybook for eight-to-ten-year-olds: mild adventure is fine; storybook props such as a sword, shield or bow may be worn or carried but never aimed at, striking, or hurting anyone; no realistic or horrifying creatures; nobody hurt or afraid.",
+    // The band named here is the STUDIO's target (7–9, paper §5), not this
+    // tier's grades label above. Deliberate: this is the tier the content
+    // audit froze and the paper prints, so its wording tracks the paper.
+    imageSuffix: " Keep it at the level of a classic children's storybook for seven-to-nine-year-olds: mild adventure is fine; storybook props such as a sword, shield or bow may be worn or carried but never aimed at, striking, or hurting anyone; no realistic or horrifying creatures; nobody hurt or afraid",
     extraBlocked: [],
   },
 
@@ -412,17 +415,19 @@ async function handleChat(body, env, tier) {
    suffix states the calibration rule directly: match the intensity, never
    exceed it. See PAPER_REFERENCE.md.
 
-   The bullying sentence is measured, not decorative: in the 2026-08 content-
-   constraint audit (tests/constraint_audit/), "kids ganging up and beating
-   another kid" rendered a full bullying scene under the abstract "nothing
-   hateful or cruel" wording, and no layer — ours or the provider's — stopped
-   it. Concrete wording flips some of these to a provider input-block and
-   de-escalates others; it does NOT reliably eliminate the category. The
-   dependable refusal for child-vs-child cruelty is Pip's chat contract; this
-   sentence is the renderer-side backstop for text that reaches /image
-   directly.
+   Child-vs-child cruelty, for the record. The 2026-08 audit
+   (tests/constraint_audit/) found that "kids ganging up and beating another
+   kid" rendered a full bullying scene under the abstract "nothing hateful or
+   cruel" wording, with no layer stopping it. An explicit bullying sentence was
+   added here and measured: it flips some such prompts to a provider
+   input-block and de-escalates others, but does NOT reliably eliminate the
+   category. It was removed again in the 2026-08-09 revision to keep this line
+   short. The load is therefore carried entirely by Pip's chat contract, which
+   the Pip arm measured declining 75/75 violating requests with zero leakage
+   into image_prompt — and Pip is the only reachable path to an image in the
+   deployed app. If a direct /image path is ever re-exposed, this hole reopens.
    ─────────────────────────────────────────────────────────────────────────── */
-const UNIVERSAL_IMAGE_RULE = " This is an illustration for a children's storybook. Do not add anything frightening, violent, gory, or adult that the description did not explicitly ask for — match the intensity of the description and never exceed it. Absolutely no nudity, undress or sexual content; no blood, wounds, gore, injury or death; no real firearms or military hardware; nothing hateful or cruel. No bullying and no children hurting, threatening, or ganging up on other children.";
+const UNIVERSAL_IMAGE_RULE = " This is an illustration for a children's storybook. Do not add anything frightening, violent, gory, or adult that the description did not explicitly ask for — match the intensity of the description and never exceed it. Absolutely no nudity ,  or sexual content; no blood, wounds, gore, injury or death; no real firearms or military hardware; nothing hateful or cruel.";
 
 const safeStyleFor = (tier) => UNIVERSAL_IMAGE_RULE + tier.imageSuffix;
 
